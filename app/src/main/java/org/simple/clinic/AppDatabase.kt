@@ -89,7 +89,8 @@ import org.simple.clinic.util.room.UuidRoomTypeConverter
     PatientStatus.RoomTypeConverter::class,
     ReminderConsent.RoomTypeConverter::class,
     BloodSugarMeasurementType.RoomTypeConverter::class,
-    DeletedReason.RoomTypeConverter::class
+    DeletedReason.RoomTypeConverter::class,
+    User.CapabilityType.TypeAdapter::class
 )
 abstract class AppDatabase : RoomDatabase() {
 
