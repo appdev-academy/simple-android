@@ -452,7 +452,8 @@ object TestData {
       updatedAt: Instant = Instant.now(),
       registrationFacilityUuid: UUID = UUID.fromString("fa85410a-54ca-449c-b3d6-7caf9def1474"),
       currentFacilityUuid: UUID = registrationFacilityUuid,
-      teleconsultPhoneNumber: String = "1111111111"
+      teleconsultPhoneNumber: String = "1111111111",
+      capabilities: User.Capabilities? = null
   ): User {
     return User(
         uuid = uuid,
@@ -465,7 +466,8 @@ object TestData {
         loggedInStatus = loggedInStatus,
         registrationFacilityUuid = registrationFacilityUuid,
         currentFacilityUuid = currentFacilityUuid,
-        teleconsultPhoneNumber = teleconsultPhoneNumber
+        teleconsultPhoneNumber = teleconsultPhoneNumber,
+        capabilities = capabilities
     )
   }
 
@@ -951,7 +953,8 @@ object TestData {
       status: UserStatus = UserStatus.WaitingForApproval,
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now(),
-      teleconsultPhoneNumber: String = "1111111111"
+      teleconsultPhoneNumber: String = "1111111111",
+      capabilities: User.Capabilities? = null
   ): LoggedInUserPayload {
     return LoggedInUserPayload(
         uuid = uuid,
@@ -962,7 +965,9 @@ object TestData {
         createdAt = createdAt,
         status = status,
         updatedAt = updatedAt,
-        teleconsultPhoneNumber = teleconsultPhoneNumber)
+        teleconsultPhoneNumber = teleconsultPhoneNumber,
+        capabilities = capabilities
+    )
   }
 
   fun patientSearchResult(
