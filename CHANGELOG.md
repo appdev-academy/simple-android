@@ -15,6 +15,7 @@
 - Clean up sync tests
 - Add support for the teleconsultation record deeplink
 - Change syncs to happen on a fixed pool of threads
+- Add `Capabilities` to User
 
 ## On Demo
 ### Changes
