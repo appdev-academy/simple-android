@@ -5,9 +5,9 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.simple.clinic.AppDatabase
-import org.simple.clinic.analytics.RxTimingAnalytics
 import org.simple.clinic.di.AppScope
 import org.simple.clinic.facility.Facility
+import org.simple.clinic.measure
 import org.simple.clinic.overdue.Appointment.AppointmentType.Manual
 import org.simple.clinic.overdue.Appointment.Status.Scheduled
 import org.simple.clinic.patient.PatientSearchCriteria.Name
@@ -37,6 +37,7 @@ import org.simple.clinic.util.Optional
 import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.scheduler.SchedulersProvider
 import org.simple.clinic.util.toOptional
+import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -61,24 +62,24 @@ class PatientRepository @Inject constructor(
 
   private var ongoingNewPatientEntry: OngoingNewPatientEntry = OngoingNewPatientEntry()
 
-  fun search(criteria: PatientSearchCriteria): Observable<List<PatientSearchResult>> {
+  fun search(criteria: PatientSearchCriteria): List<PatientSearchResult> {
     return when (criteria) {
       is Name -> searchByName(criteria.patientName)
       is PhoneNumber -> searchByPhoneNumber(criteria.phoneNumber)
     }
   }
 
-  private fun searchByName(name: String): Observable<List<PatientSearchResult>> {
-    return findPatientIdsMatchingName(name)
-        .switchMap { matchingUuidsSortedByScore ->
-          when {
-            matchingUuidsSortedByScore.isEmpty() -> Observable.just(emptyList())
-            else -> searchResultsByPatientUuids(matchingUuidsSortedByScore)
-          }
-        }
+  private fun searchByName(name: String): List<PatientSearchResult> {
+    val matchingUuidsSortedByScore = findPatientIdsMatchingName(name)
+    return when {
+      matchingUuidsSortedByScore.isEmpty() -> emptyList()
+      else -> measure({ searchResultsByPatientUuids(matchingUuidsSortedByScore) }) {
+        Timber.tag("SearchPerf").i("Fetch search results for IDs: ${it}ms")
+      }
+    }
   }
 
-  private fun searchResultsByPatientUuids(patientUuids: List<UUID>): Observable<List<PatientSearchResult>> {
+  private fun searchResultsByPatientUuids(patientUuids: List<UUID>): List<PatientSearchResult> {
     return database.patientSearchDao()
         .searchByIds(patientUuids, PatientStatus.Active)
         .toObservable()
@@ -90,48 +91,45 @@ class PatientRepository @Inject constructor(
           val resultsByUuid = results.associateBy { it.uuid }
           patientUuids.map { resultsByUuid.getValue(it) }
         }
-        .compose(RxTimingAnalytics(
-            analyticsName = "Search Patient:Fetch Patient Details",
-            timestampScheduler = schedulersProvider.computation()
-        ))
+        .blockingFirst()
   }
 
-  private fun findPatientIdsMatchingName(name: String): Observable<List<UUID>> {
-    val loadAllPatientNamesAndIds = database
-        .patientSearchDao()
-        .nameAndId(PatientStatus.Active)
-        .toObservable()
-
-    return loadAllPatientNamesAndIds
-        .compose(RxTimingAnalytics(
-            analyticsName = "Search Patient:Fetch Name and Id",
-            timestampScheduler = schedulersProvider.computation()
-        ))
-        .switchMap { patientNamesAndIds -> findPatientsWithNameMatching(patientNamesAndIds, name) }
+  private fun findPatientIdsMatchingName(name: String): List<UUID> {
+    val patientNamesAndIds = measure({
+      database
+          .patientSearchDao()
+          .nameAndId(PatientStatus.Active)
+          .toObservable()
+          .blockingFirst()
+    }) {
+      Timber.tag("SearchPerf").i("Fetch patient names and IDs: ${it}ms")
+    }
+    return findPatientsWithNameMatching(patientNamesAndIds, name)
   }
 
   private fun findPatientsWithNameMatching(
       allPatientNamesAndIds: List<PatientSearchResult.PatientNameAndId>,
       name: String
-  ): Observable<List<UUID>> {
+  ): List<UUID> {
 
-    val allPatientUuidsMatchingName = searchPatientByName
-        .search(searchTerm = name, names = allPatientNamesAndIds)
-        .toObservable()
-        .compose(RxTimingAnalytics(
-            analyticsName = "Search Patient:Fuzzy Filtering By Name",
-            timestampScheduler = schedulersProvider.computation()
-        ))
+    val allPatientUuidsMatchingName = measure({
+      searchPatientByName
+          .search(searchTerm = name, names = allPatientNamesAndIds)
+          .toObservable()
+          .blockingFirst()
+    }) {
+      Timber.tag("SearchPerf").i("Fuzzy name search: ${it}ms")
+    }
 
-    return allPatientUuidsMatchingName
-        .map { uuids -> uuids.take(config.limitOfSearchResults) }
+    return allPatientUuidsMatchingName.take(config.limitOfSearchResults)
   }
 
-  private fun searchByPhoneNumber(phoneNumber: String): Observable<List<PatientSearchResult>> {
+  private fun searchByPhoneNumber(phoneNumber: String): List<PatientSearchResult> {
     return database
         .patientSearchDao()
         .searchByPhoneNumber(phoneNumber, config.limitOfSearchResults)
         .toObservable()
+        .blockingFirst()
   }
 
   private fun savePatient(patient: Patient): Completable = Completable.fromAction { database.patientDao().save(patient) }

@@ -31,6 +31,7 @@ import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.platform.crash.CrashReporter
 import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.scanid.ScanSimpleIdScreenKey
+import org.simple.clinic.search.PatientSearchScreenKey
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.RequestPermissions
@@ -164,12 +165,12 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
       .map { SimpleVideoClicked }
 
   override fun openPatientSearchScreen() {
-//    screenRouter.push(PatientSearchScreenKey(additionalIdentifier = null))
-    screenRouter.push(PatientSummaryScreenKey(
-        patientUuid = UUID.fromString("31b3a9d4-7a3c-49a3-bc4a-de468205b9f4"),
-        intention = OpenIntention.ViewExistingPatient,
-        screenCreatedTimestamp = Instant.now()
-    ))
+    screenRouter.push(PatientSearchScreenKey(additionalIdentifier = null))
+//    screenRouter.push(PatientSummaryScreenKey(
+//        patientUuid = UUID.fromString("31b3a9d4-7a3c-49a3-bc4a-de468205b9f4"),
+//        intention = OpenIntention.ViewExistingPatient,
+//        screenCreatedTimestamp = Instant.now()
+//    ))
   }
 
   private fun showStatus(@IdRes statusViewId: Int) {

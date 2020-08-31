@@ -5,9 +5,11 @@ import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.bp.BloodPressureMeasurement
 import org.simple.clinic.facility.Facility
+import org.simple.clinic.measure
 import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.patient.PatientSearchResult
 import org.simple.clinic.util.scheduler.SchedulersProvider
+import timber.log.Timber
 import javax.inject.Inject
 
 class SearchResultsEffectHandler @Inject constructor(
@@ -27,12 +29,21 @@ class SearchResultsEffectHandler @Inject constructor(
   private fun searchForPatients(): ObservableTransformer<SearchWithCriteria, SearchResultsEvent> {
     return ObservableTransformer { effects ->
       effects
-          .switchMap { effect ->
-            patientRepository
-                .search(effect.searchCriteria)
-                .subscribeOn(schedulers.io())
-                .map { searchResults -> partitionSearchResultsByFacility(searchResults, currentFacility.get()) }
-                .map(::SearchResultsLoaded)
+          .observeOn(schedulers.io())
+          .map { effect ->
+            val searchResults = measure({ patientRepository.search(effect.searchCriteria) }) {
+              Timber.tag("SearchPerf").i("Search by name: ${it}ms")
+            }
+
+            val currentFacility = measure({ currentFacility.get() }) {
+              Timber.tag("SearchPerf").i("Fetch current facility: ${it}ms")
+            }
+
+            val partitioned = measure({ partitionSearchResultsByFacility(searchResults, currentFacility) }) {
+              Timber.tag("SearchPerf").i("Partition search results: ${it}ms")
+            }
+
+            SearchResultsLoaded(partitioned)
           }
     }
   }
@@ -43,9 +54,13 @@ class SearchResultsEffectHandler @Inject constructor(
   ): PatientSearchResults {
     val patientIds = searchResults.map { it.uuid }
 
+    val patientToFacilityIds = measure({ bloodPressureDao.patientToFacilityIds(patientIds) }) {
+      Timber.tag("SearchPerf").i("Fetch patient facility IDs: ${it}ms")
+    }
+
     return PatientSearchResults.from(
         searchResults = searchResults,
-        patientToFacilityIds = bloodPressureDao.patientToFacilityIds(patientIds),
+        patientToFacilityIds = patientToFacilityIds,
         currentFacility = facility
     )
   }
