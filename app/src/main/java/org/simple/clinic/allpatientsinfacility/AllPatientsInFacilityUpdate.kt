@@ -12,7 +12,7 @@ class AllPatientsInFacilityUpdate : Update<AllPatientsInFacilityModel, AllPatien
     return when (event) {
       is FacilityFetchedEvent -> {
         val facility = event.facility
-        next(model.facilityFetched(facility), FetchPatientsEffect(facility))
+        next(model.facilityFetched(facility))
       }
 
       is NoPatientsInFacilityEvent -> Next.next(model.noPatients())
