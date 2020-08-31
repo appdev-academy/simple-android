@@ -8,6 +8,7 @@ import io.reactivex.rxkotlin.toObservable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import org.simple.clinic.di.AppScope
+import org.simple.clinic.measure
 import org.simple.clinic.platform.analytics.Analytics
 import org.simple.clinic.platform.analytics.SyncAnalyticsEvent
 import org.simple.clinic.platform.crash.CrashReporter
@@ -43,7 +44,7 @@ private fun createScheduler(workers: Int): Scheduler {
   return Schedulers.from(executor)
 }
 
-private class SyncThreadFactory: ThreadFactory {
+private class SyncThreadFactory : ThreadFactory {
 
   private val threadCounter = AtomicInteger(1)
 
@@ -61,13 +62,14 @@ class DataSync(
     private val syncScheduler: Scheduler
 ) {
 
-  @Inject constructor(
+  @Inject
+  constructor(
       modelSyncs: ArrayList<ModelSync>,
       crashReporter: CrashReporter,
       userSession: UserSession,
       schedulersProvider: SchedulersProvider,
       remoteConfigService: RemoteConfigService
-  ): this(
+  ) : this(
       modelSyncs = modelSyncs,
       crashReporter = crashReporter,
       userSession = userSession,
@@ -122,7 +124,9 @@ class DataSync(
 
   private fun generatePullOperationForSync(sync: ModelSync): Completable {
     return Completable
-        .fromAction(sync::pull)
+        .fromAction {
+          measure(sync::pull) { Timber.tag("SyncPerf").i("Pull:${sync.name}:${it}ms") }
+        }
         .doOnSubscribe { reportSyncEvent(sync.name, "Pull", SyncAnalyticsEvent.Started) }
         .doOnComplete { reportSyncEvent(sync.name, "Pull", SyncAnalyticsEvent.Completed) }
         .doOnError { reportSyncEvent(sync.name, "Pull", SyncAnalyticsEvent.Failed) }
@@ -130,7 +134,9 @@ class DataSync(
 
   private fun generatePushOperationForSync(sync: ModelSync): Completable {
     return Completable
-        .fromAction(sync::push)
+        .fromAction {
+          measure(sync::push) { Timber.tag("SyncPerf").i("Push:${sync.name}:${it}ms") }
+        }
         .doOnSubscribe { reportSyncEvent(sync.name, "Push", SyncAnalyticsEvent.Started) }
         .doOnComplete { reportSyncEvent(sync.name, "Push", SyncAnalyticsEvent.Completed) }
         .doOnError { reportSyncEvent(sync.name, "Push", SyncAnalyticsEvent.Failed) }

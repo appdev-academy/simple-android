@@ -5,6 +5,8 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import org.simple.clinic.facility.FacilityRepository
+import org.simple.clinic.measure
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -17,12 +19,18 @@ class LoggedInUserHttpInterceptor @Inject constructor(
   override fun intercept(chain: Interceptor.Chain?): Response {
     val originalRequest = chain!!.request()
 
-    val user = userSession.get().loggedInUserImmediate()
-    val (accessToken) = userSession.get().accessToken()
+    val user = measure({ userSession.get().loggedInUserImmediate() }) {
+      Timber.tag("SyncPerf").i("Fetch user in HTTP interceptor:${it}ms")
+    }
+    val (accessToken) = measure({ userSession.get().accessToken() }) {
+      Timber.tag("SyncPerf").i("Fetch access token in HTTP interceptor:${it}ms")
+    }
 
     var facilityUuid: UUID? = null
     if (user != null) {
-      facilityUuid = facilityRepository.currentFacilityUuid()
+      facilityUuid = measure({ facilityRepository.currentFacilityUuid() }) {
+        Timber.tag("SyncPerf").i("Fetch current facility in HTTP interceptor:${it}ms")
+      }
     }
 
     return if (user != null && accessToken.isNullOrBlank().not() && facilityUuid != null) {
