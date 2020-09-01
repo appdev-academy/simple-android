@@ -6,7 +6,7 @@ import dagger.Module
 import dagger.Provides
 import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
-import okhttp3.logging.HttpLoggingInterceptor.Level.BODY
+import okhttp3.logging.HttpLoggingInterceptor.Level.BASIC
 import org.simple.clinic.user.LoggedInUserHttpInterceptor
 
 @Module
@@ -19,7 +19,7 @@ class HttpInterceptorsModule {
       networkPlugin: NetworkFlipperPlugin
   ): List<Interceptor> {
     val loggingInterceptor = HttpLoggingInterceptor().apply {
-      level = BODY
+      level = BASIC
     }
 
     return listOf(
