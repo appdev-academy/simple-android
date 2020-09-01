@@ -80,18 +80,17 @@ class PatientRepository @Inject constructor(
   }
 
   private fun searchResultsByPatientUuids(patientUuids: List<UUID>): List<PatientSearchResult> {
-    return database.patientSearchDao()
+    val results = database
+        .patientSearchDao()
         .searchByIds(patientUuids, PatientStatus.Active)
-        .toObservable()
-        .map { results ->
-          // This is needed to maintain the order of the search results
-          // so that its in the same order of the list of the UUIDs.
-          // Otherwise, the order is dependent on the SQLite default
-          // implementation.
-          val resultsByUuid = results.associateBy { it.uuid }
-          patientUuids.map { resultsByUuid.getValue(it) }
-        }
-        .blockingFirst()
+
+    // This is needed to maintain the order of the search results
+    // so that its in the same order of the list of the UUIDs.
+    // Otherwise, the order is dependent on the SQLite default
+    // implementation.
+    val resultsByUuid = results.associateBy { it.uuid }
+
+    return patientUuids.map { resultsByUuid.getValue(it) }
   }
 
   private fun findPatientIdsMatchingName(name: String): List<UUID> {
@@ -99,8 +98,6 @@ class PatientRepository @Inject constructor(
       database
           .patientSearchDao()
           .nameAndId(PatientStatus.Active)
-          .toObservable()
-          .blockingFirst()
     }) {
       Timber.tag("SearchPerf").i("Fetch patient names and IDs: ${it}ms")
     }
@@ -113,10 +110,7 @@ class PatientRepository @Inject constructor(
   ): List<UUID> {
 
     val allPatientUuidsMatchingName = measure({
-      searchPatientByName
-          .search(searchTerm = name, names = allPatientNamesAndIds)
-          .toObservable()
-          .blockingFirst()
+      searchPatientByName.search(searchTerm = name, names = allPatientNamesAndIds)
     }) {
       Timber.tag("SearchPerf").i("Fuzzy name search: ${it}ms")
     }
@@ -128,8 +122,6 @@ class PatientRepository @Inject constructor(
     return database
         .patientSearchDao()
         .searchByPhoneNumber(phoneNumber, config.limitOfSearchResults)
-        .toObservable()
-        .blockingFirst()
   }
 
   private fun savePatient(patient: Patient): Completable = Completable.fromAction { database.patientDao().save(patient) }
@@ -654,7 +646,7 @@ class PatientRepository @Inject constructor(
         }
 
     return shortCodeSearchResult
-        .flatMapSingle { database.patientSearchDao().searchByIds(it, PatientStatus.Active) }
+        .flatMapSingle { Single.fromCallable { database.patientSearchDao().searchByIds(it, PatientStatus.Active) } }
   }
 
   @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

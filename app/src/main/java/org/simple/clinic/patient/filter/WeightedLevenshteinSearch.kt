@@ -1,9 +1,7 @@
 package org.simple.clinic.patient.filter
 
 import info.debatty.java.stringsimilarity.CharacterInsDelInterface
-import info.debatty.java.stringsimilarity.CharacterSubstitutionInterface
 import info.debatty.java.stringsimilarity.WeightedLevenshtein
-import io.reactivex.Single
 import org.simple.clinic.patient.PatientSearchResult
 import java.util.Locale
 import java.util.UUID
@@ -26,7 +24,7 @@ class WeightedLevenshteinSearch(
   private val whiteSpaceRegex = Regex("[\\s]")
 
   private val levenshtein = WeightedLevenshtein(
-      CharacterSubstitutionInterface { _, _ -> characterSubstitutionCost.toDouble() },
+      { _, _ -> characterSubstitutionCost.toDouble() },
       object : CharacterInsDelInterface {
         override fun deletionCost(c: Char) = characterDeletionCost.toDouble()
 
@@ -34,12 +32,12 @@ class WeightedLevenshteinSearch(
       }
   )
 
-  override fun search(searchTerm: String, names: List<PatientSearchResult.PatientNameAndId>): Single<List<UUID>> {
+  override fun search(searchTerm: String, names: List<PatientSearchResult.PatientNameAndId>): List<UUID> {
     val searchTermParts = stringToSearchableParts(searchTerm)
         .filter { it.length >= minimumSearchTermLength }
 
     return if (searchTermParts.isEmpty()) {
-      Single.just(emptyList())
+      emptyList()
     } else {
       val searchContext = names
           .filter { it.fullName.isNotBlank() }
@@ -63,7 +61,7 @@ class WeightedLevenshteinSearch(
           .filter(this::discardLowQualityResults)
           .sortedWith(resultsComparator)
 
-      Single.just(searchContext.map { it.patient.uuid })
+      searchContext.map { it.patient.uuid }
     }
   }
 
