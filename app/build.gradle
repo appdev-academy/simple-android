@@ -6,6 +6,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'io.sentry.android.gradle'
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
 
 apply from: "../quality/install-git-hook.gradle"
 
@@ -67,11 +69,11 @@ android {
   ndkVersion androidNdkVersion
 
   defaultConfig {
-    applicationId "org.simple.clinic"
+    applicationId 'com.simpleappcameroon.android'
     minSdkVersion versions.minSdk
     targetSdkVersion versions.compileSdk
     versionCode 1
-    versionName "0.1"
+    versionName '1.0.0'
     multiDexEnabled true
 
     testInstrumentationRunner "org.simple.clinic.AndroidTestJUnitRunner"
@@ -82,7 +84,7 @@ android {
 
   buildTypes {
     debug {
-      applicationIdSuffix ".debug"
+//      applicationIdSuffix ".debug"
       minifyEnabled false
       shrinkResources false
     }
@@ -104,8 +106,8 @@ android {
   productFlavors {
     qa {
       dimension 'track'
-      applicationIdSuffix ".qa"
-      versionNameSuffix "-qa"
+//      applicationIdSuffix ".qa"
+//      versionNameSuffix "-qa"
       buildConfigField "String", "MANIFEST_ENDPOINT", "\"" + qaManifestEndpoint + "\""
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + qaFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + qaMixpanelToken + "\""
@@ -365,9 +367,8 @@ dependencies {
 
   implementation "androidx.viewpager2:viewpager2:$versions.viewpager2"
 
+  implementation 'com.google.firebase:firebase-analytics:17.5.0'
+  implementation 'com.google.firebase:firebase-crashlytics:17.2.1'
+
   lintChecks project(path: ':lint')
 }
-
-// This must always be present at the bottom of this file, as per:
-// https://console.firebase.google.com/u/2/project/simple-org/settings/general/
-apply plugin: 'com.google.gms.google-services'

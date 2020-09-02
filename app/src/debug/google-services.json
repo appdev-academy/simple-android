@@ -1,39 +1,37 @@
 {
   "project_info": {
-    "project_number": "235314010044",
-    "firebase_url": "https://simple-org.firebaseio.com",
-    "project_id": "simple-org",
-    "storage_bucket": "simple-org.appspot.com"
+    "project_number": "108784970409",
+    "firebase_url": "https://simple-app-cameroon.firebaseio.com",
+    "project_id": "simple-app-cameroon",
+    "storage_bucket": "simple-app-cameroon.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:235314010044:android:26e63edde5002dd6",
+        "mobilesdk_app_id": "1:108784970409:android:23dde7b04055175dde57b8",
         "android_client_info": {
-          "package_name": "org.simple.clinic.qa.debug"
+          "package_name": "com.simpleappcameroon.android"
         }
       },
       "oauth_client": [
         {
-          "client_id": "235314010044-5cs4deattnhsdcs4ooljphm0fla9vjvh.apps.googleusercontent.com",
+          "client_id": "108784970409-o80vmdcco02n8qv0a9n18gjpncac08br.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDtpDbqQ-TXRED-gdOhbRbgQIOicyGAiaM"
+          "current_key": "AIzaSyCsubrOHCEr9PyWR7nMlvoOWjLIK8MD6q0"
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
-        },
-        "ads_service": {
-          "status": 2
+          "other_platform_oauth_client": [
+            {
+              "client_id": "108784970409-o80vmdcco02n8qv0a9n18gjpncac08br.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
