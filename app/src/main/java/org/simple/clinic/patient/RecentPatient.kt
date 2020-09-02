@@ -50,6 +50,7 @@ data class RecentPatient(
               FROM BloodPressureMeasurement
               WHERE facilityUuid = :facilityUuid
               AND deletedAt IS NULL
+              AND recordedAt BETWEEN :fromTime AND :toTime
               GROUP BY patientUuid
           ) BP ON P.uuid = BP.patientUuid
           LEFT JOIN (
@@ -57,6 +58,7 @@ data class RecentPatient(
               FROM PrescribedDrug
               WHERE facilityUuid = :facilityUuid
               AND deletedAt IS NULL
+              AND updatedAt BETWEEN :fromTime AND :toTime
               GROUP BY patientUuid
           ) PD ON P.uuid = PD.patientUuid
           LEFT JOIN (
@@ -66,6 +68,7 @@ data class RecentPatient(
               AND deletedAt IS NULL
               AND status = :appointmentStatus
               AND appointmentType = :appointmentType
+              AND updatedAt BETWEEN :fromTime AND :toTime
               GROUP BY patientUuid
           ) AP ON P.uuid = AP.patientUuid
           LEFT JOIN (
@@ -74,6 +77,7 @@ data class RecentPatient(
               WHERE facilityUuid = :facilityUuid
               AND deletedAt IS NULL
               GROUP BY patientUuid
+              AND recordedAt BETWEEN :fromTime AND :toTime
           ) BloodSugar ON P.uuid = BloodSugar.patientUuid
         WHERE (
           (
@@ -105,7 +109,9 @@ data class RecentPatient(
         appointmentStatus: Status,
         appointmentType: AppointmentType,
         patientStatus: PatientStatus,
-        limit: Int
+        limit: Int,
+        fromTime: Instant,
+        toTime: Instant
     ): Flowable<List<RecentPatient>>
 
     @Query(RECENT_PATIENT_QUERY)
@@ -113,7 +119,9 @@ data class RecentPatient(
         facilityUuid: UUID,
         appointmentStatus: Status,
         appointmentType: AppointmentType,
-        patientStatus: PatientStatus
+        patientStatus: PatientStatus,
+        fromTime: Instant,
+        toTime: Instant
     ): Flowable<List<RecentPatient>>
   }
 }
