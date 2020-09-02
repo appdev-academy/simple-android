@@ -489,7 +489,7 @@ class PatientRepository @Inject constructor(
         .andThen(reportsRepository.deleteReports())
   }
 
-  fun recentPatients(
+  /*fun recentPatients(
       facilityUuid: UUID,
       limit: Int
   ): Observable<List<RecentPatient>> {
@@ -519,6 +519,52 @@ class PatientRepository @Inject constructor(
             toTime = today.toUtcInstantAtEndOfDay(userClock)
         )
         .toObservable()
+  }*/
+
+  fun recentPatients(
+      facilityUuid: UUID,
+      limit: Int
+  ): Observable<List<RecentPatient>> {
+    return Observable
+        .fromCallable {
+          val today = LocalDate.now(userClock)
+          measure({
+            database
+                .recentPatientDao()
+                .recentPatientsBlocking(
+                    facilityUuid = facilityUuid,
+                    appointmentStatus = Scheduled,
+                    appointmentType = Manual,
+                    patientStatus = PatientStatus.Active,
+                    limit = limit,
+                    fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
+                    toTime = today.toUtcInstantAtEndOfDay(userClock)
+                )
+          }) {
+            Timber.tag("RecentPatientPerf").i("Recent patients with limit: ${it}ms")
+          }
+        }
+  }
+
+  fun recentPatients(facilityUuid: UUID): Observable<List<RecentPatient>> {
+    return Observable
+        .fromCallable {
+          val today = LocalDate.now(userClock)
+          measure({
+            database
+                .recentPatientDao()
+                .recentPatientsBlocking(
+                    facilityUuid = facilityUuid,
+                    appointmentStatus = Scheduled,
+                    appointmentType = Manual,
+                    patientStatus = PatientStatus.Active,
+                    fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
+                    toTime = today.toUtcInstantAtEndOfDay(userClock)
+                )
+          }) {
+            Timber.tag("RecentPatientPerf").i("Recent patients without limit: ${it}ms")
+          }
+        }
   }
 
   override fun pendingSyncRecordCount(): Observable<Int> {

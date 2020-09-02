@@ -123,5 +123,26 @@ data class RecentPatient(
         fromTime: Instant,
         toTime: Instant
     ): Flowable<List<RecentPatient>>
+
+    @Query("$RECENT_PATIENT_QUERY LIMIT :limit")
+    fun recentPatientsBlocking(
+        facilityUuid: UUID,
+        appointmentStatus: Status,
+        appointmentType: AppointmentType,
+        patientStatus: PatientStatus,
+        limit: Int,
+        fromTime: Instant,
+        toTime: Instant
+    ): List<RecentPatient>
+
+    @Query(RECENT_PATIENT_QUERY)
+    fun recentPatientsBlocking(
+        facilityUuid: UUID,
+        appointmentStatus: Status,
+        appointmentType: AppointmentType,
+        patientStatus: PatientStatus,
+        fromTime: Instant,
+        toTime: Instant
+    ): List<RecentPatient>
   }
 }
