@@ -21,18 +21,6 @@ fun LocalDate.toUtcInstant(userClock: UserClock): Instant {
   return utcDateTime.toInstant()
 }
 
-fun LocalDate.toUtcInstantAtStartOfDay(userClock: UserClock): Instant {
-  val userDateTime = this.atStartOfDay()
-  val utcDateTime = userDateTime.atZone(userClock.zone).withZoneSameInstant(UTC)
-  return utcDateTime.toInstant()
-}
-
-fun LocalDate.toUtcInstantAtEndOfDay(userClock: UserClock): Instant {
-  val userDateTime = this.plusDays(1).atStartOfDay().minusSeconds(1)
-  val utcDateTime = userDateTime.atZone(userClock.zone).withZoneSameInstant(UTC)
-  return utcDateTime.toInstant()
-}
-
 fun LocalDate.plus(timeToAppointment: TimeToAppointment): LocalDate {
   return this.plus(
       timeToAppointment.value.toLong(),

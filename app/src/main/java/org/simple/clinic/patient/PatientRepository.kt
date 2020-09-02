@@ -34,12 +34,9 @@ import org.simple.clinic.user.User
 import org.simple.clinic.util.Just
 import org.simple.clinic.util.None
 import org.simple.clinic.util.Optional
-import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.scheduler.SchedulersProvider
 import org.simple.clinic.util.toOptional
-import org.simple.clinic.util.toUtcInstantAtEndOfDay
-import org.simple.clinic.util.toUtcInstantAtStartOfDay
 import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDate
@@ -55,7 +52,6 @@ typealias FacilityUuid = UUID
 class PatientRepository @Inject constructor(
     private val database: AppDatabase,
     private val utcClock: UtcClock,
-    private val userClock: UserClock,
     private val searchPatientByName: SearchPatientByName,
     private val config: PatientConfig,
     private val reportsRepository: ReportsRepository,
@@ -489,83 +485,15 @@ class PatientRepository @Inject constructor(
         .andThen(reportsRepository.deleteReports())
   }
 
-  /*fun recentPatients(
-      facilityUuid: UUID,
-      limit: Int
-  ): Observable<List<RecentPatient>> {
-    val today = LocalDate.now(userClock)
-    return database.recentPatientDao()
-        .recentPatients(
-            facilityUuid = facilityUuid,
-            appointmentStatus = Scheduled,
-            appointmentType = Manual,
-            patientStatus = PatientStatus.Active,
-            limit = limit,
-            fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
-            toTime = today.toUtcInstantAtEndOfDay(userClock)
-        )
-        .toObservable()
-  }
+  fun recentPatients(facilityUuid: UUID, limit: Int): Observable<List<RecentPatient>> =
+      database.recentPatientDao()
+          .recentPatients(facilityUuid, Scheduled, Manual, PatientStatus.Active, limit)
+          .toObservable()
 
-  fun recentPatients(facilityUuid: UUID): Observable<List<RecentPatient>> {
-    val today = LocalDate.now(userClock)
-    return database.recentPatientDao()
-        .recentPatients(
-            facilityUuid = facilityUuid,
-            appointmentStatus = Scheduled,
-            appointmentType = Manual,
-            patientStatus = PatientStatus.Active,
-            fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
-            toTime = today.toUtcInstantAtEndOfDay(userClock)
-        )
-        .toObservable()
-  }*/
-
-  fun recentPatients(
-      facilityUuid: UUID,
-      limit: Int
-  ): Observable<List<RecentPatient>> {
-    return Observable
-        .fromCallable {
-          val today = LocalDate.now(userClock)
-          measure({
-            database
-                .recentPatientDao()
-                .recentPatientsBlocking(
-                    facilityUuid = facilityUuid,
-                    appointmentStatus = Scheduled,
-                    appointmentType = Manual,
-                    patientStatus = PatientStatus.Active,
-                    limit = limit,
-                    fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
-                    toTime = today.toUtcInstantAtEndOfDay(userClock)
-                )
-          }) {
-            Timber.tag("RecentPatientPerf").i("Recent patients with limit: ${it}ms")
-          }
-        }
-  }
-
-  fun recentPatients(facilityUuid: UUID): Observable<List<RecentPatient>> {
-    return Observable
-        .fromCallable {
-          val today = LocalDate.now(userClock)
-          measure({
-            database
-                .recentPatientDao()
-                .recentPatientsBlocking(
-                    facilityUuid = facilityUuid,
-                    appointmentStatus = Scheduled,
-                    appointmentType = Manual,
-                    patientStatus = PatientStatus.Active,
-                    fromTime = today.minusWeeks(1).toUtcInstantAtStartOfDay(userClock),
-                    toTime = today.toUtcInstantAtEndOfDay(userClock)
-                )
-          }) {
-            Timber.tag("RecentPatientPerf").i("Recent patients without limit: ${it}ms")
-          }
-        }
-  }
+  fun recentPatients(facilityUuid: UUID): Observable<List<RecentPatient>> =
+      database.recentPatientDao()
+          .recentPatients(facilityUuid, Scheduled, Manual, PatientStatus.Active)
+          .toObservable()
 
   override fun pendingSyncRecordCount(): Observable<Int> {
     return database.patientDao()
