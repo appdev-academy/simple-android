@@ -37,6 +37,7 @@ class InputFieldsFactoryModule {
       Country.INDIA -> IndiaInputFieldsProvider(dateTimeFormatter, date, currentFacility, chennaiFacilityGroupIds)
       Country.BANGLADESH -> BangladeshInputFieldsProvider(dateTimeFormatter, date)
       Country.ETHIOPIA -> EthiopiaInputFieldsProvider(dateTimeFormatter, date)
+      Country.CAMEROON -> EthiopiaInputFieldsProvider(dateTimeFormatter, date)
       else -> throw IllegalArgumentException("Unknown country code: $isoCountryCode")
     }
   }

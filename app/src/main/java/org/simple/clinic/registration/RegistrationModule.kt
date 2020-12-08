@@ -18,6 +18,11 @@ class RegistrationModule {
           maximumAllowedLengthMobile = 10,
           minimumRequiredLengthLandlinesOrMobile = 9,
           maximumAllowedLengthLandlinesOrMobile = 10)
+      Country.CAMEROON -> LengthBasedNumberValidator(
+              minimumRequiredLengthMobile = 9,
+              maximumAllowedLengthMobile = 10,
+              minimumRequiredLengthLandlinesOrMobile = 9,
+              maximumAllowedLengthLandlinesOrMobile = 10)
       else -> LengthBasedNumberValidator(
           minimumRequiredLengthMobile = 10,
           maximumAllowedLengthMobile = 10,

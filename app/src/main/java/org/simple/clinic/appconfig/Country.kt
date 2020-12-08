@@ -37,5 +37,6 @@ data class Country(
     const val INDIA = "IN"
     const val BANGLADESH = "BD"
     const val ETHIOPIA = "ET"
+    const val CAMEROON = "CM"
   }
 }
