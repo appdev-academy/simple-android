@@ -72,7 +72,7 @@ android {
     applicationId 'com.simpleappcameroon.android'
     minSdkVersion versions.minSdk
     targetSdkVersion versions.compileSdk
-    versionCode 4
+    versionCode 5
     versionName '1.0.0'
     multiDexEnabled true
 
