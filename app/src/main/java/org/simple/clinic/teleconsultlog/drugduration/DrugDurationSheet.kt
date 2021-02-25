@@ -3,6 +3,7 @@ package org.simple.clinic.teleconsultlog.drugduration
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -10,29 +11,49 @@ import com.jakewharton.rxbinding3.widget.editorActions
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.sheet_drug_duration.*
 import org.simple.clinic.ClinicApp
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.SheetDrugDurationBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.teleconsultlog.drugduration.di.DrugDurationComponent
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import org.simple.clinic.widgets.setTextAndCursor
 import org.simple.clinic.widgets.textChanges
+import java.time.Duration
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiActions {
+
+  private lateinit var binding: SheetDrugDurationBinding
+
+  private val drugDurationTitleTextView
+    get() = binding.drugDurationTitleTextView
+
+  private val drugDurationEditText
+    get() = binding.drugDurationEditText
+
+  private val drugDurationErrorTextView
+    get() = binding.drugDurationErrorTextView
 
   @Inject
   lateinit var locale: Locale
 
   @Inject
+  lateinit var drugDurationUpdate: DrugDurationUpdate
+
+  @Inject
   lateinit var effectHandlerFactory: DrugDurationEffectHandler.Factory
+
+  @Inject
+  lateinit var features: Features
 
   companion object {
     private const val EXTRA_DRUG_DURATION = "drugDuration"
@@ -46,6 +67,16 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
       return Intent(context, DrugDurationSheet::class.java).apply {
         putExtra(EXTRA_DRUG_DURATION, drugDuration)
       }
+    }
+
+    fun readSavedDrugDuration(intent: Intent): SavedDrugDuration {
+      val uuid = intent.getSerializableExtra(EXTRA_SAVED_DRUG_UUID) as UUID
+      val duration = intent.extras!!.getInt(EXTRA_SAVED_DURATION)
+
+      return SavedDrugDuration(
+          drugUuid = uuid,
+          duration = Duration.ofDays(duration.toLong())
+      )
     }
   }
 
@@ -70,7 +101,8 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
     MobiusDelegate.forActivity(
         events = events.ofType(),
         defaultModel = DrugDurationModel.create(drugDuration.duration),
-        update = DrugDurationUpdate(),
+        init = DrugDurationInit(),
+        update = drugDurationUpdate,
         effectHandler = effectHandlerFactory.create(this).build(),
         modelUpdateListener = uiRenderer::render
     )
@@ -88,7 +120,10 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.sheet_drug_duration)
+
+    binding = SheetDrugDurationBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
     delegate.onRestoreInstanceState(savedInstanceState)
 
     drugDurationTitleTextView.text = getString(R.string.drug_duration_title, drugDuration.name, drugDuration.dosage)
@@ -103,18 +138,21 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
     setupDi()
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setupDi() {
     component = ClinicApp.appComponent
         .drugDurationComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }
@@ -135,6 +173,11 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
     drugDurationErrorTextView.visibility = View.VISIBLE
   }
 
+  override fun showMaxDrugDurationError(maxAllowedDurationInDays: Int) {
+    drugDurationErrorTextView.text = getString(R.string.drug_duration_max_error, maxAllowedDurationInDays.toString())
+    drugDurationErrorTextView.visibility = View.VISIBLE
+  }
+
   override fun hideDurationError() {
     drugDurationErrorTextView.text = null
     drugDurationErrorTextView.visibility = View.GONE
@@ -149,7 +192,7 @@ class DrugDurationSheet : BottomSheetActivity(), DrugDurationUi, DrugDurationUiA
     finish()
   }
 
-  override fun setDrugDuration(duration: String?) {
+  override fun prefillDrugDuration(duration: String) {
     drugDurationEditText.setTextAndCursor(duration)
   }
 }

@@ -7,16 +7,18 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import androidx.cardview.widget.CardView
+import android.view.inputmethod.EditorInfo
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
+import com.google.android.material.card.MaterialCardView
+import com.jakewharton.rxbinding3.widget.editorActions
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.pin_entry_card.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.PinEntryCardBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.security.di.Method
@@ -33,7 +35,7 @@ import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
-class PinEntryCardView(context: Context, attrs: AttributeSet) : CardView(context, attrs), PinEntryUi, UiActions {
+class PinEntryCardView(context: Context, attrs: AttributeSet) : MaterialCardView(context, attrs), PinEntryUi, UiActions {
 
   companion object {
     private const val MILLIS_IN_SECOND = 1000L
@@ -54,15 +56,40 @@ class PinEntryCardView(context: Context, attrs: AttributeSet) : CardView(context
 
   private val method: Method
 
+  private var binding: PinEntryCardBinding? = null
+
+  val pinEditText
+    get() = binding!!.pinEditText
+
+  private val errorTextView
+    get() = binding!!.errorTextView
+
+  private val contentContainer
+    get() = binding!!.contentContainer
+
+  private val progressView
+    get() = binding!!.progressView
+
+  private val pinAndLockViewFlipper
+    get() = binding!!.pinAndLockViewFlipper
+
+  private val timeRemainingTillUnlockTextView
+    get() = binding!!.timeRemainingTillUnlockTextView
+
+  val forgotPinButton
+    get() = binding!!.forgotPinButton
+
   init {
-    LayoutInflater.from(context).inflate(R.layout.pin_entry_card, this, true)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = PinEntryCardBinding.inflate(layoutInflater, this)
+
     setPinEntryMode(PinEntryUi.Mode.PinEntry)
     setForgotButtonVisible(true)
 
     with(context.obtainStyledAttributes(attrs, R.styleable.PinEntryCardView)) {
       val methodIndex = getInt(R.styleable.PinEntryCardView_verificationMethod, -1)
 
-      if(methodIndex < 0) {
+      if (methodIndex < 0) {
         throw RuntimeException("No verification method defined!")
       }
       method = Method.values()[methodIndex]
@@ -72,7 +99,11 @@ class PinEntryCardView(context: Context, attrs: AttributeSet) : CardView(context
   }
 
   private val events by unsafeLazy {
-    pinTextChanges()
+    Observable
+        .merge(
+            pinTextChanges(),
+            doneClicks()
+        )
         .compose(ReportAnalyticsEvents())
   }
 
@@ -114,10 +145,11 @@ class PinEntryCardView(context: Context, attrs: AttributeSet) : CardView(context
   override fun onDetachedFromWindow() {
     pinEntryLockedCountdown?.cancel()
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -129,6 +161,10 @@ class PinEntryCardView(context: Context, attrs: AttributeSet) : CardView(context
       pinEditText.textChanges()
           .map(CharSequence::toString)
           .map(::PinTextChanged)
+
+  private fun doneClicks() = pinEditText
+      .editorActions { it == EditorInfo.IME_ACTION_DONE }
+      .map { PinEntryDoneClicked }
 
   override fun setPinEntryMode(mode: PinEntryUi.Mode) {
     val transition = AutoTransition()

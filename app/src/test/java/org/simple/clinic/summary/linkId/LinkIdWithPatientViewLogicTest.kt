@@ -3,6 +3,7 @@ package org.simple.clinic.summary.linkId
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
+import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.whenever
@@ -37,6 +38,8 @@ class LinkIdWithPatientViewLogicTest {
   private val uiEvents = PublishSubject.create<UiEvent>()
 
   private val patientUuid = UUID.fromString("755bfa1a-afa5-4c80-9ec7-57d81dff2ca1")
+  private val patientName = "TestName"
+  private val patient = TestData.patient(uuid = patientUuid, fullName = patientName)
   private val identifierUuid = UUID.fromString("097a39e5-945f-44de-8293-f75960c0a54e")
   private val identifier = Identifier(
       value = "40269f4d-f177-44a5-9db7-3cb8a7a53b33",
@@ -55,21 +58,11 @@ class LinkIdWithPatientViewLogicTest {
   }
 
   @Test
-  fun `when the view is created, the identifier must be displayed`() {
-    // when
-    setupController()
-    uiEvents.onNext(LinkIdWithPatientViewShown(patientUuid, identifier))
-
-    // then
-    verify(ui).renderIdentifierText(identifier)
-    verifyNoMoreInteractions(ui, uiActions)
-  }
-
-  @Test
   fun `when add is clicked, id should be added to patient and sheet should close`() {
     // given
     val businessId = TestData.businessId(uuid = identifierUuid, patientUuid = patientUuid, identifier = identifier)
 
+    whenever(patientRepository.patientImmediate(patientUuid)).thenReturn(patient)
     whenever(patientRepository.addIdentifierToPatient(
         uuid = identifierUuid,
         patientUuid = patientUuid,
@@ -90,7 +83,9 @@ class LinkIdWithPatientViewLogicTest {
         assigningUser = user
     )
 
-    verify(ui).renderIdentifierText(identifier)
+    verify(ui, times(3)).renderPatientName(patientName)
+    verify(ui).showAddButtonProgress()
+    verify(ui, times(4)).hideAddButtonProgress()
     verify(uiActions).closeSheetWithIdLinked()
     verifyNoMoreInteractions(ui, uiActions)
   }
@@ -98,12 +93,14 @@ class LinkIdWithPatientViewLogicTest {
   @Test
   fun `when cancel is clicked, the sheet should close without saving id`() {
     // when
+    whenever(patientRepository.patientImmediate(patientUuid)).thenReturn(patient)
     setupController()
     uiEvents.onNext(LinkIdWithPatientViewShown(patientUuid, identifier))
     uiEvents.onNext(LinkIdWithPatientCancelClicked)
 
     // then
-    verify(ui).renderIdentifierText(identifier)
+    verify(ui).renderPatientName(patientName)
+    verify(ui, times(3)).hideAddButtonProgress()
     verify(uiActions).closeSheetWithoutIdLinked()
     verifyNoMoreInteractions(ui, uiActions)
 

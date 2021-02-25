@@ -58,7 +58,9 @@ data class Facility(
     val deletedAt: Instant?,
 
     @Embedded(prefix = "config_")
-    val config: FacilityConfig
+    val config: FacilityConfig,
+
+    val syncGroup: String
 ) : Parcelable {
 
   @Dao
@@ -115,5 +117,11 @@ data class Facility(
 
     @Query("DELETE FROM Facility")
     fun clear()
+
+    @Query(""" 
+      SELECT uuid FROM Facility
+      WHERE syncGroup = :syncGroup
+    """)
+    fun facilityIdsInSyncGroup(syncGroup: String): List<UUID>
   }
 }

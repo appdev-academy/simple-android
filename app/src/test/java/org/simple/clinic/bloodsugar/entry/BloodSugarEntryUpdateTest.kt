@@ -1,14 +1,20 @@
 package org.simple.clinic.bloodsugar.entry
 
+import com.f2prateek.rx.preferences2.Preference
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import com.spotify.mobius.test.NextMatchers.hasEffects
 import com.spotify.mobius.test.NextMatchers.hasModel
 import com.spotify.mobius.test.NextMatchers.hasNoEffects
 import com.spotify.mobius.test.NextMatchers.hasNoModel
 import com.spotify.mobius.test.UpdateSpec
 import com.spotify.mobius.test.UpdateSpec.assertThatNext
+import org.junit.Before
 import org.junit.Test
 import org.simple.clinic.TestData
 import org.simple.clinic.bloodsugar.BloodSugarReading
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
 import org.simple.clinic.bloodsugar.Random
 import org.simple.clinic.bloodsugar.entry.BloodSugarEntrySheet.ScreenType.BLOOD_SUGAR_ENTRY
 import org.simple.clinic.bloodsugar.entry.BloodSugarEntrySheet.ScreenType.DATE_ENTRY
@@ -37,13 +43,20 @@ class BloodSugarEntryUpdateTest {
   private val validBloodSugarDate = LocalDate.of(1994, 2, 14)
 
   private val defaultModel = BloodSugarEntryModel.create(LocalDate.now(testUserClock).year, New(patientUuid, Random))
-  private val updateSpec = UpdateSpec<BloodSugarEntryModel, BloodSugarEntryEvent, BloodSugarEntryEffect>(
+  private val bloodSugarUnitPreference = mock<Preference<BloodSugarUnitPreference>>()
+  private val updateSpec = UpdateSpec(
       BloodSugarEntryUpdate(
           dateValidator,
           LocalDate.now(testUserClock.zone),
-          UserInputDatePaddingCharacter.ZERO
+          UserInputDatePaddingCharacter.ZERO,
+          bloodSugarUnitPreference
       )
   )
+
+  @Before
+  fun setup() {
+    whenever(bloodSugarUnitPreference.get()) doReturn BloodSugarUnitPreference.Mg
+  }
 
   @Test
   fun `when blood sugar value changes, hide any blood sugar error message`() {
@@ -161,14 +174,14 @@ class BloodSugarEntryUpdateTest {
 
   @Test
   fun `when blood sugar entry is active and value is invalid and date button is pressed, then show blood sugar validation errors`() {
-    val measurementType = defaultModel.bloodSugarReading.type
+    val measurementType = defaultModel.bloodSugarMeasurementType
 
     updateSpec
         .given(defaultModel.bloodSugarChanged(invalidBloodSugar))
         .whenEvent(BloodSugarDateClicked)
         .then(assertThatNext(
             hasNoModel(),
-            hasEffects(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType)) as BloodSugarEntryEffect)
+            hasEffects(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType), BloodSugarUnitPreference.Mg) as BloodSugarEntryEffect)
         ))
   }
 
@@ -271,14 +284,14 @@ class BloodSugarEntryUpdateTest {
         .monthChanged(validBloodSugarDate.monthValue.toString())
         .yearChanged(validBloodSugarDate.year.toString())
         .datePrefilled(validBloodSugarDate)
-    val measurementType = invalidBloodSugarModel.bloodSugarReading.type
+    val measurementType = invalidBloodSugarModel.bloodSugarMeasurementType
 
     updateSpec
         .given(invalidBloodSugarModel)
         .whenEvent(SaveClicked)
         .then(assertThatNext(
             hasNoModel(),
-            hasEffects(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType)) as BloodSugarEntryEffect)
+            hasEffects(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType), BloodSugarUnitPreference.Mg) as BloodSugarEntryEffect)
         ))
   }
 
@@ -330,7 +343,7 @@ class BloodSugarEntryUpdateTest {
   @Test
   fun `when blood sugar measurement is fetched, then prefill date and set blood sugar reading`() {
     val bloodSugarMeasurement = TestData.bloodSugarMeasurement()
-    val bloodSugarReading = bloodSugarMeasurement.reading.displayValue
+    val bloodSugarReading = bloodSugarMeasurement.reading.displayValue(bloodSugarUnitPreference.get())
 
     updateSpec
         .given(defaultModel)
@@ -364,4 +377,31 @@ class BloodSugarEntryUpdateTest {
         ))
   }
 
+  @Test
+  fun `when blood sugar unit preference is loaded, then update the model`() {
+    val bloodSugarUnitPreference = BloodSugarUnitPreference.Mg
+
+    updateSpec
+        .given(defaultModel)
+        .whenEvent(BloodSugarUnitPreferenceLoaded(bloodSugarUnitPreference))
+        .then(
+            assertThatNext(
+                hasModel(defaultModel.bloodSugarUnitChanged(bloodSugarUnitPreference)),
+                hasNoEffects()
+            )
+        )
+  }
+
+  @Test
+  fun `When the blood sugar unit button is clicked then show blood sugar unit selection dialog`() {
+    updateSpec
+        .given(defaultModel)
+        .whenEvent(BloodSugarReadingUnitButtonClicked)
+        .then(
+            assertThatNext(
+                hasNoModel(),
+                hasEffects(ShowBloodSugarUnitSelectionDialog(bloodSugarUnitPreference = defaultModel.bloodSugarUnitPreference))
+            )
+        )
+  }
 }

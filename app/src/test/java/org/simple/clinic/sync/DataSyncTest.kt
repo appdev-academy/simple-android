@@ -1,6 +1,10 @@
 package org.simple.clinic.sync
 
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import io.reactivex.Completable
 import org.junit.Rule
@@ -9,9 +13,11 @@ import org.simple.clinic.TestData
 import org.simple.clinic.user.User
 import org.simple.clinic.user.UserSession
 import org.simple.clinic.user.UserStatus
+import org.simple.clinic.util.ErrorResolver
 import org.simple.clinic.util.ResolvedError
 import org.simple.clinic.util.RxErrorsRule
 import org.simple.clinic.util.scheduler.TestSchedulersProvider
+import java.io.IOException
 import java.util.UUID
 
 class DataSyncTest {
@@ -54,21 +60,17 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
         .streamSyncErrors()
         .test()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoErrors()
@@ -98,9 +100,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -108,12 +111,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertValue(ResolvedError.Unexpected(runtimeException))
@@ -145,21 +143,17 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3, modelSync4),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
         .streamSyncErrors()
         .test()
 
-    dataSync
-        .sync(SyncGroup.FREQUENT)
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.sync(SyncGroup.FREQUENT)
 
     syncErrors
         .assertNoErrors()
@@ -194,9 +188,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3, modelSync4),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -204,12 +199,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .sync(SyncGroup.DAILY)
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.sync(SyncGroup.DAILY)
 
     syncErrors
         .assertValue(ResolvedError.Unexpected(runtimeException))
@@ -240,9 +230,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -250,64 +241,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
-
-    syncErrors
-        .assertNoValues()
-        .assertNoErrors()
-        .dispose()
-  }
-
-  @Test
-  fun `when syncing everything, syncs which require a sync approved user should be skipped if there is a user present and they are not logged in`() {
-    val user = TestData.loggedInUser(
-        uuid = UUID.fromString("54cb095a-71f3-412d-8587-dc450a7a47b9"),
-        loggedInStatus = User.LoggedInStatus.NOT_LOGGED_IN,
-        status = UserStatus.ApprovedForSyncing
-    )
-    whenever(userSession.loggedInUserImmediate()).thenReturn(user)
-
-    val modelSync1 = FakeModelSync(
-        _name = "sync1",
-        config = dailySyncConfig
-    )
-
-    val modelSync2 = FakeModelSync(
-        _name = "sync2",
-        _requiresSyncApprovedUser = true,
-        config = dailySyncConfig,
-        pullError = RuntimeException("TEST"),
-    )
-
-    val modelSync3 = FakeModelSync(
-        _name = "sync3",
-        config = frequentSyncConfig
-    )
-
-    val dataSync = DataSync(
-        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
-        crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
-        userSession = userSession,
-        syncScheduler = schedulersProvider.io()
-    )
-
-    val syncErrors = dataSync
-        .streamSyncErrors()
-        .test()
-        .assertNoErrors()
-
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -344,9 +278,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -354,12 +289,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -396,9 +326,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -406,12 +337,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -448,9 +374,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -458,12 +385,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -500,9 +422,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -510,12 +433,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -553,9 +471,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -563,12 +482,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertValue(ResolvedError.Unexpected(exception))
@@ -605,9 +519,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -615,12 +530,7 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
@@ -657,9 +567,10 @@ class DataSyncTest {
     val dataSync = DataSync(
         modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
         crashReporter = mock(),
-        schedulersProvider = schedulersProvider,
         userSession = userSession,
-        syncScheduler = schedulersProvider.io()
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
     )
 
     val syncErrors = dataSync
@@ -667,17 +578,256 @@ class DataSyncTest {
         .test()
         .assertNoErrors()
 
-    dataSync
-        .syncTheWorld()
-        .test()
-        .assertNoErrors()
-        .assertComplete()
-        .dispose()
+    dataSync.syncTheWorld()
 
     syncErrors
         .assertNoValues()
         .assertNoErrors()
         .dispose()
+  }
+
+  @Test
+  fun `when syncing a group, if multiple syncs throws an error, the overall sync result must be a failure`() {
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig
+    )
+
+    val runtimeException = RuntimeException("TEST")
+    val ioException = IOException("TEST")
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig,
+        pullError = runtimeException
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = frequentSyncConfig,
+        pushError = ioException
+    )
+
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = mock()
+    )
+
+    val syncErrors = dataSync
+        .streamSyncErrors()
+        .test()
+        .assertNoErrors()
+
+    val syncResults = dataSync
+        .streamSyncResults()
+        .test()
+        .assertNoErrors()
+
+    dataSync.sync(SyncGroup.FREQUENT)
+
+    syncErrors
+        .assertValue(ErrorResolver.resolve(ioException)) // IOException because it is a push error and pushes are executed first
+        .assertNoErrors()
+        .dispose()
+
+    syncResults
+        .assertValues(
+            DataSync.SyncGroupResult(SyncGroup.FREQUENT, SyncProgress.SYNCING),
+            DataSync.SyncGroupResult(SyncGroup.FREQUENT, SyncProgress.FAILURE)
+        )
+        .assertNoErrors()
+        .dispose()
+  }
+
+  @Test
+  fun `when syncing a group, the unused data must never be purged`() {
+    // given
+    whenever(userSession.isUserPresentLocally()).thenReturn(true)
+
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig
+    )
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = frequentSyncConfig
+    )
+
+    val purgeOnSync = mock<PurgeOnSync>()
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = purgeOnSync
+    )
+
+    // when
+    dataSync.sync(SyncGroup.FREQUENT)
+
+    // then
+    verifyZeroInteractions(purgeOnSync)
+  }
+
+  @Test
+  fun `when syncing everything and there is a user present locally, the unused data must be purged if all syncs completed successfully`() {
+    // given
+    whenever(userSession.isUserPresentLocally()).thenReturn(true)
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig
+    )
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = dailySyncConfig
+    )
+
+    val purgeOnSync = mock<PurgeOnSync>()
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = purgeOnSync
+    )
+
+    // when
+    dataSync.syncTheWorld()
+
+    // then
+    verify(purgeOnSync).purgeUnusedData()
+    verifyNoMoreInteractions(purgeOnSync)
+  }
+
+  @Test
+  fun `when syncing everything and there is no user present locally, the unused data must not be purged even if all syncs completed successfully`() {
+    // given
+    whenever(userSession.isUserPresentLocally()).thenReturn(false)
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig
+    )
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = dailySyncConfig
+    )
+
+    val purgeOnSync = mock<PurgeOnSync>()
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = purgeOnSync
+    )
+
+    // when
+    dataSync.syncTheWorld()
+
+    // then
+    verify(purgeOnSync, never()).purgeUnusedData()
+    verifyNoMoreInteractions(purgeOnSync)
+  }
+
+  @Test
+  fun `if a pull operation fails when syncing everything, the unused data must not be purged`() {
+    // given
+    whenever(userSession.isUserPresentLocally()).thenReturn(true)
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig,
+        pullError = RuntimeException()
+    )
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = dailySyncConfig
+    )
+
+    val purgeOnSync = mock<PurgeOnSync>()
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = purgeOnSync
+    )
+
+    // when
+    dataSync.syncTheWorld()
+
+    // then
+    verify(purgeOnSync, never()).purgeUnusedData()
+    verifyNoMoreInteractions(purgeOnSync)
+  }
+
+  @Test
+  fun `if a push operation fails when syncing everything, the unused data must not be purged`() {
+    // given
+    whenever(userSession.isUserPresentLocally()).thenReturn(true)
+    val modelSync1 = FakeModelSync(
+        _name = "sync1",
+        config = frequentSyncConfig
+    )
+
+    val modelSync2 = FakeModelSync(
+        _name = "sync2",
+        config = frequentSyncConfig
+    )
+
+    val modelSync3 = FakeModelSync(
+        _name = "sync3",
+        config = dailySyncConfig,
+        pushError = RuntimeException()
+    )
+
+    val purgeOnSync = mock<PurgeOnSync>()
+    val dataSync = DataSync(
+        modelSyncs = arrayListOf(modelSync1, modelSync2, modelSync3),
+        crashReporter = mock(),
+        userSession = userSession,
+        schedulersProvider = schedulersProvider,
+        syncScheduler = schedulersProvider.io(),
+        purgeOnSync = purgeOnSync
+    )
+
+    // when
+    dataSync.syncTheWorld()
+
+    // then
+    verify(purgeOnSync, never()).purgeUnusedData()
+    verifyNoMoreInteractions(purgeOnSync)
   }
 
   private class FakeModelSync(

@@ -1,5 +1,7 @@
 package org.simple.clinic
 
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -26,6 +28,11 @@ import org.simple.clinic.patient.ReminderConsent
 import org.simple.clinic.patient.SyncStatus
 import org.simple.clinic.patient.businessid.BusinessId
 import org.simple.clinic.patient.businessid.Identifier
+import org.simple.clinic.platform.analytics.Analytics
+import org.simple.clinic.platform.analytics.DatabaseOptimizationEvent
+import org.simple.clinic.platform.analytics.DatabaseOptimizationEvent.OptimizationType.PurgeDeleted
+import org.simple.clinic.platform.analytics.DatabaseOptimizationEvent.OptimizationType.PurgeFromOtherSyncGroup
+import org.simple.clinic.platform.crash.CrashReporter
 import org.simple.clinic.protocol.Protocol
 import org.simple.clinic.protocol.ProtocolDrug
 import org.simple.clinic.storage.text.TextRecord
@@ -35,6 +42,10 @@ import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityI
 import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityMedicalOfficersCrossRef
 import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityWithMedicalOfficers
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency
+import org.simple.clinic.teleconsultlog.teleconsultrecord.Answer.RoomTypeConverter
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecord
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultStatus
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultationType
 import org.simple.clinic.user.OngoingLoginEntry
 import org.simple.clinic.user.User
 import org.simple.clinic.user.UserStatus
@@ -62,13 +73,14 @@ import org.simple.clinic.util.room.UuidRoomTypeConverter
       TextRecord::class,
       TeleconsultationFacilityInfo::class,
       MedicalOfficer::class,
-      TeleconsultationFacilityMedicalOfficersCrossRef::class
+      TeleconsultationFacilityMedicalOfficersCrossRef::class,
+      TeleconsultRecord::class
     ],
     views = [
       OverdueAppointment::class,
       PatientSearchResult::class
     ],
-    version = 73,
+    version = 85,
     exportSchema = true
 )
 @TypeConverters(
@@ -91,7 +103,11 @@ import org.simple.clinic.util.room.UuidRoomTypeConverter
     ReminderConsent.RoomTypeConverter::class,
     BloodSugarMeasurementType.RoomTypeConverter::class,
     DeletedReason.RoomTypeConverter::class,
-    MedicineFrequency.RoomTypeConverter::class
+    MedicineFrequency.RoomTypeConverter::class,
+    TeleconsultationType.RoomTypeConverter::class,
+    RoomTypeConverter::class,
+    User.CapabilityStatus.RoomTypeConverter::class,
+    TeleconsultStatus.RoomTypeConverter::class
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -139,6 +155,8 @@ abstract class AppDatabase : RoomDatabase() {
 
   abstract fun teleconsultFacilityWithMedicalOfficersDao(): TeleconsultationFacilityWithMedicalOfficers.RoomDao
 
+  abstract fun teleconsultRecordDao(): TeleconsultRecord.RoomDao
+
   fun clearAppData() {
     runInTransaction {
       patientDao().clear()
@@ -152,6 +170,98 @@ abstract class AppDatabase : RoomDatabase() {
       teleconsultFacilityInfoDao().clear()
       teleconsultMedicalOfficersDao().clear()
       teleconsultFacilityWithMedicalOfficersDao().clear()
+      teleconsultRecordDao().clear()
     }
+  }
+
+  fun prune(
+      crashReporter: CrashReporter
+  ) {
+    optimizeWithAnalytics(PurgeDeleted) {
+      purge()
+      try {
+        vacuumDatabase()
+      } catch (e: Exception) {
+        // Vacuuming is an optimization that's unlikely to fail. But if it
+        // does, we can ignore it and just report the exception and let
+        // the original sqlite file continue to be used.
+        crashReporter.report(e)
+      }
+    }
+  }
+
+  @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+  fun purge() {
+    runInTransaction {
+      with(patientDao()) {
+        purgeDeleted()
+        purgeDeletedPhoneNumbers()
+        purgeDeletedBusinessIds()
+      }
+      bloodPressureDao().purgeDeleted()
+      bloodSugarDao().purgeDeleted()
+      prescriptionDao().purgeDeleted()
+      medicalHistoryDao().purgeDeleted()
+
+      with(appointmentDao()) {
+        purgeDeleted()
+        purgeUnusedAppointments()
+      }
+    }
+  }
+
+  private fun vacuumDatabase() {
+    val db = openHelper.writableDatabase
+
+    // Transfer everything from the write ahead log to the main database
+    // file before running a vacuum.
+    db.query("PRAGMA wal_checkpoint(FULL)").close()
+    if (!db.inTransaction()) {
+      db.execSQL("VACUUM")
+    }
+  }
+
+  fun deletePatientsNotInFacilitySyncGroup(currentFacility: Facility) {
+    optimizeWithAnalytics(PurgeFromOtherSyncGroup) {
+      runInTransaction {
+        val facilityIdsInCurrentSyncGroup = facilityDao().facilityIdsInSyncGroup(currentFacility.syncGroup)
+
+        patientDao().deletePatientsNotInFacilities(facilityIdsInCurrentSyncGroup)
+        bloodPressureDao().deleteWithoutLinkedPatient()
+        bloodSugarDao().deleteWithoutLinkedPatient()
+        appointmentDao().deleteWithoutLinkedPatient()
+        prescriptionDao().deleteWithoutLinkedPatient()
+        medicalHistoryDao().deleteWithoutLinkedPatient()
+      }
+    }
+  }
+
+  @WorkerThread
+  fun sizeInBytes(): Long {
+    return openHelper
+        .readableDatabase
+        .query(""" SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size() """)
+        .use { cursor ->
+          cursor.moveToFirst()
+
+          cursor.getLong(0)
+        }
+  }
+
+  private inline fun optimizeWithAnalytics(
+      type: DatabaseOptimizationEvent.OptimizationType,
+      block: () -> Unit
+  ) {
+    val sizeBeforeOptimization = sizeInBytes()
+
+    block.invoke()
+
+    val sizeAfterOptimization = sizeInBytes()
+
+    Analytics.reportDatabaseOptimizationEvent(DatabaseOptimizationEvent(
+        sizeBeforeOptimizationBytes = sizeBeforeOptimization,
+        sizeAfterOptimizationBytes = sizeAfterOptimization,
+        type = type
+    ))
   }
 }

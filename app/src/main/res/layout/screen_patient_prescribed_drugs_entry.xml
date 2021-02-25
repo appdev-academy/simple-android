@@ -1,42 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.simple.clinic.drugs.selection.EditMedicinesScreen xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/prescribeddrugs_root"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:orientation="vertical">
 
-  <androidx.appcompat.widget.Toolbar
-    android:id="@+id/prescribeddrugs_toolbar"
+  <com.google.android.material.appbar.AppBarLayout
+    android:id="@+id/prescribeddrugs_appbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:navigationIcon="@drawable/ic_arrow_back_24dp"
-    app:title="@string/patient_prescribeddrugs_screen_title" />
+    app:layout_constraintTop_toTopOf="parent">
 
-  <androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/prescribeddrugs_recyclerview"
+    <com.google.android.material.appbar.MaterialToolbar
+      android:id="@+id/prescribeddrugs_toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      app:navigationIcon="@drawable/ic_arrow_back_24dp"
+      app:title="@string/patient_prescribeddrugs_screen_title" />
+
+  </com.google.android.material.appbar.AppBarLayout>
+
+  <com.google.android.material.card.MaterialCardView
     android:layout_width="match_parent"
-    android:layout_height="0dp"
+    android:layout_height="wrap_content"
     android:layout_margin="@dimen/spacing_8"
-    android:layout_weight="1"
     android:clipToPadding="false"
-    android:paddingBottom="@dimen/spacing_16" />
+    android:paddingBottom="@dimen/spacing_16"
+    app:layout_constraintBottom_toTopOf="@id/buttonFrame"
+    app:layout_constraintTop_toBottomOf="@id/prescribeddrugs_appbar"
+    app:layout_constraintVertical_bias="0">
 
-  <org.simple.clinic.widgets.PrimarySolidButtonWithFrame
-    android:id="@+id/prescribeddrugs_done"
-    style="@style/Clinic.V2.BottomAlignedButtonFrame"
-    app:buttonBackgroundDisabled="@color/grey2"
-    app:buttonBackgroundEnabled="@color/blue1"
-    app:frameBackgroundDisabled="@color/grey3"
-    app:frameBackgroundEnabled="@color/blue2">
+    <androidx.recyclerview.widget.RecyclerView
+      android:id="@+id/prescribeddrugs_recyclerview"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent" />
+
+  </com.google.android.material.card.MaterialCardView>
+
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/buttonFrame"
+    style="@style/Widget.Simple.Button.Frame"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    app:layout_constraintBottom_toBottomOf="parent">
 
     <com.google.android.material.button.MaterialButton
-      style="?attr/materialButtonStyle"
+      android:id="@+id/prescribeddrugs_done"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="@string/patientsummary_finish_saving_patient"
+      android:visibility="gone"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      tools:visibility="visible" />
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/prescribeddrugs_refill"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
       android:layout_margin="@dimen/spacing_8"
-      android:textAppearance="@style/Clinic.V2.TextAppearance.Button1" />
-  </org.simple.clinic.widgets.PrimarySolidButtonWithFrame>
+      android:text="@string/patientsummary_finish_refill_medicine"
+      android:visibility="gone"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent" />
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
 
 </org.simple.clinic.drugs.selection.EditMedicinesScreen>

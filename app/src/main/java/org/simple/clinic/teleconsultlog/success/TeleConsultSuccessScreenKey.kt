@@ -10,7 +10,7 @@ import java.util.UUID
 @Parcelize
 data class TeleConsultSuccessScreenKey(
     val patientUuid: UUID,
-    val prescriptionUuid: UUID
+    val teleconsultRecordId: UUID
 ) : Parcelable, FullScreenKey {
   @IgnoredOnParcel
   override val analyticsName: String = "TeleConsultation Success"

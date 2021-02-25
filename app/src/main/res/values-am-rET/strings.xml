@@ -66,19 +66,22 @@
   <string name="patiententry_kebele">ቀበሌ</string>
   <string name="patiententry_zone">ህብረት</string>
   <string name="patiententry_district">ቀበሌ</string>
-  <string name="patiententry_woreda">ወረዳ</string>
+  <string name="patiententry_woreda">ዞን</string>
   <string name="patiententry_upazila">ኡፓዚላ</string>
   <string name="patiententry_state">አከባቢ</string>
   <string name="patiententry_region">ክልል</string>
+  <string name="patiententry_doornumber_streetname">የበር ቁጥር ፣ የጎዳና ስም</string>
+  <string name="patiententry_division_area">ክፈል እና አከባቢ</string>
   <string name="patiententry_save_patient">ቀጣይ</string>
   <string name="patiententry_error_empty_fullname">የታካሚውን ሙሉ ስም ያስገቡ</string>
   <string name="patiententry_error_empty_gender">የታካሚውን ጾታ ይምረጡ</string>
-  <string name="patiententry_error_empty_colony_or_village">መንደር/ጎጥ/ወረዳ ያስገቡ</string>
-  <string name="patiententry_error_empty_district">የታካሚው ቤት የሚገኝበት ወረዳ ያስገቡ</string>
-  <string name="patiententry_error_state_empty">የታካሚውን የቤት ሁኔታ ያስገቡ</string>
+  <string name="patiententry_error_empty_colony_or_village">ይፈለጋል</string>
+  <string name="patiententry_error_empty_district">ይፈለጋል</string>
+  <string name="patiententry_error_state_empty">ይፈለጋል</string>
   <string name="patiententry_error_both_dateofbirth_and_age_empty">የታካሚውን ዕድሜ ያስገቡ</string>
   <string name="patiententry_error_invalid_dateofbirth">የታካሚውን የትውልድ ቀን በ ቀቀ/ወወ/ዓዓ ውስጥ ያስገቡ</string>
   <string name="patiententry_error_dateofbirth_is_in_future">የታካሚውን የትውልድ ቀን ያስተካክሉ</string>
+  <string name="patiententry_error_phonenumber_blank">የስልክ ቁጥር ባዶ ልሆን አይችልም</string>
   <string name="patiententry_error_phonenumber_length_less">የስልክ ቁጥር ከ %1$s ዲጂቶች በታች መሆን አይችልም</string>
   <string name="patiententry_error_phonenumber_length_more">የስልክ ቁጥር ከ %1$s ዲጂቶች በላይ መሆን አይችልም</string>
   <string name="patiententry_identifier">የደም ግፊት ፓስፖርት</string>
@@ -155,6 +158,7 @@
   <string name="patientsummary_prescriptions_update">መድኃኒቶችን ያርትዑ</string>
   <string name="patientsummary_bp_add_new">ደም ግፊት</string>
   <string name="patientsummary_finish_saving_patient">ሴቭ ያድርጉ</string>
+  <string name="patientsummary_finish_refill_medicine">መድኃኒት እንደገና ይሙሉ</string>
   <string name="patientsummary_bp_none_added">ምንም የደም ግፊት አልገባም</string>
   <string name="patientsummary_edit">ያርትዑ ወይም ያስተካክሉ</string>
 
@@ -171,9 +175,11 @@
   <string name="patientsummary_toolbar_title">%1$s ፣ %2$s ፣ %3$s</string>
   <string name="patientsummary_bangladesh_national_id">መታወቂያ</string>
 
-  <string name="patientsummary_contact_doctor">ሐኪም</string>
-  <string name="patientsummary_teleconsult_network_error">በመጥፎ በይነመረብ አማካኝነት ማገናኘት አልተቻለም</string>
-  <string name="patientsummary_teleconsult_network_error_retry">በድጋሚ ይሞክሩ</string>
+  <string name="patientsummary_teleconsult">Tele-consult</string>
+  <string name="patientsummary_log_teleconsult">በስልክ ማማከር ይግቡ</string>
+
+  <string name="patientsummary_registered_faciliy_title">የመዝግቧል</string>
+  <string name="patientsummary_registered_facility">%1$sበ %2$s</string>
 
   <string name="bloodpressuresummaryview_see_all_button">ሁሉንም ይመልከቱ</string>
 
@@ -231,6 +237,8 @@
   <string name="registration_loggedout_dialog_title"> ወጥተዋል</string>
   <string name="registration_loggedout_dialog_message">ለመቀጠል እባክዎ እንደገና ይግቡ</string>
   <string name="registration_loggedout_dialog_confirm">እሺ</string>
+  <string name="registrationphone_next">ቀጣይ</string>
+
   <string name="registrationname_name_label">ሙሉ ስምዎን ይንገሩን</string>
   <string name="registrationname_error_empty_name">እባክዎ ሙሉ ስምዎን ያስገቡ</string>
 
@@ -247,12 +255,6 @@
   <string name="registrationlocation_permission_rationale_description">መዳረሻዎ ክሊኒክዎን ለማግኘት ይረዳናል</string>
   <string name="registrationlocation_permission_rationale_title">ክሊኒክዎን በፍጥነት ያግኙ</string>
   <string name="registrationlocation_allow_access">የአካባቢ መዳረሻ ፍቀድ</string>
-
-  <string name="facilitypicker_screen_title">ክሊኒክዎን ይምረጡ</string>
-  <string name="facilitypicker_search_hint">ክሊኒክዎን ይፈልጉ</string>
-  <!-- Street, District, State -->
-  <string name="facilitypicker_header_suggested_facilities">የተጠቆሙ ክሊኒኮች</string>
-  <string name="facilitypicker_header_all_facilities">ሁሉም ክሊኒኮች</string>
 
   <!-- Onboarding -->
   <string name="onboarding_get_started">ያስጀምሩ</string>
@@ -280,6 +282,7 @@
   <string name="overduelist_diagnosis_label">ምርመራ</string>
   <string name="overduelist_visited">ጎብኝተዋል</string>
   <string name="overduelist_high_risk">ከፍተኛ ተጋላጭነት</string>
+  <string name="overduelist_transferred">ተላልፏል ወደ</string>
 
   <!-- Facility change -->
 
@@ -294,6 +297,7 @@
   <string name="scheduleappointment_next_visit_in">ቀጣዩ ጉብኝት መርሃግብር በ</string>
   <string name="scheduleappointment_not_now">አሁን አይሆንም</string>
   <string name="scheduleappointment_done">ተጠናቅቋል</string>
+  <string name="scheduleappointment_next">ቀጣይ</string>
   <plurals name="scheduleappointment_appointment_in_days">
     <item quantity="one">%s ቀን</item>
     <item quantity="other">%s ቀናት</item>
@@ -334,7 +338,6 @@
   <string name="newmedicalhistory_no">አይ</string>
   <string name="newmedicalhistory_history">ታሪክ</string>
   <string name="newmedicalhistory_diagnosis">ምርመራ (አስፈላጊ)</string>
-  <string name="newmedicalhistory_diagnosis_required_error">እባክዎን ምርመራ ይምረጡ</string>
 
   <!--Prescribed Drug with Dosages Sheet-->
   <string name="prescribed_drugs_dosage_none">ምንም</string>
@@ -363,10 +366,10 @@
   <string name="help_try_again">ድጋሚ ይሞክሩ</string>
 
   <!-- Link Id Sheet-->
-  <string name="linkidwithpatient_button_add">ቀጣይ</string>
-  <string name="linkidwithpatient_button_cancel">ይቅር</string>
-  <string name="linkidwithpatient_add_id_text">ያክሉ %1$s\u0020</string>
-  <string name="linkidwithpatient_to_patient_text">\u0020 ወደ \u00A0ታካሚ?</string>
+  <string name="linkidwithpatient_button_yes">አዎ</string>
+  <string name="linkidwithpatient_button_back">ወደኋላ</string>
+  <string name="linkidwithpatient_text">የ ደም ግፊት ፓስፖርት ይጨምሩ</string>
+  <string name="linkidwithpatient_patient_text">%1$s?</string>
 
   <!-- Add ID to Patient: Search -->
 
@@ -381,7 +384,7 @@
 
   <!-- App update : Dialog -->
   <string name="appupdatedialog_title">መተግበሪያን አዘምን ወይም አድስ</string>
-  <string name="appupdatedialog_body">በቀላሉ ለማዘመን ወደ Play መደብር ይወሰዳሉ</string>
+  <string name="appupdatedialog_body">Simpleን ለማዘመን ወደ Google Play Store ይወሰዳሉ ፡፡</string>
   <string name="appupdatedialog_positive_button_text">አዘምን ወይም አድስ</string>
   <string name="appupdatedialog_negative_button_text">አሁን አይሆንም</string>
 
@@ -450,9 +453,11 @@
   <string name="bloodsugarentry_month">ወር</string>
   <string name="bloodsugarentry_year">አመት</string>
   <string name="bloodsugarentry_error_lower_limit">ልኬት ወይም መጠን ከ30 mg/dL በታች ሊሆን አይችልም</string>
-  <string name="bloodsugarentry_error_lower_limit_hba1c">ልኬት ከ 3% በታች መሆን አይችልም</string>
+  <string name="bloodsugarentry_error_lower_limit_hba1c">መጠኑ ከ 3\u0025 በታች መሆን አይችልም</string>
+  <string name="bloodsugarentry_error_lower_limit_mmol">እሴቱ ከ 1.66 mmol/L ሊያንስ አይችልም</string>
   <string name="bloodsugarentry_error_higher_limit">ውጤቱ ከ1000 mg/dL በላይ ሊሆን አይችልም</string>
-  <string name="bloodsugarentry_error_higher_limit_hba1c">ውጤቱ ከ 25% በላይ መሆን አይችልም</string>
+  <string name="bloodsugarentry_error_higher_limit_hba1c">መጠኑ ከ 25\u0025 በላይ መሆን አይችልም</string>
+  <string name="bloodsugarentry_error_higher_limit_mmol">እሴቱ ከ 55.49 mmol/L ሊበልጥ አይችልም</string>
   <string name="bloodsugarentry_error_empty">ልኬት ባዶ ሊሆን አይችልም</string>
   <string name="bloodsugarentry_error_date_invalid_pattern">በ ቀን/ወር/ዓመት ትክክለኛ ቀን ያስገቡ</string>
   <string name="bloodsugarentry_error_date_is_in_future">ቀን ለወደፊቱ መሆን አይችልም</string>
@@ -567,11 +572,119 @@
   <string name="screensplash_next">ቀጣይ</string>
 
   <!-- Contact doctor sheet -->
-  <string name="contactdoctor_title">ሐኪሞች</string>
-  <string name="contactdoctor_subtitle">ለ %1$s ተመድቧል</string>
+  <string name="contactdoctor_new_title">ሐኪሞች ይገኛሉ</string>
+  <string name="contactdoctor_new_subtitle">ከተቻለ ዋትስአፕ ይጠቀሙ</string>
 
   <!-- Intro Video Screen -->
   <string name="screenintrovideo_how_to_use_simple_app">ሲምፕል መተግበርያን እንዴት መጠቀም ይቻላል</string>
   <string name="screenintrovideo_watch_video">ቪዲዮን ይመልከቱ</string>
   <string name="screenintrovideo_skip">ዝለል</string>
+
+  <!-- Assigned Facility -->
+  <string name="assigned_facility_view_title">የሚመረጥ አከባቢ</string>
+  <string name="assigned_facility_view_change">ለውጥ</string>
+
+  <!-- Facility Picker -->
+  <string name="facilitypicker_search_hint">ክሊኒክዎን ይፈልጉ</string>
+  <!-- Street, District, State -->
+  <string name="facilitypicker_header_suggested_facilities">የተጠቆሙ ክሊኒኮች</string>
+  <string name="facilitypicker_header_all_facilities">ሁሉም ክሊኒኮች</string>
+
+  <!--  TeleMedicine User Signature-->
+  <string name="screen_signature_sign_in_this_box">በዝህ ሳጥን ዉስጥ ምልክት ያድርጉ</string>
+
+  <!-- Drug Duration -->
+  <string name="drug_duration_title">%1$s %2$s</string>
+  <string name="drugDurationLabel">ቀናት</string>
+  <string name="drug_duration_empty_error">የመድኃኒት ጊዜ ባዶ ሊሆን አይችልም</string>
+  <string name="drug_duration_max_error">Yeroon fudhannaa dawaa guyyoota %1$s caaluu hin danda\'u</string>
+
+  <!-- Teleconsultation success-->
+  <string name="screen_teleconsult_success_add_prescription">ትዕዛዝ ያክሉ?</string>
+  <string name="screen_teleconsult_success_yes">አዎ</string>
+  <string name="screen_teleconsult_success_no">አይ</string>
+  <string name="screen_teleconsult_success_teleconsult_recorded">በስልክ ማማከር ተመዝግቧል</string>
+  <string name="screen_teleconsult_success_patient_information">%1$s ፣ %2$s ፣ %3$s</string>
+  <string name="sheet_medicine_frequency_od">OD</string>
+  <string name="sheet_medicine_frequency_bd">BD</string>
+  <string name="sheet_medicine_frequency_tds">TDS</string>
+  <string name="sheet_medicine_frequency_qds">QDS</string>
+  <string name="sheet_medicine_frequency_save">ሴቭ</string>
+
+  <!-- Teleconsult Record Screen -->
+  <string name="screen_teleconsult_record">የ በስልክ ማማከር ቅጂ</string>
+  <string name="screen_teleconsult_record_type">የ በስልክ ማማከር  አይነት</string>
+  <string name="screen_teleconsult_record_type_audio">የድምጽ ጥሪ</string>
+  <string name="screen_teleconsult_record_type_video">የቪዲዮ ጥሪ</string>
+  <string name="screen_teleconsult_record_type_message">ማልዕክት</string>
+  <string name="screen_teleconsult_record_patient_took_medicine">ታካሚው ፀረ-ግፊት እና የስኳር በሽታ መድኃኒቶችን አዘውትሮ እየወሰደ ነው</string>
+  <string name="screen_teleconsult_record_patient_consented">ታካሚው ለ በስልክ ማማከር ፈቃድ ሰጠ</string>
+  <string name="screen_teleconsult_record_done">ተጠናቅቋል</string>
+  <string name="teleconsultnotrecordeddialog_title">በስልክ ማማከር አልተቀዳም</string>
+  <string name="teleconsultnotrecordeddialog_body">እርግጠኛ ነዎት ማቋረጥ ይፈልጋሉ?</string>
+  <string name="teleconsultnotrecordeddialog_positive_button_text">አዎ</string>
+  <string name="teleconsultnotrecordeddialog_negative_button_text">አይ</string>
+
+  <!-- Deeplink Teleconsult not authorised-->
+  <string name="deeplink_medical_officer_not_authorised_to_log_teleconsult">ወደ በስልክ ማማከር ለመግባት ፈቃድ አልተሰጠዎትም</string>
+  <string name="deeplink_please_check_with_your_supervisor">እባክዎን ከተቆጣጣሪዎ ጋር ያረጋግጡ</string>
+  <string name="deeplink_okay_positive_action">እሺ</string>
+
+  <string name="screen_teleconsult_prescription_next">ቀጣይ</string>
+
+  <!-- Teleconsult Medicines View -->
+  <string name="view_teleconsult_medicines">መድኃኒቶች</string>
+  <string name="view_teleconsult_medicines_add">ያክሉ</string>
+  <string name="view_teleconsult_medicines_edit">ያርትዑ ወይም ያስተካክሉ</string>
+  <string name="view_teleconsult_medicines_required_error">Xiqqatu dawaa tokko dabali</string>
+  <plurals name="list_item_teleconsult_medicine_duration">
+    <item quantity="one">%1$s day</item>
+    <item quantity="other">%1$s ቀናት</item>
+  </plurals>
+
+  <!-- Teleconsult Doctor Info View -->
+  <string name="view_teleconsult_doctor_info_instructions">ለታካሚ መመሪያዎች</string>
+  <string name="view_teleconsult_doctor_info_registration_id">የህክምና ምዝገባ መታወቅያ</string>
+  <string name="view_teleconsult_doctor_info_acknowledgement">ይህንን ማዘዣ በመፈረም %1$sመሆኔን አረጋግጣለው</string>
+  <string name="view_teleconsult_doctor_info_add_signature">ፍርምያ ያክሉ</string>
+  <string name="view_teleconsult_doctor_info_signature_error">ፍርምያ ያክሉ</string>
+
+  <string name="screen_teleconsult_share_prescription_download">አውርድ</string>
+  <string name="screen_teleconsult_share_prescription_share">ያጋሩ</string>
+  <string name="screen_teleconsult_share_prescription_done">ተጠናቅቋል</string>
+  <string name="screen_teleconsult_share_prescription_image_using">በመጠቀም ምስልን ያጋሩ</string>
+  <string name="screen_teleconsult_share_prescription_title">የሐኪም ማዘዣ</string>
+  <string name="screen_teleconsult_share_prescription_image_saved">ማዘዣዎች በውርዶች ውስጥ ይቀመጣሉ</string>
+
+  <!-- Select diagnosis error alert dialog -->
+  <string name="select_diagnosis_error_diagnosis_required">ምርመራ ያስፈልጋል</string>
+  <string name="select_diagnosis_error_enter_diagnosis_both_hypertension_diabetes">ለሁለቱም የደም ግፊት እና የስኳር በሽታ ምርመራን ይምረጡ</string>
+  <string name="select_diagnosis_error_ok">እሺ</string>
+  <string name="sheet_teleconsult_status_title">ቴሌ-ማማከር ተጠናቅቋል?</string>
+  <string name="sheet_teleconsult_status_yes">አዎ</string>
+  <string name="sheet_teleconsult_status_no">አይ</string>
+  <string name="sheet_teleconsult_status_waiting">አሁንም በመጠበቅ ላይ</string>
+  <string name="sheet_teleconsult_status_done">ተጠናቅቋል</string>
+
+  <!-- Setup activity -->
+  <string name="setup_cannot_run">መተግበሪያን ማሄድ አልተቻለም</string>
+  <string name="setup_rooted">Simple ስር በሰደደ መሣሪያ ላይ ማሄድ አይቻልም።</string>
+  <string name="setup_close">ዝጋ</string>
+
+  <!-- Blood sugar unit selection dialog -->
+  <string name="blood_sugar_unit_selection_choose">ይምረጡ</string>
+  <string name="blood_sugar_unit_selection_done">አልቋል</string>
+
+  <!-- BP passport sheet -->
+  <string name="sheet_bp_passport_register_new_patient">አዲስ ታካሚ ይመዝግቡ</string>
+  <string name="sheet_bp_passport_add_to_existing_patient">ወደ ነባር ህመምተኛ ያክሉ</string>
+  <string name="sheet_bp_passport_number">የ BP  ፓስፖርት %1$s</string>
+
+  <!-- Instant search -->
+  <string name="patientinstantsearch_assigned_facility_header">ለ %1$s ተመድቧል</string>
+  <string name="patientinstantsearch_nearby_facilities_header">በአቅራቢያ ካሉ ተቋማት</string>
+  <string name="patientsearch_error_no_patients_in_facility">እዚህ በተቋሙ የተመዘገቡትን ህመምተኞች በሙሉ ማየት ይችላሉ</string>
+  <string name="patientsearch_error_no_search_results">ከታካሚው ጋር አይዛመድም</string>
+  <string name="patientsearch_error_no_patients_in_facility_heading">ታካሚ በ %1$s ዉስጥ የለም</string>
+
 </resources>

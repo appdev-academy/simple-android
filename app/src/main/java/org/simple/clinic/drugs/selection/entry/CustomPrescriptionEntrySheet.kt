@@ -3,26 +3,29 @@ package org.simple.clinic.drugs.selection.entry
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.inputmethod.EditorInfo
-import com.jakewharton.rxbinding2.view.RxView
-import com.jakewharton.rxbinding2.widget.RxTextView
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.view.focusChanges
+import com.jakewharton.rxbinding3.widget.editorActions
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.sheet_custom_prescription_entry.*
 import org.simple.clinic.ClinicApp
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.SheetCustomPrescriptionEntryBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
 import org.simple.clinic.drugs.selection.entry.confirmremovedialog.ConfirmRemovePrescriptionDialog
 import org.simple.clinic.drugs.selection.entry.di.CustomPrescriptionEntrySheetComponent
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import org.simple.clinic.widgets.ScreenDestroyed
@@ -41,12 +44,15 @@ class CustomPrescriptionEntrySheet : BottomSheetActivity(), CustomPrescriptionEn
   @Inject
   lateinit var effectHandlerFactory: CustomPrescriptionEntryEffectHandler.Factory
 
+  @Inject
+  lateinit var features: Features
+
   private lateinit var component: CustomPrescriptionEntrySheetComponent
 
   private val onDestroys = PublishSubject.create<ScreenDestroyed>()
 
   private val openAs by unsafeLazy {
-    intent.getParcelableExtra(KEY_OPEN_AS) as OpenAs
+    intent.getParcelableExtra<OpenAs>(KEY_OPEN_AS)!!
   }
 
   private val events by unsafeLazy {
@@ -73,11 +79,35 @@ class CustomPrescriptionEntrySheet : BottomSheetActivity(), CustomPrescriptionEn
     )
   }
 
+  private lateinit var binding: SheetCustomPrescriptionEntryBinding
+
+  private val rootLayout
+    get() = binding.rootLayout
+
+  private val drugNameEditText
+    get() = binding.drugNameEditText
+
+  private val drugDosageEditText
+    get() = binding.drugDosageEditText
+
+  private val saveButton
+    get() = binding.saveButton
+
+  private val removeMedicineButton
+    get() = binding.removeMedicineButton
+
+  private val enterMedicineTextView
+    get() = binding.enterMedicineTextView
+
+  private val editMedicineTextView
+    get() = binding.editMedicineTextView
 
   @SuppressLint("CheckResult")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.sheet_custom_prescription_entry)
+
+    binding = SheetCustomPrescriptionEntryBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     delegate.onRestoreInstanceState(savedInstanceState)
 
@@ -89,18 +119,21 @@ class CustomPrescriptionEntrySheet : BottomSheetActivity(), CustomPrescriptionEn
     setupDiGraph()
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setupDiGraph() {
     component = ClinicApp.appComponent
-        .customPrescriptionEntrySheetComponentBuilder()
-        .activity(this)
-        .build()
+        .customPrescriptionEntrySheetComponent()
+        .create(activity = this)
 
     component.inject(this)
   }
@@ -139,20 +172,24 @@ class CustomPrescriptionEntrySheet : BottomSheetActivity(), CustomPrescriptionEn
 
   private fun drugDosageChanges() = drugDosageEditText.textChanges(::CustomPrescriptionDrugDosageTextChanged)
 
-  private fun drugDosageFocusChanges() = RxView.focusChanges(drugDosageEditText)
+  private fun drugDosageFocusChanges() = drugDosageEditText
+      .focusChanges()
       .map(::CustomPrescriptionDrugDosageFocusChanged)
 
   private fun saveClicks(): Observable<UiEvent> {
-    val dosageImeClicks = RxTextView.editorActions(drugDosageEditText) { it == EditorInfo.IME_ACTION_DONE }
+    val dosageImeClicks = drugDosageEditText
+        .editorActions { it == EditorInfo.IME_ACTION_DONE }
+        .map { Unit }
 
-    return RxView.clicks(saveButton)
+    return saveButton
+        .clicks()
         .mergeWith(dosageImeClicks)
         .map { SaveCustomPrescriptionClicked }
   }
 
   private fun removeClicks(): Observable<UiEvent> =
-      RxView
-          .clicks(removeMedicineButton)
+      removeMedicineButton
+          .clicks()
           .map { RemoveCustomPrescriptionClicked }
 
   override fun setSaveButtonEnabled(enabled: Boolean) {

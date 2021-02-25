@@ -36,6 +36,17 @@ data class PatientAddress(
 
     val deletedAt: Instant?
 ) : Parcelable {
+
+  val completeAddress: String
+    get() = listOf(
+        streetAddress,
+        colonyOrVillage,
+        district,
+        state,
+        zone
+    ).filterNot { it.isNullOrBlank() }
+        .joinToString()
+
   fun withLocality(
       colonyOrVillage: String,
       district: String,
@@ -87,5 +98,8 @@ data class PatientAddress(
 
     @Query("SELECT COUNT(uuid) FROM PatientAddress")
     abstract fun count(): Int
+
+    @Query("SELECT DISTINCT colonyOrVillage FROM PatientAddress ORDER BY colonyOrVillage ASC")
+    abstract fun getColonyOrVillages(): List<String>?
   }
 }

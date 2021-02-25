@@ -1,8 +1,9 @@
 package org.simple.clinic.contactpatient
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.ObservableTransformer
 import io.reactivex.Scheduler
 import org.simple.clinic.overdue.AppointmentCancelReason
@@ -22,7 +23,7 @@ class ContactPatientEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: ContactPatientUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: ContactPatientUiActions): ContactPatientEffectHandler
   }
@@ -43,7 +44,29 @@ class ContactPatientEffectHandler @AssistedInject constructor(
         .addTransformer(MarkPatientAsVisited::class.java, markPatientAsVisited(schedulers.io()))
         .addTransformer(MarkPatientAsDead::class.java, markPatientAsDead(schedulers.io()))
         .addTransformer(CancelAppointment::class.java, cancelAppointment(schedulers.io()))
+        .addTransformer(MarkPatientAsMovedToPrivate::class.java, markPatientAsMovedToPrivate(schedulers.io()))
+        .addTransformer(MarkPatientAsTransferredToAnotherFacility::class.java, markPatientAsMovedToPublic(schedulers.io()))
         .build()
+  }
+
+  private fun markPatientAsMovedToPublic(scheduler: Scheduler): ObservableTransformer<MarkPatientAsTransferredToAnotherFacility, ContactPatientEvent> {
+    return ObservableTransformer { effects ->
+      effects
+          .observeOn(scheduler)
+          .doOnNext { patientRepository.updatePatientStatusToMigrated(patientUuid = it.patientUuid) }
+          .map { AppointmentCancelReason.TransferredToAnotherPublicHospital }
+          .map(::PatientMarkAsMigrated)
+    }
+  }
+
+  private fun markPatientAsMovedToPrivate(scheduler: Scheduler): ObservableTransformer<MarkPatientAsMovedToPrivate, ContactPatientEvent> {
+    return ObservableTransformer { effects ->
+      effects
+          .observeOn(scheduler)
+          .doOnNext { patientRepository.updatePatientStatusToMigrated(patientUuid = it.patientUuid) }
+          .map { AppointmentCancelReason.MovedToPrivatePractitioner }
+          .map(::PatientMarkAsMigrated)
+    }
   }
 
   private fun loadPatientProfile(

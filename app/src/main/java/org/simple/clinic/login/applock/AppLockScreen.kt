@@ -1,31 +1,41 @@
 package org.simple.clinic.login.applock
 
 import android.content.Context
-import android.os.Parcelable
-import android.util.AttributeSet
-import android.widget.RelativeLayout
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
+import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.pin_entry_card.view.*
-import kotlinx.android.synthetic.main.screen_app_lock.view.*
+import io.reactivex.subjects.PublishSubject
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenAppLockBinding
 import org.simple.clinic.di.injector
-import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.BackPressInterceptCallback
-import org.simple.clinic.router.screen.BackPressInterceptor
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.HandlesBack
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.fragments.BaseScreen
 import org.simple.clinic.security.pin.PinAuthenticated
-import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.showKeyboard
 import javax.inject.Inject
 
-class AppLockScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), AppLockScreenUi, AppLockUiActions {
+class AppLockScreen :
+    BaseScreen<
+        AppLockScreenKey,
+        ScreenAppLockBinding,
+        AppLockModel,
+        AppLockEvent,
+        AppLockEffect
+        >(),
+    AppLockScreenUi,
+    AppLockUiActions,
+    HandlesBack {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -33,79 +43,71 @@ class AppLockScreen(context: Context, attrs: AttributeSet) : RelativeLayout(cont
   @Inject
   lateinit var effectHandlerFactory: AppLockEffectHandler.Factory
 
-  private val events by unsafeLazy {
-    Observable
-        .merge(
-            backClicks(),
-            forgotPinClicks(),
-            pinAuthentications()
-        )
-        .compose(ReportAnalyticsEvents())
-  }
+  private val logoutButton
+    get() = binding.logoutButton
 
-  private val delegate by unsafeLazy {
-    val uiRenderer = AppLockUiRenderer(this)
+  private val pinEntryCardView
+    get() = binding.pinEntryCardView
 
-    MobiusDelegate.forView(
-        events = events.ofType(),
-        defaultModel = AppLockModel.create(),
-        init = AppLockInit(),
-        update = AppLockUpdate(),
-        effectHandler = effectHandlerFactory.create(this).build(),
-        modelUpdateListener = uiRenderer::render
-    )
-  }
+  private val pinEditText
+    get() = binding.pinEntryCardView.pinEditText
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    delegate.start()
-  }
+  private val forgotPinButton
+    get() = binding.pinEntryCardView.forgotPinButton
 
-  override fun onDetachedFromWindow() {
-    delegate.stop()
-    super.onDetachedFromWindow()
-  }
+  private val fullNameTextView
+    get() = binding.fullNameTextView
 
-  override fun onSaveInstanceState(): Parcelable? {
-    return delegate.onSaveInstanceState(super.onSaveInstanceState())
-  }
+  private val facilityTextView
+    get() = binding.facilityTextView
 
-  override fun onRestoreInstanceState(state: Parcelable?) {
-    super.onRestoreInstanceState(delegate.onRestoreInstanceState(state))
-  }
+  private val backClicks = PublishSubject.create<AppLockBackClicked>()
 
-  override fun onFinishInflate() {
-    super.onFinishInflate()
-    if (isInEditMode) {
-      return
-    }
+  override fun defaultModel() = AppLockModel.create()
+
+  override fun bindView(layoutInflater: LayoutInflater, container: ViewGroup?) =
+      ScreenAppLockBinding.inflate(layoutInflater, container, false)
+
+  override fun uiRenderer() = AppLockUiRenderer(this)
+
+  override fun events() = Observable
+      .merge(
+          backClicks,
+          forgotPinClicks(),
+          pinAuthentications()
+      )
+      .compose(ReportAnalyticsEvents())
+      .cast<AppLockEvent>()
+
+  override fun createUpdate() = AppLockUpdate()
+
+  override fun createInit() = AppLockInit()
+
+  override fun createEffectHandler() = effectHandlerFactory.create(this).build()
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
     context.injector<Injector>().inject(this)
+  }
 
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     logoutButton.setOnClickListener {
       Toast.makeText(context, "Work in progress", Toast.LENGTH_SHORT).show()
     }
 
     // The keyboard shows up on PIN field automatically when the app is
     // starting, but not when the user comes back from FacilityChangeScreen.
-    pinEntryCardView.pinEditText.showKeyboard()
+    pinEditText.showKeyboard()
   }
 
-  private fun backClicks(): Observable<AppLockBackClicked> {
-    return Observable.create { emitter ->
-      val interceptor = object : BackPressInterceptor {
-        override fun onInterceptBackPress(callback: BackPressInterceptCallback) {
-          emitter.onNext(AppLockBackClicked)
-          callback.markBackPressIntercepted()
-        }
-      }
-      emitter.setCancellable { screenRouter.unregisterBackPressInterceptor(interceptor) }
-      screenRouter.registerBackPressInterceptor(interceptor)
-    }
+  override fun onBackPressed(): Boolean {
+    backClicks.onNext(AppLockBackClicked)
+    return true
   }
 
   private fun forgotPinClicks() =
-      pinEntryCardView
-          .forgotPinButton
+      forgotPinButton
           .clicks()
           .map { AppLockForgotPinClicked }
 
@@ -120,11 +122,11 @@ class AppLockScreen(context: Context, attrs: AttributeSet) : RelativeLayout(cont
   }
 
   override fun setFacilityName(facilityName: String) {
-    this.facilityTextView.text = facilityName
+    facilityTextView.text = facilityName
   }
 
   override fun restorePreviousScreen() {
-    screenRouter.pop()
+    router.pop()
   }
 
   override fun exitApp() {

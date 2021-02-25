@@ -4,28 +4,32 @@ import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.RelativeLayout
+import androidx.appcompat.app.AppCompatActivity
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.screen_new_medical_history.view.*
 import org.simple.clinic.ReportAnalyticsEvents
-import org.simple.clinic.main.TheActivity
+import org.simple.clinic.databinding.ScreenNewMedicalHistoryBinding
+import org.simple.clinic.di.injector
 import org.simple.clinic.medicalhistory.Answer
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion
-import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.DIAGNOSED_WITH_HYPERTENSION
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.DIAGNOSED_WITH_DIABETES
+import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.DIAGNOSED_WITH_HYPERTENSION
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_HEART_ATTACK
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_KIDNEY_DISEASE
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_STROKE
+import org.simple.clinic.medicalhistory.SelectDiagnosisErrorDialog
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.mobius.ViewRenderer
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState.Enabled
+import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState.InProgress
 import org.simple.clinic.widgets.hideKeyboard
 import java.time.Instant
 import java.util.UUID
@@ -37,13 +41,45 @@ class NewMedicalHistoryScreen(
 ) : RelativeLayout(context, attrs), NewMedicalHistoryUi, NewMedicalHistoryUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var utcClock: UtcClock
 
   @Inject
+  lateinit var activity: AppCompatActivity
+
+  @Inject
   lateinit var effectHandlerFactory: NewMedicalHistoryEffectHandler.Factory
+
+  private var binding: ScreenNewMedicalHistoryBinding? = null
+
+  private val toolbar
+    get() = binding!!.toolbar
+
+  private val nextButton
+    get() = binding!!.nextButton
+
+  private val heartAttackQuestionView
+    get() = binding!!.heartAttackQuestionView
+
+  private val strokeQuestionView
+    get() = binding!!.strokeQuestionView
+
+  private val kidneyDiseaseQuestionView
+    get() = binding!!.kidneyDiseaseQuestionView
+
+  private val diabetesQuestionView
+    get() = binding!!.diabetesQuestionView
+
+  private val diagnosisViewContainer
+    get() = binding!!.diagnosisViewContainer
+
+  private val diabetesDiagnosisView
+    get() = binding!!.diabetesDiagnosisView
+
+  private val hypertensionDiagnosisView
+    get() = binding!!.hypertensionDiagnosisView
 
   private val questionViewEvents: Subject<NewMedicalHistoryEvent> = PublishSubject.create()
 
@@ -72,10 +108,13 @@ class NewMedicalHistoryScreen(
     if (isInEditMode) {
       return
     }
-    TheActivity.component.inject(this)
+
+    binding = ScreenNewMedicalHistoryBinding.bind(this)
+
+    context.injector<Injector>().inject(this)
 
     toolbar.setNavigationOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
 
     post {
@@ -90,10 +129,11 @@ class NewMedicalHistoryScreen(
 
   override fun onDetachedFromWindow() {
     mobiusDelegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return mobiusDelegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -101,13 +141,12 @@ class NewMedicalHistoryScreen(
     super.onRestoreInstanceState(mobiusDelegate.onRestoreInstanceState(state))
   }
 
-  private fun saveClicks() =
-      nextButtonFrame.button
-          .clicks()
-          .map { SaveMedicalHistoryClicked() }
+  private fun saveClicks() = nextButton
+      .clicks()
+      .map { SaveMedicalHistoryClicked() }
 
   override fun openPatientSummaryScreen(patientUuid: UUID) {
-    screenRouter.push(PatientSummaryScreenKey(patientUuid, OpenIntention.ViewNewPatient, Instant.now(utcClock)))
+    router.push(PatientSummaryScreenKey(patientUuid, OpenIntention.ViewNewPatient, Instant.now(utcClock)))
   }
 
   override fun setPatientName(patientName: String) {
@@ -161,6 +200,19 @@ class NewMedicalHistoryScreen(
   }
 
   override fun showDiagnosisRequiredError(showError: Boolean) {
-    diagnosisRequiredError.visibility = if (showError) VISIBLE else GONE
+    if (showError)
+      SelectDiagnosisErrorDialog.show(activity.supportFragmentManager)
+  }
+
+  override fun showNextButtonProgress() {
+    nextButton.setButtonState(InProgress)
+  }
+
+  override fun hideNextButtonProgress() {
+    nextButton.setButtonState(Enabled)
+  }
+
+  interface Injector {
+    fun inject(target: NewMedicalHistoryScreen)
   }
 }

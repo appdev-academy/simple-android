@@ -10,13 +10,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.view_allpatientsinfacility.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.allpatientsinfacility.AllPatientsInFacilityListItem.AllPatientsInFacilityListItemCallback
 import org.simple.clinic.allpatientsinfacility.AllPatientsInFacilityListItem.Event.SearchResultClicked
+import org.simple.clinic.databinding.ListAllpatientsinfacilityFacilityHeaderBinding
+import org.simple.clinic.databinding.ListPatientSearchOldBinding
+import org.simple.clinic.databinding.ViewAllpatientsinfacilityBinding
+import org.simple.clinic.di.injector
 import org.simple.clinic.facility.FacilityRepository
-import org.simple.clinic.main.TheActivity
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.platform.crash.CrashReporter
@@ -32,7 +34,18 @@ class AllPatientsInFacilityView(
 ) : FrameLayout(context, attributeSet), AllPatientsInFacilityUi {
 
   private val searchResultsAdapter by unsafeLazy {
-    AllPatientsInFacilityListAdapter(AllPatientsInFacilityListItemCallback(), locale)
+    AllPatientsInFacilityListAdapter(
+        diffCallback = AllPatientsInFacilityListItemCallback(),
+        bindings = mapOf(
+            R.layout.list_allpatientsinfacility_facility_header to { layoutInflater, parent ->
+              ListAllpatientsinfacilityFacilityHeaderBinding.inflate(layoutInflater, parent, false)
+            },
+            R.layout.list_patient_search_old to { layoutInflater, parent ->
+              ListPatientSearchOldBinding.inflate(layoutInflater, parent, false)
+            }
+        ),
+        locale = locale
+    )
   }
 
   @Inject
@@ -60,16 +73,26 @@ class AllPatientsInFacilityView(
     val effectHandler = AllPatientsInFacilityEffectHandler
         .createEffectHandler(facilityRepository, patientRepository, schedulersProvider)
 
-    MobiusDelegate(
-        Observable.never(),
-        AllPatientsInFacilityModel.FETCHING_PATIENTS,
-        AllPatientsInFacilityInit(),
-        AllPatientsInFacilityUpdate(),
-        effectHandler,
-        viewRenderer::render,
-        crashReporter
+    MobiusDelegate.forView(
+        events = Observable.never(),
+        defaultModel = AllPatientsInFacilityModel.FETCHING_PATIENTS,
+        init = AllPatientsInFacilityInit(),
+        update = AllPatientsInFacilityUpdate(),
+        effectHandler = effectHandler,
+        modelUpdateListener = viewRenderer::render
     )
   }
+
+  private var binding: ViewAllpatientsinfacilityBinding? = null
+
+  private val patientsList
+    get() = binding!!.patientsList
+
+  private val noPatientsContainer
+    get() = binding!!.noPatientsContainer
+
+  private val noPatientsLabel
+    get() = binding!!.noPatientsLabel
 
   override fun onFinishInflate() {
     super.onFinishInflate()
@@ -77,12 +100,12 @@ class AllPatientsInFacilityView(
       return
     }
 
-    TheActivity.component.inject(this)
+    binding = ViewAllpatientsinfacilityBinding.bind(this)
+
+    context.injector<Injector>().inject(this)
 
     setupAllPatientsList()
     setupInitialViewVisibility()
-
-    delegate.prepare()
   }
 
   override fun showNoPatientsFound(facilityName: String) {
@@ -104,6 +127,7 @@ class AllPatientsInFacilityView(
   }
 
   override fun onDetachedFromWindow() {
+    binding = null
     delegate.stop()
     super.onDetachedFromWindow()
   }
@@ -143,5 +167,9 @@ class AllPatientsInFacilityView(
       layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
       adapter = searchResultsAdapter
     }
+  }
+
+  interface Injector {
+    fun inject(target: AllPatientsInFacilityView)
   }
 }

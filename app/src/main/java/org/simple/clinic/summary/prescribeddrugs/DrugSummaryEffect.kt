@@ -9,4 +9,7 @@ data class LoadPrescribedDrugs(val patientUuid: UUID) : DrugSummaryEffect()
 
 object LoadCurrentFacility : DrugSummaryEffect()
 
-data class OpenUpdatePrescribedDrugScreen(val patientUuid: UUID, val facility: Facility) : DrugSummaryEffect()
+data class OpenUpdatePrescribedDrugScreen(
+    val patientUuid: UUID,
+    val facility: Facility
+) : DrugSummaryEffect()

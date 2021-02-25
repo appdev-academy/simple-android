@@ -4,18 +4,21 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.widget.RelativeLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding3.view.detaches
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.patient_search_view.view.*
 import org.simple.clinic.R
+import org.simple.clinic.databinding.ListPatientSearchHeaderBinding
+import org.simple.clinic.databinding.ListPatientSearchNoPatientsBinding
+import org.simple.clinic.databinding.ListPatientSearchOldBinding
+import org.simple.clinic.databinding.PatientSearchViewBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.DeferredEventSource
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.patient.PatientSearchCriteria
-import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.ItemAdapter
 import org.simple.clinic.widgets.ScreenDestroyed
@@ -29,16 +32,46 @@ private typealias SearchResultClicked = (UUID) -> Unit
 class PatientSearchView(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), SearchResultsUi {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
-
-  @Inject
   lateinit var effectHandler: SearchResultsEffectHandler
+
+  private var binding: PatientSearchViewBinding? = null
+
+  private val resultsRecyclerView
+    get() = binding!!.resultsRecyclerView
+
+  private val newPatientButton
+    get() = binding!!.newPatientButton
+
+  private val loader
+    get() = binding!!.loader
+
+  private val newPatientContainer
+    get() = binding!!.newPatientContainer
+
+  private val emptyStateView
+    get() = binding!!.emptyStateView
+
+  private val newPatientRationaleTextView
+    get() = binding!!.newPatientRationaleTextView
 
   var registerNewPatientClicked: RegisterNewPatientClicked? = null
 
   var searchResultClicked: SearchResultClicked? = null
 
-  private val adapter = ItemAdapter(SearchResultsItemType.DiffCallback())
+  private val adapter = ItemAdapter(
+      diffCallback = SearchResultsItemType.DiffCallback(),
+      bindings = mapOf(
+          R.layout.list_patient_search_header to { layoutInflater, parent ->
+            ListPatientSearchHeaderBinding.inflate(layoutInflater, parent, false)
+          },
+          R.layout.list_patient_search_no_patients to { layoutInflater, parent ->
+            ListPatientSearchNoPatientsBinding.inflate(layoutInflater, parent, false)
+          },
+          R.layout.list_patient_search_old to { layoutInflater, parent ->
+            ListPatientSearchOldBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   private val externalEvents = DeferredEventSource<SearchResultsEvent>()
 
@@ -59,15 +92,18 @@ class PatientSearchView(context: Context, attrs: AttributeSet) : RelativeLayout(
   @SuppressLint("CheckResult")
   override fun onFinishInflate() {
     super.onFinishInflate()
-    inflate(context, R.layout.patient_search_view, this)
     if (isInEditMode) {
       return
     }
+
+    val layoutInflater = LayoutInflater.from(context)
+    binding = PatientSearchViewBinding.inflate(layoutInflater, this)
 
     context.injector<Injector>().inject(this)
 
     val screenDestroys = detaches().map { ScreenDestroyed() }
     setupScreen(screenDestroys)
+    isSaveEnabled = false
   }
 
   override fun onAttachedToWindow() {
@@ -77,6 +113,7 @@ class PatientSearchView(context: Context, attrs: AttributeSet) : RelativeLayout(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 

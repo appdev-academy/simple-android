@@ -3,20 +3,21 @@ package org.simple.clinic.scheduleappointment.facilityselection
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.activity_select_facility.*
 import org.simple.clinic.ClinicApp
-import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ActivitySelectFacilityBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
 import org.simple.clinic.facility.Facility
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.UiEvent
 import java.util.Locale
@@ -36,7 +37,15 @@ class FacilitySelectionActivity : AppCompatActivity(), FacilitySelectionUi, Faci
   lateinit var locale: Locale
 
   @Inject
+  lateinit var features: Features
+
+  @Inject
   lateinit var effectHandlerFactory: FacilitySelectionEffectHandler.Factory
+
+  private lateinit var binding: ActivitySelectFacilityBinding
+
+  private val facilityPickerView
+    get() = binding.facilityPickerView
 
   private val events by unsafeLazy {
     facilityClicks()
@@ -60,7 +69,9 @@ class FacilitySelectionActivity : AppCompatActivity(), FacilitySelectionUi, Faci
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_select_facility)
+
+    binding = ActivitySelectFacilityBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     facilityPickerView.backClicked = this@FacilitySelectionActivity::finish
 
@@ -70,17 +81,21 @@ class FacilitySelectionActivity : AppCompatActivity(), FacilitySelectionUi, Faci
   override fun attachBaseContext(baseContext: Context) {
     component = ClinicApp
         .appComponent
-        .patientFacilityChangeComponentBuilder()
-        .activity(this)
-        .build()
+        .facilitySelectionActivityComponent()
+        .create(activity = this)
+
     component.inject(this)
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   override fun onStart() {

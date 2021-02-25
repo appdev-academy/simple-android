@@ -1,16 +1,14 @@
 package org.simple.clinic.bloodsugar.entry.confirmremovebloodsugar
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.FragmentManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
 import org.simple.clinic.R
-import org.simple.clinic.bloodsugar.entry.BloodSugarEntrySheet
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.platform.crash.CrashReporter
@@ -56,7 +54,7 @@ class ConfirmRemoveBloodSugarDialog : AppCompatDialogFragment(), ConfirmRemoveBl
   private val events = PublishSubject.create<ConfirmRemoveBloodSugarEvent>()
 
   private val delegate by unsafeLazy {
-    val bloodSugarMeasurementUuid = arguments!!.getSerializable(KEY_BLOOD_SUGAR_UUID) as UUID
+    val bloodSugarMeasurementUuid = requireArguments().getSerializable(KEY_BLOOD_SUGAR_UUID) as UUID
 
     MobiusDelegate.forActivity(
         events = events.ofType(),
@@ -87,9 +85,8 @@ class ConfirmRemoveBloodSugarDialog : AppCompatDialogFragment(), ConfirmRemoveBl
     delegate.onRestoreInstanceState(savedInstanceState)
   }
 
-  @SuppressLint("CheckResult")
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    return AlertDialog.Builder(requireContext(), R.style.Clinic_V2_DialogStyle_Destructive)
+    return MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Simple_MaterialAlertDialog_Destructive)
         .setTitle(R.string.bloodsugarentry_remove_blood_sugar_title)
         .setMessage(R.string.bloodsugarentry_remove_blood_sugar_message)
         .setPositiveButton(R.string.bloodsugarentry_remove_blood_sugar_confirm) { _, _ ->

@@ -3,14 +3,15 @@ package org.simple.clinic.contactpatient.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
+import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding3.view.detaches
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.contactpatient_removeappointment.view.*
 import org.simple.clinic.R
 import org.simple.clinic.contactpatient.RemoveAppointmentReason
+import org.simple.clinic.databinding.ContactpatientRemoveappointmentBinding
+import org.simple.clinic.databinding.ContactpatientRemoveappointmentReasonitemBinding
 import org.simple.clinic.widgets.DividerItemDecorator
 import org.simple.clinic.widgets.ItemAdapter
 import org.simple.clinic.widgets.dp
@@ -24,7 +25,25 @@ class RemoveAppointmentView(
     attributeSet: AttributeSet
 ) : ConstraintLayout(context, attributeSet) {
 
-  private val removalReasonsAdapter = ItemAdapter(RemoveAppointmentReasonItem.DiffCallback())
+  private var binding: ContactpatientRemoveappointmentBinding? = null
+
+  private val removalReasonsRecyclerView
+    get() = binding!!.removalReasonsRecyclerView
+
+  private val removeAppointmentDone
+    get() = binding!!.removeAppointmentDone
+
+  private val removeAppointmentToolbar
+    get() = binding!!.removeAppointmentToolbar
+
+  private val removalReasonsAdapter = ItemAdapter(
+      diffCallback = RemoveAppointmentReasonItem.DiffCallback(),
+      bindings = mapOf(
+          R.layout.contactpatient_removeappointment_reasonitem to { layoutInflater, parent ->
+            ContactpatientRemoveappointmentReasonitemBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   var removeReasonClicked: RemoveReasonClicked? = null
 
@@ -36,7 +55,8 @@ class RemoveAppointmentView(
   override fun onFinishInflate() {
     super.onFinishInflate()
 
-    View.inflate(context, R.layout.contactpatient_removeappointment, this)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = ContactpatientRemoveappointmentBinding.inflate(layoutInflater, this)
 
     removalReasonsRecyclerView.apply {
       setHasFixedSize(true)
@@ -67,5 +87,10 @@ class RemoveAppointmentView(
 
   fun disableRemoveAppointmentDoneButton() {
     removeAppointmentDone.isEnabled = false
+  }
+
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+    binding = null
   }
 }

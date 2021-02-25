@@ -7,15 +7,19 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
-import com.jakewharton.rxbinding2.view.RxView
+import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
-import kotlinx.android.synthetic.main.screen_settings.view.*
 import org.simple.clinic.BuildConfig
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
-import org.simple.clinic.main.TheActivity
+import org.simple.clinic.databinding.ScreenSettingsBinding
+import org.simple.clinic.di.injector
+import org.simple.clinic.feature.Feature
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
 import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.settings.changelanguage.ChangeLanguageScreenKey
 import org.simple.clinic.util.unsafeLazy
@@ -27,10 +31,39 @@ class SettingsScreen(
 ) : LinearLayout(context, attributeSet), SettingsUi, UiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var settingsEffectHandler: SettingsEffectHandler.Factory
+
+  @Inject
+  lateinit var features: Features
+
+  private var binding: ScreenSettingsBinding? = null
+
+  private val changeLanguageButton
+    get() = binding!!.changeLanguageButton
+
+  private val toolbar
+    get() = binding!!.toolbar
+
+  private val updateAppVersionButton
+    get() = binding!!.updateAppVersionButton
+
+  private val userName
+    get() = binding!!.userName
+
+  private val userNumber
+    get() = binding!!.userNumber
+
+  private val currentLanguage
+    get() = binding!!.currentLanguage
+
+  private val appVersion
+    get() = binding!!.appVersion
+
+  private val changeLanguageWidgetGroup
+    get() = binding!!.changeLanguageWidgetGroup
 
   private val uiRenderer: SettingsUiRenderer = SettingsUiRenderer(this)
 
@@ -51,8 +84,10 @@ class SettingsScreen(
     )
   }
 
+  private val isChangeLanguageFeatureEnabled by unsafeLazy { features.isEnabled(Feature.ChangeLanguage) }
+
   private fun changeLanguageButtonClicks(): Observable<SettingsEvent> {
-    return RxView.clicks(changeLanguageButton).map { ChangeLanguage }
+    return changeLanguageButton.clicks().map { ChangeLanguage }
   }
 
   override fun onFinishInflate() {
@@ -61,13 +96,20 @@ class SettingsScreen(
       return
     }
 
-    TheActivity.component.inject(this)
+    binding = ScreenSettingsBinding.bind(this)
 
-    toolbar.setNavigationOnClickListener { screenRouter.pop() }
+    context.injector<Injector>().inject(this)
+
+    toggleChangeLanguageFeature()
+    toolbar.setNavigationOnClickListener { router.pop() }
 
     updateAppVersionButton.setOnClickListener {
       launchPlayStoreForUpdate()
     }
+  }
+
+  private fun toggleChangeLanguageFeature() {
+    changeLanguageWidgetGroup.visibility = if (isChangeLanguageFeatureEnabled) VISIBLE else GONE
   }
 
   override fun onAttachedToWindow() {
@@ -77,6 +119,7 @@ class SettingsScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -98,11 +141,13 @@ class SettingsScreen(
   }
 
   override fun setChangeLanguageButtonVisible() {
-    changeLanguageButton.visibility = View.VISIBLE
+    if (isChangeLanguageFeatureEnabled) {
+      changeLanguageButton.visibility = View.VISIBLE
+    }
   }
 
   override fun openLanguageSelectionScreen() {
-    screenRouter.push(ChangeLanguageScreenKey())
+    router.push(ChangeLanguageScreenKey().wrap())
   }
 
   override fun displayAppVersion(version: String) {
@@ -122,5 +167,9 @@ class SettingsScreen(
       data = Uri.parse("https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
     }
     context.startActivity(intent)
+  }
+
+  interface Injector {
+    fun inject(target: SettingsScreen)
   }
 }

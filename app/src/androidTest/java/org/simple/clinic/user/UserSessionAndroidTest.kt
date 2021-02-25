@@ -19,7 +19,7 @@ import org.simple.clinic.util.Optional
 import org.simple.clinic.util.Rules
 import org.simple.clinic.util.RxErrorsRule
 import org.simple.clinic.util.toOptional
-import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 
 
@@ -58,24 +58,6 @@ class UserSessionAndroidTest {
   }
 
   @Test
-  fun when_logging_in_from_registration_entry_user_should_be_logged_in_locally() {
-    val ongoingRegistrationEntry = testData.ongoingRegistrationEntry(
-        uuid = user.uuid,
-        registrationFacility = facility
-    )
-    userSession.saveOngoingRegistrationEntryAsUser(ongoingRegistrationEntry, Instant.parse("2018-01-01T00:00:00Z")).blockingAwait()
-
-    assertThat(userSession.isUserLoggedIn()).isTrue()
-    val loggedInUser = userSession.loggedInUser().blockingFirst().get()
-    assertThat(loggedInUser.status).isEqualTo(UserStatus.WaitingForApproval)
-
-    val currentFacility = facilityRepository
-        .currentFacility()
-        .blockingFirst()
-    assertThat(currentFacility.uuid).isEqualTo(facility.uuid)
-  }
-
-  @Test
   fun when_user_is_logged_out_then_all_app_data_should_get_cleared() {
     userSession.logout().blockingGet()
 
@@ -84,10 +66,10 @@ class UserSessionAndroidTest {
 
   @Test
   fun when_logged_in_user_is_cleared_the_local_saved_user_must_be_removed_from_database() {
-    assertThat(userSession.isUserLoggedIn()).isTrue()
+    assertThat(userSession.isUserPresentLocally()).isTrue()
 
     userSession.clearLoggedInUser().blockingAwait()
-    assertThat(userSession.isUserLoggedIn()).isFalse()
+    assertThat(userSession.isUserPresentLocally()).isFalse()
 
     val user = userSession.loggedInUserImmediate()
     assertThat(user).isNull()
@@ -110,5 +92,30 @@ class UserSessionAndroidTest {
     userSession.logout().blockingGet()
 
     assertThat(selectedCountryPreference.get()).isEqualTo(Optional.of(country))
+  }
+
+  @Test
+  fun fetching_the_user_and_facility_details_should_work_as_expected() {
+    // given
+    val newFacility = TestData.facility(
+        uuid = UUID.fromString("56ddc7df-6a81-42bc-8659-78b0ccb51edd"),
+        syncGroup = "bb92c082-d749-478a-bd2a-fe7f10055ef0"
+    )
+    facilityRepository
+        .save(listOf(newFacility))
+        .blockingAwait()
+
+    facilityRepository.setCurrentFacilityImmediate(newFacility)
+
+    // when
+    val userFacilityDetails = userSession.userFacilityDetails()
+
+    // then
+    val expected = UserFacilityDetails(
+        userId = user.uuid,
+        currentFacilityId = newFacility.uuid,
+        currentSyncGroupId = newFacility.syncGroup
+    )
+    assertThat(userFacilityDetails).isEqualTo(expected)
   }
 }

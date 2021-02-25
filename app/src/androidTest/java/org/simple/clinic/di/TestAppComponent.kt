@@ -17,14 +17,16 @@ import org.simple.clinic.login.LoginUserWithOtpServerIntegrationTest
 import org.simple.clinic.medicalhistory.MedicalHistoryRepositoryAndroidTest
 import org.simple.clinic.overdue.AppointmentRepositoryAndroidTest
 import org.simple.clinic.patient.PatientRepositoryAndroidTest
-import org.simple.clinic.patient.businessid.BusinessIdMetaDataAdapterAndroidTest
 import org.simple.clinic.protocolv2.ProtocolRepositoryAndroidTest
 import org.simple.clinic.protocolv2.sync.ProtocolSyncAndroidTest
 import org.simple.clinic.rules.LocalAuthenticationRule
 import org.simple.clinic.rules.RegisterPatientRule
 import org.simple.clinic.rules.ServerAuthenticationRule
 import org.simple.clinic.security.pin.BruteForceProtectionAndroidTest
+import org.simple.clinic.signature.SignatureRepositoryAndroidTest
 import org.simple.clinic.storage.DaoWithUpsertAndroidTest
+import org.simple.clinic.storage.DeleteSyncGroupDatabaseAndroidTest
+import org.simple.clinic.storage.PurgeDatabaseAndroidTest
 import org.simple.clinic.storage.migrations.BaseDatabaseMigrationTest
 import org.simple.clinic.storage.migrations.DatabaseMigrationAndroidTest
 import org.simple.clinic.storage.migrations.Migration57AndroidTest
@@ -43,6 +45,9 @@ import org.simple.clinic.sync.PrescriptionSyncIntegrationTest
 import org.simple.clinic.sync.ProtocolSyncIntegrationTest
 import org.simple.clinic.sync.ReportsSyncIntegrationTest
 import org.simple.clinic.sync.TeleconsultationSyncIntegrationTest
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecordRepositoryAndroidTest
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecordSyncIntegrationTest
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecordTest
 import org.simple.clinic.user.OngoingLoginEntryRepositoryTest
 import org.simple.clinic.user.RegisterUserServerIntegrationTest
 import org.simple.clinic.user.UserDaoAndroidTest
@@ -77,7 +82,6 @@ interface TestAppComponent {
   fun inject(target: DatabaseMigrationAndroidTest)
   fun inject(target: ReportsSyncIntegrationTest)
   fun inject(target: MissingPhoneReminderRepositoryAndroidTest)
-  fun inject(target: BusinessIdMetaDataAdapterAndroidTest)
   fun inject(target: HelpSyncIntegrationTest)
   fun inject(target: ServerAuthenticationRule)
   fun inject(target: RegisterUserServerIntegrationTest)
@@ -102,4 +106,10 @@ interface TestAppComponent {
   fun inject(target: BloodSugarSyncIntegrationTest)
   fun inject(target: TeleconsultationSyncIntegrationTest)
   fun inject(target: ProtocolSyncIntegrationTest)
+  fun inject(target: TeleconsultRecordTest)
+  fun inject(target: PurgeDatabaseAndroidTest)
+  fun inject(target: SignatureRepositoryAndroidTest)
+  fun inject(target: TeleconsultRecordRepositoryAndroidTest)
+  fun inject(target: TeleconsultRecordSyncIntegrationTest)
+  fun inject(target: DeleteSyncGroupDatabaseAndroidTest)
 }

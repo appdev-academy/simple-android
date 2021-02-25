@@ -16,4 +16,7 @@ object ShowPatientNotFound : DeepLinkResult()
 object ShowNoPatientUuid : DeepLinkResult()
 
 @Parcelize
-data class OpenPatientSummaryWithTeleconsultLog(val patientUuid: UUID, val teleconsultRecordId: UUID?) : DeepLinkResult()
+data class OpenPatientSummaryWithTeleconsultLog(val patientUuid: UUID, val teleconsultRecordId: UUID) : DeepLinkResult()
+
+@Parcelize
+object ShowTeleconsultNotAllowed : DeepLinkResult()

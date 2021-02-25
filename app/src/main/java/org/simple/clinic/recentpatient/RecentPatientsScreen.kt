@@ -7,11 +7,13 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.recent_patients_screen.view.*
+import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.RecentPatientItemViewBinding
+import org.simple.clinic.databinding.RecentPatientsScreenBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.UtcClock
@@ -28,7 +30,7 @@ class RecentPatientsScreen(
 ) : LinearLayout(context, attrs), AllRecentPatientsUi, AllRecentPatientsUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var utcClock: UtcClock
@@ -38,6 +40,14 @@ class RecentPatientsScreen(
 
   @Inject
   lateinit var uiRendererFactory: AllRecentPatientsUiRenderer.Factory
+
+  private var binding: RecentPatientsScreenBinding? = null
+
+  private val toolbar
+    get() = binding!!.toolbar
+
+  private val recyclerView
+    get() = binding!!.recyclerView
 
   private val events by unsafeLazy {
     adapterEvents()
@@ -57,13 +67,22 @@ class RecentPatientsScreen(
     )
   }
 
-  private val recentAdapter = ItemAdapter(RecentPatientItemDiffCallback())
+  private val recentAdapter = ItemAdapter(
+      diffCallback = RecentPatientItemDiffCallback(),
+      bindings = mapOf(
+          R.layout.recent_patient_item_view to { layoutInflater, parent ->
+            RecentPatientItemViewBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   override fun onFinishInflate() {
     super.onFinishInflate()
     if (isInEditMode) {
       return
     }
+
+    binding = RecentPatientsScreenBinding.bind(this)
 
     context.injector<Injector>().inject(this)
 
@@ -77,6 +96,7 @@ class RecentPatientsScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -90,7 +110,7 @@ class RecentPatientsScreen(
 
   private fun setupScreen() {
     toolbar.setNavigationOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
 
     recyclerView.apply {
@@ -106,12 +126,13 @@ class RecentPatientsScreen(
   }
 
   override fun openPatientSummary(patientUuid: UUID) {
-    screenRouter.push(
+    router.push(
         PatientSummaryScreenKey(
             patientUuid = patientUuid,
             intention = OpenIntention.ViewExistingPatient,
             screenCreatedTimestamp = Instant.now(utcClock)
-        ))
+        )
+    )
   }
 
   override fun updateRecentPatients(allItemTypes: List<RecentPatientItem>) {

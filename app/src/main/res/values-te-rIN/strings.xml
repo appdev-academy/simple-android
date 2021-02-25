@@ -66,19 +66,22 @@
   <string name="patiententry_kebele">కేబిలే</string>
   <string name="patiententry_zone">యూనియన్</string>
   <string name="patiententry_district">జిల్లా</string>
-  <string name="patiententry_woreda">వోర్డా</string>
+  <string name="patiententry_woreda">జోన్</string>
   <string name="patiententry_upazila">ఉపజిలా</string>
   <string name="patiententry_state">రాష్ట్రం</string>
   <string name="patiententry_region">ప్రాంతం</string>
+  <string name="patiententry_doornumber_streetname">ఇంటి నంబర్, వీధి పేరు</string>
+  <string name="patiententry_division_area">విభాగం మరియు ప్రాంతం</string>
   <string name="patiententry_save_patient">తదుపరి</string>
   <string name="patiententry_error_empty_fullname">రోగి పూర్తి పేరును నమోదు చేయండి</string>
   <string name="patiententry_error_empty_gender">రోగి లింగాన్ని ఎంచుకోండి</string>
-  <string name="patiententry_error_empty_colony_or_village">కాలనీ / గ్రామం / వార్డ్ నమోదు చేయండి</string>
-  <string name="patiententry_error_empty_district">రోగి స్వంత జిల్లాను నమోదు చేయండి</string>
-  <string name="patiententry_error_state_empty">రోగి స్వంత రాష్ట్రాన్ని నమోదు చేయండి</string>
+  <string name="patiententry_error_empty_colony_or_village">అవసరం</string>
+  <string name="patiententry_error_empty_district">అవసరం</string>
+  <string name="patiententry_error_state_empty">అవసరం</string>
   <string name="patiententry_error_both_dateofbirth_and_age_empty">రోగి వయస్సును నమోదు చేయండి</string>
   <string name="patiententry_error_invalid_dateofbirth">DD/MM/YYYY ప్రకారం రోగి పుట్టినతేదీని నమోదు చేయండి</string>
   <string name="patiententry_error_dateofbirth_is_in_future">రోగి పుట్టినతేదీని ఫిక్స్ చేయండి</string>
+  <string name="patiententry_error_phonenumber_blank">ఫోన్ నంబర్ ఫీల్డ్ ఖాళీగా ఉండకూడదు</string>
   <string name="patiententry_error_phonenumber_length_less">ఫోన్ నంబర్ %1$s అంకెల కంటే తక్కువగా ఉండకూడదు</string>
   <string name="patiententry_error_phonenumber_length_more">ఫోన్ నంబర్ %1$s అంకెల కంటే ఎక్కువగా ఉండకూడదు</string>
   <string name="patiententry_identifier">బిపి పాస్‌పోర్ట్</string>
@@ -155,6 +158,7 @@
   <string name="patientsummary_prescriptions_update">మందులను సవరించు</string>
   <string name="patientsummary_bp_add_new">రక్తపోటు</string>
   <string name="patientsummary_finish_saving_patient">సేవ్ చేయి</string>
+  <string name="patientsummary_finish_refill_medicine">మందులను మళ్లీ పూరించండి</string>
   <string name="patientsummary_bp_none_added">రక్తపోటును జోడించలేదు</string>
   <string name="patientsummary_edit">సవరించు</string>
 
@@ -171,9 +175,11 @@
   <string name="patientsummary_toolbar_title">%1$s, %2$s, %3$s</string>
   <string name="patientsummary_bangladesh_national_id">ఐడి</string>
 
-  <string name="patientsummary_contact_doctor">వైద్యుడు</string>
-  <string name="patientsummary_teleconsult_network_error">ఇంటర్నెట్ కనెక్షన్ బలహీనంగా ఉన్నందున కనెక్ట్ చేయలేరు</string>
-  <string name="patientsummary_teleconsult_network_error_retry">తిరిగి ప్రయత్నించు</string>
+  <string name="patientsummary_teleconsult">టెలి-కన్సల్ట్</string>
+  <string name="patientsummary_log_teleconsult">లాగ్ టెలికన్సల్ట్</string>
+
+  <string name="patientsummary_registered_faciliy_title">రిజిస్టర్ చేయబడింది</string>
+  <string name="patientsummary_registered_facility">%2$s వద్ద %1$s</string>
 
   <string name="bloodpressuresummaryview_see_all_button">మొత్తం చూడండి</string>
 
@@ -192,7 +198,7 @@
   <string name="timestamp_days_ago">%s రోజుల క్రితం</string>
 
   <!-- Prescribed drugs -->
-  <string name="patient_prescribeddrugs_screen_title">బిపి మందులు</string>
+  <string name="patient_prescribeddrugs_screen_title">మందులు</string>
   <string name="patient_prescribeddrugs_add_custom_prescription">మరో మందును జోడించు</string>
 
   <string name="customprescription_enter_medicine">మందులను నమోదు చేయండి</string>
@@ -231,6 +237,8 @@
   <string name="registration_loggedout_dialog_title">మీరు లాగ్ అవుట్ అయ్యారు</string>
   <string name="registration_loggedout_dialog_message">కొనసాగించడం కోసం మళ్లీ లాగిన్ చేయండి</string>
   <string name="registration_loggedout_dialog_confirm">సరే</string>
+  <string name="registrationphone_next">తదుపరి</string>
+
   <string name="registrationname_name_label">మీ పూర్తి పేరును మాకు చెప్పండి</string>
   <string name="registrationname_error_empty_name">మీ పూర్తి పేరును నమోదు చేయండి</string>
 
@@ -247,12 +255,6 @@
   <string name="registrationlocation_permission_rationale_description">మీ క్లినిక్‌ను కనుగొనడంలో మీ స్థానం సహాయపడుతుంది</string>
   <string name="registrationlocation_permission_rationale_title">మీ క్లినిక్‌ను త్వరగా కనుగొనండి</string>
   <string name="registrationlocation_allow_access">స్థానం యాక్సెస్‌ను అనుమతించు</string>
-
-  <string name="facilitypicker_screen_title">మీ క్లినిక్‌ను ఎంచుకోండి</string>
-  <string name="facilitypicker_search_hint">మీ క్లినిక్ కోసం వెతకండి</string>
-  <!-- Street, District, State -->
-  <string name="facilitypicker_header_suggested_facilities">సూచించిన క్లినిక్‌లు</string>
-  <string name="facilitypicker_header_all_facilities">అన్ని క్లినిక్‌లు</string>
 
   <!-- Onboarding -->
   <string name="onboarding_get_started">ప్రారంభించండి</string>
@@ -280,6 +282,7 @@
   <string name="overduelist_diagnosis_label">Dx</string>
   <string name="overduelist_visited">సందర్శించినవి</string>
   <string name="overduelist_high_risk">అధిక ప్రమాదం</string>
+  <string name="overduelist_transferred">వీరికి బదిలీ చేయబడింది</string>
 
   <!-- Facility change -->
 
@@ -294,6 +297,7 @@
   <string name="scheduleappointment_next_visit_in">షెడ్యూల్ చేసిన తదుపరి సందర్శన</string>
   <string name="scheduleappointment_not_now">ఇప్పుడు కాదు</string>
   <string name="scheduleappointment_done">పూర్తయింది</string>
+  <string name="scheduleappointment_next">తదుపరి</string>
   <plurals name="scheduleappointment_appointment_in_days">
     <item quantity="one">%s రోజు</item>
     <item quantity="other">%s రోజులు</item>
@@ -334,10 +338,10 @@
   <string name="newmedicalhistory_no">కాదు</string>
   <string name="newmedicalhistory_history">చరిత్ర</string>
   <string name="newmedicalhistory_diagnosis">రోగ నిర్ధారణ (అవసరం)</string>
-  <string name="newmedicalhistory_diagnosis_required_error">దయచేసి రోగ నిర్ధారణని ఎంచుకోండి</string>
 
   <!--Prescribed Drug with Dosages Sheet-->
   <string name="prescribed_drugs_dosage_none">ఏదీ కాదు</string>
+  <string name="prescribed_drugs_dosage_remove">తీసివేయి</string>
   <string name="prescribed_drug_with_dosages_sheet_drug_name">%s మోతాదు</string>
 
   <!--Scan Simple ID-->
@@ -363,10 +367,10 @@
   <string name="help_try_again">మళ్లీ ప్రయత్నించండి</string>
 
   <!-- Link Id Sheet-->
-  <string name="linkidwithpatient_button_add">తదుపరి</string>
-  <string name="linkidwithpatient_button_cancel">రద్దు చేయి</string>
-  <string name="linkidwithpatient_add_id_text">%1$s\u0020 జోడించు</string>
-  <string name="linkidwithpatient_to_patient_text">\u0020కు\u00A0రోగి?</string>
+  <string name="linkidwithpatient_button_yes">అవును</string>
+  <string name="linkidwithpatient_button_back">వెనుకకు</string>
+  <string name="linkidwithpatient_text">దీనికి బిపి పాస్‌పోర్ట్‌ను జోడించండి</string>
+  <string name="linkidwithpatient_patient_text">%1$s?</string>
 
   <!-- Add ID to Patient: Search -->
 
@@ -381,7 +385,7 @@
 
   <!-- App update : Dialog -->
   <string name="appupdatedialog_title">యాప్‌ను అప్‌డేట్ చేయి</string>
-  <string name="appupdatedialog_body">సింపుల్‌ను అప్‌డేట్ చేయడానికి మీరు ప్లే స్టోర్‌కు వెళతారు</string>
+  <string name="appupdatedialog_body">సింపుల్ను నవీకరించడానికి మీరు Google Play Store తీకుకెళ్లబడతారు.</string>
   <string name="appupdatedialog_positive_button_text">అప్‌డేట్ చేయి</string>
   <string name="appupdatedialog_negative_button_text">ఇప్పుడు కాదు</string>
 
@@ -449,10 +453,12 @@
   <string name="bloodsugarentry_day">రోజు</string>
   <string name="bloodsugarentry_month">నెల</string>
   <string name="bloodsugarentry_year">సంవత్సరం</string>
-  <string name="bloodsugarentry_error_lower_limit">విలువ 30 ఎంజి/డిఎల్ కంటే తక్కువగా ఉండకూడదు</string>
-  <string name="bloodsugarentry_error_lower_limit_hba1c">విలువ 3% కంటే తక్కువగా ఉండకూడదు</string>
-  <string name="bloodsugarentry_error_higher_limit">విలువ 1000 ఎంజి/డిఎల్ కంటే ఎక్కువగా ఉండకూడదు</string>
-  <string name="bloodsugarentry_error_higher_limit_hba1c">విలువ 25% కంటే ఎక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_lower_limit">విలువ 30 mg/dL కంటే తక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_lower_limit_hba1c">విలువ 3\u0025 కంటే తక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_lower_limit_mmol">విలువ 1.66 mmol/L కంటే తక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_higher_limit">విలువ 1000 mg/dL కంటే ఎక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_higher_limit_hba1c">విలువ 25\u0025 కంటే ఎక్కువగా ఉండకూడదు</string>
+  <string name="bloodsugarentry_error_higher_limit_mmol">విలువ 55.49 mmol/L కంటే ఎక్కువగా ఉండకూడదు</string>
   <string name="bloodsugarentry_error_empty">విలువ ఖాళీగా ఉండకూడదు</string>
   <string name="bloodsugarentry_error_date_invalid_pattern">DD/MM/YYYYలో చెల్లుబాటు అయ్యే తేదీని నమోదు చేయండి</string>
   <string name="bloodsugarentry_error_date_is_in_future">తేదీ భవిష్యత్తులో ఉండకూడదు</string>
@@ -567,11 +573,119 @@
   <string name="screensplash_next">తదుపరి</string>
 
   <!-- Contact doctor sheet -->
-  <string name="contactdoctor_title">వైద్యులు</string>
-  <string name="contactdoctor_subtitle">%1$sకు కేటాయించబడ్డారు</string>
+  <string name="contactdoctor_new_title">వైద్యులు అందుబాటులో ఉన్నారు</string>
+  <string name="contactdoctor_new_subtitle">వీలైత్ WhatsAppని ఉపయోగించండి</string>
 
   <!-- Intro Video Screen -->
   <string name="screenintrovideo_how_to_use_simple_app">సింపుల్ యాప్‌ను ఎలా ఉపయోగించాలి</string>
   <string name="screenintrovideo_watch_video">వీడియోను చూడండి</string>
   <string name="screenintrovideo_skip">దాటవేయి</string>
+
+  <!-- Assigned Facility -->
+  <string name="assigned_facility_view_title">ప్రాధాన్య సౌకర్యం</string>
+  <string name="assigned_facility_view_change">మార్చు</string>
+
+  <!-- Facility Picker -->
+  <string name="facilitypicker_search_hint">మీ క్లినిక్ కోసం వెతకండి</string>
+  <!-- Street, District, State -->
+  <string name="facilitypicker_header_suggested_facilities">సూచించిన క్లినిక్‌లు</string>
+  <string name="facilitypicker_header_all_facilities">అన్ని క్లినిక్‌లు</string>
+
+  <!--  TeleMedicine User Signature-->
+  <string name="screen_signature_sign_in_this_box">బాక్స్‌లోకి సైన్ ఇన్ చేయి</string>
+
+  <!-- Drug Duration -->
+  <string name="drug_duration_title">%1$s %2$s</string>
+  <string name="drugDurationLabel">రోజులు</string>
+  <string name="drug_duration_empty_error">మందుల కాల వ్యవధి ఖాళీగా ఉండకూడదు</string>
+  <string name="drug_duration_max_error">మందుల కాలవ్యవధి %1$s రోజుల కంటే ఎక్కువగా ఉండకూడదు</string>
+
+  <!-- Teleconsultation success-->
+  <string name="screen_teleconsult_success_add_prescription">ఔషదపత్రం జోడించాలా?</string>
+  <string name="screen_teleconsult_success_yes">అవును</string>
+  <string name="screen_teleconsult_success_no">కాదు</string>
+  <string name="screen_teleconsult_success_teleconsult_recorded">టెలికన్సల్ట్ రికార్డ్ చేయబడింది</string>
+  <string name="screen_teleconsult_success_patient_information">%1$s, %2$s, %3$s</string>
+  <string name="sheet_medicine_frequency_od">OD</string>
+  <string name="sheet_medicine_frequency_bd">BD</string>
+  <string name="sheet_medicine_frequency_tds">TDS</string>
+  <string name="sheet_medicine_frequency_qds">QDS</string>
+  <string name="sheet_medicine_frequency_save">సేవ్ చేయి</string>
+
+  <!-- Teleconsult Record Screen -->
+  <string name="screen_teleconsult_record">టెలికన్సల్ట్ రికార్డ్</string>
+  <string name="screen_teleconsult_record_type">టెలికాన్సల్టేషన్ రకం</string>
+  <string name="screen_teleconsult_record_type_audio">ఆడియో కాల్</string>
+  <string name="screen_teleconsult_record_type_video">వీడియో కాల్</string>
+  <string name="screen_teleconsult_record_type_message">సందేశం</string>
+  <string name="screen_teleconsult_record_patient_took_medicine">రోగి యాంటీ-హైపర్‌టెంన్సీవ్ మరియు యాంటీ-డయాబెటిక్ మందులను క్రమం తప్పకుండా తీసుకుంటున్నారు</string>
+  <string name="screen_teleconsult_record_patient_consented">రోగి టెలికాన్సల్టేషన్ కోసం సమ్మతించారు </string>
+  <string name="screen_teleconsult_record_done">పూర్తయింది</string>
+  <string name="teleconsultnotrecordeddialog_title">టెలికన్సల్ట్ రికార్డ్ చేయబడలేదు</string>
+  <string name="teleconsultnotrecordeddialog_body">మీరు ఖచ్చితంగా తొలగించాలనుకుంటున్నారా?</string>
+  <string name="teleconsultnotrecordeddialog_positive_button_text">అవును</string>
+  <string name="teleconsultnotrecordeddialog_negative_button_text">కాదు</string>
+
+  <!-- Deeplink Teleconsult not authorised-->
+  <string name="deeplink_medical_officer_not_authorised_to_log_teleconsult">మీకు టెలికన్సల్ట్‌లోకి లాగిన్ చేయడానికి అధికారం లేదు</string>
+  <string name="deeplink_please_check_with_your_supervisor">దయచేసి మీ పర్యవేక్షకునితో తనిఖీ చేయండి</string>
+  <string name="deeplink_okay_positive_action">సరే</string>
+
+  <string name="screen_teleconsult_prescription_next">తదుపరి</string>
+
+  <!-- Teleconsult Medicines View -->
+  <string name="view_teleconsult_medicines">మందులు</string>
+  <string name="view_teleconsult_medicines_add">జోడించు</string>
+  <string name="view_teleconsult_medicines_edit">సవరించు</string>
+  <string name="view_teleconsult_medicines_required_error">కనీసం ఒక ఔషదం జోడించండి</string>
+  <plurals name="list_item_teleconsult_medicine_duration">
+    <item quantity="one">%1$s రోజు</item>
+    <item quantity="other">%1$s రోజులు</item>
+  </plurals>
+
+  <!-- Teleconsult Doctor Info View -->
+  <string name="view_teleconsult_doctor_info_instructions">రోగి కోసం సూచనలు</string>
+  <string name="view_teleconsult_doctor_info_registration_id">వైద్య రిజిస్ట్రేషన్ ID</string>
+  <string name="view_teleconsult_doctor_info_acknowledgement">ఈ మందుచీటిపై సంతకం చేయడం ద్వారా, నేను %1$s అని అంగీకరిస్తున్నాను</string>
+  <string name="view_teleconsult_doctor_info_add_signature">సంతకం చేయండి</string>
+  <string name="view_teleconsult_doctor_info_signature_error">సంతకం చేయండి</string>
+
+  <string name="screen_teleconsult_share_prescription_download">డౌన్‌లోడ్ చేయి</string>
+  <string name="screen_teleconsult_share_prescription_share">భాగస్వామ్యం చేయి</string>
+  <string name="screen_teleconsult_share_prescription_done">పూర్తయింది</string>
+  <string name="screen_teleconsult_share_prescription_image_using">దీనిని ఉపయోగించి ఇమేజ్ భాగస్వామ్యం చేయి</string>
+  <string name="screen_teleconsult_share_prescription_title">ఔషదపత్రం</string>
+  <string name="screen_teleconsult_share_prescription_image_saved">ఔషదపత్రం డౌన్‌లోడ్‌లలో సేవ్ చేయబడింది</string>
+
+  <!-- Select diagnosis error alert dialog -->
+  <string name="select_diagnosis_error_diagnosis_required">రోగ నిర్ధారణ అవసరం</string>
+  <string name="select_diagnosis_error_enter_diagnosis_both_hypertension_diabetes">రక్తపోటు మరియు మధుమేహం రెండింటి కోసం రోగ నిర్ధారణను ఎంచుకోండి</string>
+  <string name="select_diagnosis_error_ok">సరే</string>
+  <string name="sheet_teleconsult_status_title">టెలి-కన్సల్ట్ పూర్తయ్యిందా?</string>
+  <string name="sheet_teleconsult_status_yes">అవును</string>
+  <string name="sheet_teleconsult_status_no">కాదు</string>
+  <string name="sheet_teleconsult_status_waiting">ఇంకా వేచి ఉన్నాను</string>
+  <string name="sheet_teleconsult_status_done">పూర్తయింది</string>
+
+  <!-- Setup activity -->
+  <string name="setup_cannot_run">అప్లికేషన్ అమలు చేయడం సాధ్యపడదు</string>
+  <string name="setup_rooted">సింపుల్‌ను రూట్ చేసిన పరికరంలో అమలు చేయడం సాధ్యం కాదు.</string>
+  <string name="setup_close">మూసివేయి</string>
+
+  <!-- Blood sugar unit selection dialog -->
+  <string name="blood_sugar_unit_selection_choose">ఎంచుకోండి</string>
+  <string name="blood_sugar_unit_selection_done">పూర్తయ్యింది</string>
+
+  <!-- BP passport sheet -->
+  <string name="sheet_bp_passport_register_new_patient">కొత్త రోగిని నమోదు చేయండి</string>
+  <string name="sheet_bp_passport_add_to_existing_patient">ఇప్పటికే ఉన్న రోగికి జోడించండి</string>
+  <string name="sheet_bp_passport_number">బిపి పాస్‌పోర్ట్ %1$s</string>
+
+  <!-- Instant search -->
+  <string name="patientinstantsearch_assigned_facility_header">%1$sకు కేటాయించబడ్డారు</string>
+  <string name="patientinstantsearch_nearby_facilities_header">సమీప వైద్య సదుపాయ సంస్థల నుండి</string>
+  <string name="patientsearch_error_no_patients_in_facility">ఇక్కడ మీ కేంద్రంలో నమోదు చేసుకున్న అందరు రోగులను మీరు చూడగలరు</string>
+  <string name="patientsearch_error_no_search_results">సరిపోలిన రోగులు లేరు</string>
+  <string name="patientsearch_error_no_patients_in_facility_heading">%1$sలో రోగులు లేరు</string>
+
 </resources>

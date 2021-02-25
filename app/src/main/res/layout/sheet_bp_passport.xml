@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:padding="@dimen/spacing_16"
+  tools:background="?attr/colorSurface">
+
+  <TextView
+    android:id="@+id/bpPassportNumberTextview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/spacing_16"
+    android:layout_marginBottom="@dimen/spacing_16"
+    android:gravity="center"
+    android:textAppearance="?attr/textAppearanceHeadline6"
+    android:textColor="?attr/colorOnSurface"
+    app:layout_constraintBottom_toTopOf="@+id/registerNewPatientButton"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:text="BP Passport 1111111" />
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/registerNewPatientButton"
+    android:layout_width="@dimen/spacing_0"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/spacing_16"
+    android:layout_marginBottom="@dimen/spacing_16"
+    android:text="@string/sheet_bp_passport_register_new_patient"
+    app:icon="@drawable/ic_person_add_24px"
+    app:layout_constraintBottom_toTopOf="@+id/addToExistingPatientButton"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/bpPassportNumberTextview" />
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/addToExistingPatientButton"
+    style="@style/Widget.Simple.Button.Blue2"
+    android:layout_width="@dimen/spacing_0"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_16"
+    android:text="@string/sheet_bp_passport_add_to_existing_patient"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/registerNewPatientButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

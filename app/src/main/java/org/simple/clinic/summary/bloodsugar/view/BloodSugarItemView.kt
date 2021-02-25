@@ -7,11 +7,13 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import kotlinx.android.synthetic.main.patientsummary_bloodsugar_item_content.view.*
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import org.simple.clinic.R
 import org.simple.clinic.bloodsugar.BloodSugarMeasurement
 import org.simple.clinic.bloodsugar.BloodSugarReading
-import org.simple.clinic.util.Truss
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
+import org.simple.clinic.databinding.PatientsummaryBloodsugarItemContentBinding
 import org.simple.clinic.widgets.visibleOrGone
 
 class BloodSugarItemView(
@@ -19,8 +21,29 @@ class BloodSugarItemView(
     attributeSet: AttributeSet
 ) : FrameLayout(context, attributeSet) {
 
+  private var binding: PatientsummaryBloodsugarItemContentBinding? = null
+
+  private val bloodSugarItemRoot
+    get() = binding!!.bloodSugarItemRoot
+
+  private val bloodSugarEditButton
+    get() = binding!!.bloodSugarEditButton
+
+  private val bloodSugarLevelTextView
+    get() = binding!!.bloodSugarLevelTextView
+
+  private val bloodSugarIconImageView
+    get() = binding!!.bloodSugarIconImageView
+
+  private val readingTextView
+    get() = binding!!.readingTextView
+
+  private val dateTimeTextView
+    get() = binding!!.dateTimeTextView
+
   init {
-    LayoutInflater.from(context).inflate(R.layout.patientsummary_bloodsugar_item_content, this, true)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = PatientsummaryBloodsugarItemContentBinding.inflate(layoutInflater, this, true)
   }
 
   fun render(
@@ -28,9 +51,10 @@ class BloodSugarItemView(
       bloodSugarDate: String,
       bloodSugarTime: String?,
       isBloodSugarEditable: Boolean,
+      bloodSugarUnitPreference: BloodSugarUnitPreference,
       editMeasurementClicked: (BloodSugarMeasurement) -> Unit
   ) {
-    renderBloodSugarReading(measurement.reading)
+    renderBloodSugarReading(measurement.reading, bloodSugarUnitPreference)
     renderBloodSugarLevel(measurement.reading)
     renderDateTime(bloodSugarDate, bloodSugarTime)
 
@@ -62,10 +86,10 @@ class BloodSugarItemView(
   }
 
   @SuppressLint("SetTextI18n")
-  private fun renderBloodSugarReading(reading: BloodSugarReading) {
-    val displayUnit = context.getString(reading.displayUnit)
+  private fun renderBloodSugarReading(reading: BloodSugarReading, bloodSugarUnitPreference: BloodSugarUnitPreference) {
+    val displayUnit = context.getString(reading.displayUnit(bloodSugarUnitPreference))
     val displayType = context.getString(reading.displayType)
-    val readingPrefix = reading.displayValue
+    val readingPrefix = reading.displayValue(bloodSugarUnitPreference)
     val readingSuffix = "$displayUnit $displayType"
 
     readingTextView.text = "$readingPrefix${reading.displayUnitSeparator}$readingSuffix"
@@ -73,9 +97,9 @@ class BloodSugarItemView(
 
   private fun renderDateTime(bloodSugarDate: String, bloodSugarTime: String?) {
     val dateTimeTextAppearanceSpan = if (bloodSugarTime != null) {
-      TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Caption_Grey1)
+      TextAppearanceSpan(context, R.style.TextAppearance_Simple_Caption)
     } else {
-      TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Body2Left_Grey1)
+      TextAppearanceSpan(context, R.style.TextAppearance_Simple_Body2)
     }
     val bloodSugarDateTime = if (bloodSugarTime != null) {
       context.getString(R.string.bloodpressurehistory_blood_sugar_date_time, bloodSugarDate, bloodSugarTime)
@@ -83,10 +107,15 @@ class BloodSugarItemView(
       bloodSugarDate
     }
 
-    dateTimeTextView.text = Truss()
-        .pushSpan(dateTimeTextAppearanceSpan)
-        .append(bloodSugarDateTime)
-        .popSpan()
-        .build()
+    dateTimeTextView.text = buildSpannedString {
+      inSpans(dateTimeTextAppearanceSpan) {
+        append(bloodSugarDateTime)
+      }
+    }
+  }
+
+  override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+    binding = null
   }
 }

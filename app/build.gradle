@@ -8,6 +8,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'io.sentry.android.gradle'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: 'com.google.firebase.firebase-perf'
 
 apply from: "../quality/install-git-hook.gradle"
 
@@ -101,7 +102,16 @@ android {
     }
   }
 
+  buildFeatures {
+    viewBinding true
+  }
+
   flavorDimensions 'track'
+
+  kotlinOptions {
+    jvmTarget = 1.8
+    useIR = true
+  }
 
   productFlavors {
     qa {
@@ -112,6 +122,7 @@ android {
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + qaFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + qaMixpanelToken + "\""
       buildConfigField "boolean", "DISABLE_SCREENSHOT", "false"
+      buildConfigField "boolean", "ALLOW_ROOTED_DEVICE", "true"
     }
 
     staging {
@@ -122,6 +133,7 @@ android {
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + stagingFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + stagingMixpanelToken + "\""
       buildConfigField "boolean", "DISABLE_SCREENSHOT", "false"
+      buildConfigField "boolean", "ALLOW_ROOTED_DEVICE", "true"
     }
 
     sandbox {
@@ -132,6 +144,7 @@ android {
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + sandboxFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + sandboxMixpanelToken + "\""
       buildConfigField "boolean", "DISABLE_SCREENSHOT", "false"
+      buildConfigField "boolean", "ALLOW_ROOTED_DEVICE", "true"
     }
 
     production {
@@ -140,6 +153,7 @@ android {
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + productionFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + productionMixpanelToken + "\""
       buildConfigField "boolean", "DISABLE_SCREENSHOT", "true"
+      buildConfigField "boolean", "ALLOW_ROOTED_DEVICE", "false"
     }
 
     security {
@@ -150,6 +164,7 @@ android {
       buildConfigField "String", "FALLBACK_ENDPOINT", "\"" + securityFallbackApiEndpoint + "\""
       buildConfigField "String", "MIXPANEL_TOKEN", "\"" + securityMixpanelToken + "\""
       buildConfigField "boolean", "DISABLE_SCREENSHOT", "true"
+      buildConfigField "boolean", "ALLOW_ROOTED_DEVICE", "false"
     }
   }
 
@@ -219,8 +234,16 @@ android {
   }
 
   afterEvaluate {
-    tasks.findAll { it.name in ["assembleStagingRelease", "assembleSandboxRelease", "assembleProductionRelease", "assembleSecurityRelease"] }
-        .forEach { it.finalizedBy deleteProguardMappings }
+    def buildTypes = [
+        "assembleStagingRelease",
+        "assembleSandboxRelease",
+        "assembleProductionRelease",
+        "assembleSecurityRelease"
+    ]
+
+    buildTypes.forEach { buildType ->
+      tasks.findByName(buildType).finalizedBy(deleteProguardMappings)
+    }
   }
 }
 
@@ -255,9 +278,8 @@ dependencies {
 
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
 
-  implementation "androidx.appcompat:appcompat:$versions.supportLib"
   implementation "androidx.recyclerview:recyclerview:$versions.recyclerView"
-  implementation "com.google.android.material:material:$versions.material"
+  implementation("com.google.android.material:material:$versions.material")
   implementation "androidx.cardview:cardview:$versions.cardview"
   implementation "androidx.constraintlayout:constraintlayout:$versions.constraintLayout"
   implementation "androidx.room:room-runtime:$versions.room"
@@ -265,11 +287,12 @@ dependencies {
   implementation "androidx.room:room-rxjava2:$versions.room"
   implementation "com.google.android.gms:play-services-location:$versions.playServicesLocation"
   implementation "com.google.firebase:firebase-config:$versions.firebaseConfig"
+  implementation "com.google.firebase:firebase-perf:$versions.firebasePerformance"
 
   implementation "androidx.camera:camera-core:$versions.camerax"
   implementation "androidx.camera:camera-camera2:$versions.camerax"
   implementation "androidx.camera:camera-view:$versions.cameraView"
-  implementation "androidx.camera:camera-lifecycle:$versions.cameraxLifecycle"
+  implementation "androidx.camera:camera-lifecycle:$versions.cameraLifecycle"
 
   implementation "com.google.zxing:core:$versions.zxing"
 
@@ -282,15 +305,14 @@ dependencies {
 
   implementation "com.google.dagger:dagger:$versions.dagger"
   kapt "com.google.dagger:dagger-compiler:$versions.dagger"
-  implementation("com.github.JakeWharton:kotterknife:$versions.kotterKnife") {
-    exclude group: 'com.android.support'
-  }
+
   implementation "io.reactivex.rxjava2:rxjava:$versions.rxJava"
   implementation "io.reactivex.rxjava2:rxandroid:$versions.rxAndroid"
   implementation "com.jakewharton.rxbinding2:rxbinding:$versions.rxBinding"
   implementation "com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:$versions.rxBinding"
   implementation "com.jakewharton.rxbinding3:rxbinding:$versions.rxBinding3"
   implementation "com.jakewharton.rxbinding3:rxbinding-recyclerview:$versions.rxBinding3"
+  implementation "com.jakewharton.rxbinding3:rxbinding-appcompat:$versions.rxBinding3"
   implementation "io.reactivex.rxjava2:rxkotlin:$versions.rxKotlin"
   implementation "com.squareup.retrofit2:retrofit:$versions.retrofit"
   implementation "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
@@ -306,8 +328,7 @@ dependencies {
   implementation("io.sentry:sentry-android:$versions.sentry") {
     exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
   }
-  implementation "com.xwray:groupie:$versions.groupie"
-  implementation "com.xwray:groupie-kotlin-android-extensions:$versions.groupie"
+
   implementation "com.mikepenz:itemanimators:$versions.itemAnimators@aar"
   implementation "org.mindrot:jbcrypt:$versions.jbcrypt"
   implementation "com.squareup.flow:flow:$versions.flow"
@@ -315,12 +336,10 @@ dependencies {
 
   implementation "com.google.android.gms:play-services-auth:$versions.playServicesAuth"
   implementation "io.github.inflationx:viewpump:$versions.viewPump"
-  implementation "com.facebook.shimmer:shimmer:$versions.fbShimmer"
   implementation "com.alimuzaffar.lib:pinentryedittext:$versions.pinEntryEditText"
   implementation "info.debatty:java-string-similarity:$versions.javaStringSimilarity"
   debugImplementation "com.squareup.leakcanary:leakcanary-android:$versions.leakCanary"
 
-  implementation "com.budiyev.android:code-scanner:$versions.codeScanner"
   implementation "com.google.android.play:core:$versions.playCore"
 
   implementation "com.simplecityapps:recyclerview-fastscroll:$versions.fastScroll"
@@ -336,9 +355,6 @@ dependencies {
   implementation "com.fasterxml.uuid:java-uuid-generator:$versions.uuidGenerator"
   implementation project(":simple-platform")
   implementation project(":simple-visuals")
-
-  compileOnly "com.squareup.inject:assisted-inject-annotations-dagger2:$versions.assistedInject"
-  kapt "com.squareup.inject:assisted-inject-processor-dagger2:$versions.assistedInject"
 
   debugImplementation "com.facebook.flipper:flipper:$versions.flipper"
   debugImplementation "com.facebook.flipper:flipper-network-plugin:$versions.flipper"
@@ -356,7 +372,7 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
   }
   runtimeOnly "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-  runtimeOnly "ch.qos.logback:logback-classic:$versions.logback"
+  implementation "ch.qos.logback:logback-classic:$versions.logback"
 
   implementation "androidx.appcompat:appcompat:$versions.appcompat"
   implementation "com.airbnb.android:lottie:$versions.lottie"
@@ -369,6 +385,14 @@ dependencies {
 
   // Import the BoM for the Firebase platform
   implementation platform('com.google.firebase:firebase-bom:26.1.1')
+
+  lintChecks project(path: ':lint')
+
+  implementation "com.github.scottyab:rootbeer:$versions.rootbeer"
+
+  implementation "com.google.android.gms:play-services-mlkit-barcode-scanning:$versions.mlKitBarcode"
+
+  implementation "androidx.fragment:fragment:$versions.fragment"
 
   // Declare the dependencies for the Crashlytics and Analytics libraries
   // When using the BoM, you don't specify versions in Firebase library dependencies

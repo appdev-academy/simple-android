@@ -1,7 +1,8 @@
 package org.simple.clinic.facilitypicker
 
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.simple.clinic.facility.change.FacilityListItemBuilder
 import org.simple.clinic.location.LocationUpdate
 import org.simple.clinic.mobius.ViewRenderer
@@ -12,7 +13,7 @@ class FacilityPickerUiRenderer @AssistedInject constructor(
     @Assisted private val ui: FacilityPickerUi
 ) : ViewRenderer<FacilityPickerModel> {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(ui: FacilityPickerUi): FacilityPickerUiRenderer
   }
@@ -23,18 +24,6 @@ class FacilityPickerUiRenderer @AssistedInject constructor(
       renderFacilities(model)
     } else {
       ui.showProgressIndicator()
-    }
-
-    if (model.hasLoadedTotalFacilityCount) {
-      switchToolbarType(model)
-    }
-  }
-
-  private fun switchToolbarType(model: FacilityPickerModel) {
-    if (model.totalFacilityCount!! > 0) {
-      ui.showToolbarWithSearchField()
-    } else {
-      ui.showToolbarWithoutSearchField()
     }
   }
 

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.simple.clinic.teleconsultlog.prescription.TeleconsultPrescriptionScreen xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <com.google.android.material.appbar.AppBarLayout
+    android:id="@+id/appbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <com.google.android.material.appbar.MaterialToolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      app:layout_constraintTop_toTopOf="parent"
+      app:navigationIcon="@drawable/ic_arrow_back_24dp"
+      tools:title="Anish Acharya, M, 56" />
+
+  </com.google.android.material.appbar.AppBarLayout>
+
+  <androidx.core.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="@dimen/spacing_8"
+    app:layout_constraintBottom_toTopOf="@id/buttonFrame"
+    app:layout_constraintTop_toBottomOf="@id/appbar">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:clipChildren="false"
+      android:clipToPadding="false"
+      android:orientation="vertical">
+
+      <org.simple.clinic.teleconsultlog.prescription.patientinfo.TeleconsultPatientInfoView
+        android:id="@+id/teleconsultPrescriptionPatientInfoView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+      <org.simple.clinic.teleconsultlog.prescription.medicines.TeleconsultMedicinesView
+        android:id="@+id/teleconsultPrescriptionMedicinesView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_8" />
+
+      <org.simple.clinic.teleconsultlog.prescription.doctorinfo.TeleconsultDoctorInfoView
+        android:id="@+id/teleconsultPrescriptionDoctorInfoView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_8" />
+
+    </LinearLayout>
+
+  </androidx.core.widget.NestedScrollView>
+
+  <FrameLayout
+    android:id="@+id/buttonFrame"
+    style="@style/Widget.Simple.Button.Frame"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintBottom_toBottomOf="parent">
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/nextButton"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="@dimen/spacing_8"
+      android:layout_marginEnd="@dimen/spacing_8"
+      android:text="@string/screen_teleconsult_prescription_next" />
+
+  </FrameLayout>
+
+</org.simple.clinic.teleconsultlog.prescription.TeleconsultPrescriptionScreen>

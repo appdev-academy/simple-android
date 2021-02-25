@@ -1,8 +1,9 @@
 package org.simple.clinic.registration.phone
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 import org.simple.clinic.facility.FacilitySync
@@ -22,7 +23,7 @@ class RegistrationPhoneEffectHandler @AssistedInject constructor(
     private val userLookup: UserLookup
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: RegistrationPhoneUiActions): RegistrationPhoneEffectHandler
   }
@@ -54,7 +55,8 @@ class RegistrationPhoneEffectHandler @AssistedInject constructor(
   private fun syncFacilities(): ObservableTransformer<SyncFacilities, RegistrationPhoneEvent> {
     return ObservableTransformer { effects ->
       effects
-          .switchMapSingle { facilitySync.pullWithResult().subscribeOn(schedulers.io()) }
+          .observeOn(schedulers.io())
+          .map { facilitySync.pullWithResult() }
           .map { FacilitiesSynced.fromFacilityPullResult(it) }
     }
   }
@@ -75,7 +77,8 @@ class RegistrationPhoneEffectHandler @AssistedInject constructor(
             OngoingLoginEntry(
                 uuid = it.userUuid,
                 phoneNumber = it.number,
-                status = it.status
+                status = it.status,
+                capabilities = null
             )
           }
           .flatMapSingle {

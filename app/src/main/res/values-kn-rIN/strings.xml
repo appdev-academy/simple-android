@@ -66,19 +66,22 @@
   <string name="patiententry_kebele">ಕೆಬೇಲ್</string>
   <string name="patiententry_zone">ಪ್ರದೇಶ</string>
   <string name="patiententry_district">ಜಿಲ್ಲೆ</string>
-  <string name="patiententry_woreda">ವೊರೇಡಾ</string>
+  <string name="patiententry_woreda">ವಲಯ</string>
   <string name="patiententry_upazila">ಉಪಜಿಲ್ಲೆ</string>
   <string name="patiententry_state">ರಾಜ್ಯ</string>
   <string name="patiententry_region">ಪ್ರದೇಶ</string>
+  <string name="patiententry_doornumber_streetname">ಡೋರ್ ಸಂಖ್ಯೆ, ರಸ್ತೆ ಹೆಸರು</string>
+  <string name="patiententry_division_area">ವಿಭಾಗ ಮತ್ತು ಪ್ರದೇಶ</string>
   <string name="patiententry_save_patient">ಮುಂದಿನ</string>
   <string name="patiententry_error_empty_fullname">ರೋಗಿಯ ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂದಿಸಿ</string>
   <string name="patiententry_error_empty_gender">ರೋಗಿಯ ಲಿಂಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
-  <string name="patiententry_error_empty_colony_or_village">ಕಾಲೋನಿಯನ್ನು ನಮೂದಿಸಿ / ಗ್ರಾಮ / ವಾರ್ಡ್</string>
-  <string name="patiententry_error_empty_district">ರೋಗಿಯ ಸ್ವಂತ ಜಿಲ್ಲೆಯನ್ನು ನಮೂದಿಸಿ</string>
-  <string name="patiententry_error_state_empty">ರೋಗಿಯ ಸ್ವಂತ ರಾಜ್ಯವನ್ನು ನಮೂದಿಸಿ</string>
+  <string name="patiententry_error_empty_colony_or_village">ಅಗತ್ಯವಿದೆ</string>
+  <string name="patiententry_error_empty_district">ಅಗತ್ಯವಿದೆ</string>
+  <string name="patiententry_error_state_empty">ಅಗತ್ಯವಿದೆ</string>
   <string name="patiententry_error_both_dateofbirth_and_age_empty">ರೋಗಿಯ ವಯಸ್ಸನ್ನು ನಮೂದಿಸಿ</string>
   <string name="patiententry_error_invalid_dateofbirth">ರೋಗಿಯ ಜನ್ಮ ದಿನಾಂಕವನ್ನು DD/MM/YYYY ನಲ್ಲಿ ನಮೂದಿಸಿ</string>
   <string name="patiententry_error_dateofbirth_is_in_future">ರೋಗಿಯ ಜನ್ಮ ದಿನಾಂಕವನ್ನು ಸರಿಪಡಿಸಿ</string>
+  <string name="patiententry_error_phonenumber_blank">ಫೋನ್ ಸಂಖ್ಯೆ ಖಾಲಿ ಇರಬಾರದು</string>
   <string name="patiententry_error_phonenumber_length_less">ಫೋನ್ ನಂಬರ್ %1$s ಅಂಕಿಗಳಿಗಿಂತ ಕಡಿಮೆ ಇರಬಾರದು</string>
   <string name="patiententry_error_phonenumber_length_more">ಫೋನ್ ನಂಬರ್ %1$s ಅಂಕಿಗಳಿಗಿಂತ ಹೆಚ್ಚು ಇರಬಾರದು</string>
   <string name="patiententry_identifier">ಬಿಪಿ ಪಾಸ್‌ಪೋರ್ಟ್</string>
@@ -155,6 +158,7 @@
   <string name="patientsummary_prescriptions_update">ಔಷಧಗಳನ್ನು ಎಡಿಟ್ ಮಾಡಿ</string>
   <string name="patientsummary_bp_add_new">ರಕ್ತದೊತ್ತಡ</string>
   <string name="patientsummary_finish_saving_patient">ಉಳಿಸಿ</string>
+  <string name="patientsummary_finish_refill_medicine">ಔಷಧಿ ರೀಫಿಲ್ ಮಾಡಿ</string>
   <string name="patientsummary_bp_none_added">ಯಾವುದೇ ರಕ್ತದ ಒತ್ತಡವನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ</string>
   <string name="patientsummary_edit">ಸಂಪಾದಿಸಿ</string>
 
@@ -171,9 +175,11 @@
   <string name="patientsummary_toolbar_title">%1$s, %2$s, %3$s</string>
   <string name="patientsummary_bangladesh_national_id">ಐಡಿ</string>
 
-  <string name="patientsummary_contact_doctor">ವೈದ್ಯ</string>
-  <string name="patientsummary_teleconsult_network_error">ಕಳಪೆ ಇಂಟರ್ನೆಟ್ ಕಾರಣದಿಂದ ಸಂಪರ್ಕಿಸಲಾಗುವುದಿಲ್ಲ</string>
-  <string name="patientsummary_teleconsult_network_error_retry">ಮರುಪ್ರಯತ್ನಿಸಿ</string>
+  <string name="patientsummary_teleconsult">ಟೆಲೆ-ಕನ್ಸಲ್ಟ್</string>
+  <string name="patientsummary_log_teleconsult">ಲಾಗ್ ಟೆಲೆಕನ್ಸಲ್ಟ್</string>
+
+  <string name="patientsummary_registered_faciliy_title">ನೋಂದಾಯಿಸಲಾಗಿದೆ</string>
+  <string name="patientsummary_registered_facility">%1$s ರಂದು %2$s ಸಮಯಕ್ಕೆ</string>
 
   <string name="bloodpressuresummaryview_see_all_button">ಎಲ್ಲವನ್ನು ವೀಕ್ಷಿಸಿ</string>
 
@@ -192,7 +198,7 @@
   <string name="timestamp_days_ago">%s ದಿನಗಳ ಹಿಂದೆ</string>
 
   <!-- Prescribed drugs -->
-  <string name="patient_prescribeddrugs_screen_title">ಬಿಪಿ ಔಷಧಗಳು</string>
+  <string name="patient_prescribeddrugs_screen_title">ಔಷಧಗಳು</string>
   <string name="patient_prescribeddrugs_add_custom_prescription">ಇನ್ನೊಂದು ಔಷಧವನ್ನು ಸೇರಿಸಿ</string>
 
   <string name="customprescription_enter_medicine">ಔಷಧವನ್ನು ನಮೂದಿಸಿ</string>
@@ -231,6 +237,8 @@
   <string name="registration_loggedout_dialog_title">ನೀವು ಲಾಗ್ ಔಟ್ ಆಗಿರುವಿರಿ</string>
   <string name="registration_loggedout_dialog_message">ಮುಂದುವರೆಯಲು ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಲಾಗಿನ್ ಮಾಡಿ</string>
   <string name="registration_loggedout_dialog_confirm">ಸರಿ</string>
+  <string name="registrationphone_next">ಮುಂದಿನ</string>
+
   <string name="registrationname_name_label">ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮಗೆ ತಿಳಿಸಿ</string>
   <string name="registrationname_error_empty_name">ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂದಿಸಿ</string>
 
@@ -247,12 +255,6 @@
   <string name="registrationlocation_permission_rationale_description">ನಿಮ್ಮ ಪ್ರದೇಶವು ನಿಮ್ಮ ಕ್ಲಿನಿಕ್ ಅನ್ನು ಹುಡುಕಲು ನಮಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ</string>
   <string name="registrationlocation_permission_rationale_title">ನಿಮ್ಮ ಕ್ಲಿನಿಕ್ ಅನ್ನು ವೇಗವಾಗಿ ಹುಡುಕಿ</string>
   <string name="registrationlocation_allow_access">ಪ್ರದೇಶದ ಪ್ರವೇಶಕ್ಕೆ ಅನುಮತಿಸಿ</string>
-
-  <string name="facilitypicker_screen_title">ನಿಮ್ಮ ಕ್ಲಿನಿಕ್ ಆಯ್ಕೆಮಾಡಿ</string>
-  <string name="facilitypicker_search_hint">ನಿಮ್ಮ ಕ್ಲಿನಿಕ್‌ಗಾಗಿ ಶೋಧಿಸಿ</string>
-  <!-- Street, District, State -->
-  <string name="facilitypicker_header_suggested_facilities">ಸಲಹೆ ಮಾಡಲಾದ ಕ್ಲಿನಿಕ್‌ಗಳು</string>
-  <string name="facilitypicker_header_all_facilities">ಎಲ್ಲಾ ಕ್ಲಿನಿಕ್‌ಗಳು</string>
 
   <!-- Onboarding -->
   <string name="onboarding_get_started">ಪ್ರಾರಂಭಿಸಿ</string>
@@ -280,6 +282,7 @@
   <string name="overduelist_diagnosis_label">Dx</string>
   <string name="overduelist_visited">ಭೇಟಿ ನೀಡಲಾಗಿದೆ</string>
   <string name="overduelist_high_risk">ಹೆಚ್ಚಿನ ಅಪಾಯ</string>
+  <string name="overduelist_transferred">ಇಲ್ಲಿಗೆ ವರ್ಗಾಯಿಸಲಾಗಿದೆ</string>
 
   <!-- Facility change -->
 
@@ -294,6 +297,7 @@
   <string name="scheduleappointment_next_visit_in">ಇಷ್ಟು ಸಮಯದಲ್ಲಿ ಮುಂದಿನ ಭೇಟಿ ನಿಗದಿಪಡಿಸಿ</string>
   <string name="scheduleappointment_not_now">ಈಗಲ್ಲ</string>
   <string name="scheduleappointment_done">ಪೂರ್ಣಗೊಳಿಸಲಾಗಿದೆ</string>
+  <string name="scheduleappointment_next">ಮುಂದಿನ</string>
   <plurals name="scheduleappointment_appointment_in_days">
     <item quantity="one">%s ದಿನ</item>
     <item quantity="other">%s ದಿನಗಳು</item>
@@ -334,10 +338,10 @@
   <string name="newmedicalhistory_no">ಇಲ್ಲ</string>
   <string name="newmedicalhistory_history">ಇತಿಹಾಸ</string>
   <string name="newmedicalhistory_diagnosis">ರೋಗನಿರ್ಣಯ (ಅಗತ್ಯವಿದೆ)</string>
-  <string name="newmedicalhistory_diagnosis_required_error">ದಯವಿಟ್ಟು ರೋಗನಿರ್ಣಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
 
   <!--Prescribed Drug with Dosages Sheet-->
   <string name="prescribed_drugs_dosage_none">ಯಾವುದೂ ಅಲ್ಲ</string>
+  <string name="prescribed_drugs_dosage_remove">ತೆಗೆದುಹಾಕಿ</string>
   <string name="prescribed_drug_with_dosages_sheet_drug_name">%s ಡೋಸೇಜ್</string>
 
   <!--Scan Simple ID-->
@@ -363,10 +367,10 @@
   <string name="help_try_again">ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ</string>
 
   <!-- Link Id Sheet-->
-  <string name="linkidwithpatient_button_add">ಮುಂದಿನ</string>
-  <string name="linkidwithpatient_button_cancel">ರದ್ದುಮಾಡಿ</string>
-  <string name="linkidwithpatient_add_id_text">%1$s\u0020 ಸೇರಿಸಿ</string>
-  <string name="linkidwithpatient_to_patient_text">\u0020\u00A0ರೋಗಿಗೆ?</string>
+  <string name="linkidwithpatient_button_yes">ಹೌದು</string>
+  <string name="linkidwithpatient_button_back">ಹಿಂದೆ</string>
+  <string name="linkidwithpatient_text">ಬಿಪಿ ಪಾಸ್‌ಪೋರ್ಟ್ ಸೇರಿಸಿ</string>
+  <string name="linkidwithpatient_patient_text">%1$s?</string>
 
   <!-- Add ID to Patient: Search -->
 
@@ -381,7 +385,7 @@
 
   <!-- App update : Dialog -->
   <string name="appupdatedialog_title">ಆ್ಯಪ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ</string>
-  <string name="appupdatedialog_body">ಸಿಂಪಲ್ ಅನ್ನು ಅಪ್‌ಡೇಟ್ ಮಾಡಲು ನಿಮ್ಮನ್ನು ಪ್ಲೇ ಸ್ಟೋರ್‌ಗೆ ಒಯ್ಯಲಾಗುತ್ತದೆ</string>
+  <string name="appupdatedialog_body">ಸಿಂಪಲ್ ಅನ್ನು ಅಪ್ಡೇಟ್ ಮಾಡುವುದಕ್ಕಾಗಿ ನಿಮ್ಮನ್ನು Google Play Store ಗೆ ಕರೆದೊಯ್ಯಲಾಗುತ್ತದೆ.</string>
   <string name="appupdatedialog_positive_button_text">ಅಪ್‌ಡೇಟ್ ಮಾಡಿ</string>
   <string name="appupdatedialog_negative_button_text">ಈಗಲ್ಲ</string>
 
@@ -431,7 +435,7 @@
   <!-- Select Country Screen -->
   <string name="selectcountry_logo_contentdescription">ಸಿಂಪಲ್ ಲೋಗೊ</string>
   <string name="selectcountry_next">ಮುಂದಿನ</string>
-  <string name="selectcountry_title">ನಿಮ್ಮ ದೇಶವನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
+  <string name="selectcountry_title">ನಿಮ್ಮ ದೇಶ ಆಯ್ಕೆಮಾಡಿ</string>
   <string name="selectcountry_networkerror">ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕವಿಲ್ಲ!</string>
   <string name="selectcountry_servererror">ಸರ್ವರ್ ದೋಷ! ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ!</string>
   <string name="selectcountry_genericerror">ಏನೋ ತಪ್ಪಾಗಿದೆ! ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ!</string>
@@ -449,10 +453,12 @@
   <string name="bloodsugarentry_day">ದಿನ</string>
   <string name="bloodsugarentry_month">ತಿಂಗಳು</string>
   <string name="bloodsugarentry_year">ವರ್ಷ</string>
-  <string name="bloodsugarentry_error_lower_limit">ಮೌಲ್ಯವು 30 ಮಿಗ್ರಾಂ/ಡೆಲೀಗಿಂತ ಕಡಿಮೆ ಇರಬಾರದು</string>
-  <string name="bloodsugarentry_error_lower_limit_hba1c">ಮೌಲ್ಯವು 3% ಗಿಂತ ಕಡಿಮೆ ಇರಬಾರದು</string>
-  <string name="bloodsugarentry_error_higher_limit">ಮೌಲ್ಯವು 1000 ಮಿಗ್ರಾಂ/ಡೆಲೀಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು</string>
-  <string name="bloodsugarentry_error_higher_limit_hba1c">ಮೌಲ್ಯವು 25% ಗಿಂತ ಹೆಚ್ಚು ಇರಬಾರದು</string>
+  <string name="bloodsugarentry_error_lower_limit">ಮೌಲ್ಯವು 30 mg/dL ಗಿಂತ ಕಡಿಮೆ ಇರಬಾರದು</string>
+  <string name="bloodsugarentry_error_lower_limit_hba1c">ಮೌಲ್ಯವು 3\u0025 ಗಿಂತ ಕಡಿಮೆ ಇರಬಾರದು</string>
+  <string name="bloodsugarentry_error_lower_limit_mmol">ಮೌಲ್ಯವು 1.66 mmol/L ಕಡಿಮೆ ಇರಬಾರದು</string>
+  <string name="bloodsugarentry_error_higher_limit">ಮೌಲ್ಯವು 1000 mg/dL ಗಿಂತ ಹೆಚ್ಚಿರಬಾರದು</string>
+  <string name="bloodsugarentry_error_higher_limit_hba1c">ಮೌಲ್ಯವು 25\u0025 ಗಿಂತ ಹೆಚ್ಚು ಇರಬಾರದು</string>
+  <string name="bloodsugarentry_error_higher_limit_mmol">ಮೌಲ್ಯವು 55.49 mmol/L ಹೆಚ್ಚಿರಬಾರದು</string>
   <string name="bloodsugarentry_error_empty">ಮೌಲ್ಯವು ಖಾಲಿ ಇರಬಾರದು</string>
   <string name="bloodsugarentry_error_date_invalid_pattern">DD/MM/YYYY ನಲ್ಲಿ ಮಾನ್ಯ ದಿನಾಂಕವನ್ನು ನಮೂದಿಸಿ</string>
   <string name="bloodsugarentry_error_date_is_in_future">ಭವಿಷ್ಯದ ದಿನಾಂಕದಲ್ಲಿರಬಾರದು</string>
@@ -567,11 +573,119 @@
   <string name="screensplash_next">ಮುಂದಿನ</string>
 
   <!-- Contact doctor sheet -->
-  <string name="contactdoctor_title">ವೈದ್ಯರು</string>
-  <string name="contactdoctor_subtitle">%1$s ಗೆ ನಿಯೋಜಿಸಲಾಗಿದೆ</string>
+  <string name="contactdoctor_new_title">ವೈದ್ಯರು ಲಭ್ಯವಿದ್ದಾರೆ</string>
+  <string name="contactdoctor_new_subtitle">ಸಾಧ್ಯವಾದರೆ WhatsApp ಬಳಸಿ</string>
 
   <!-- Intro Video Screen -->
   <string name="screenintrovideo_how_to_use_simple_app">ಸಿಂಪಲ್ ಆ್ಯಪ್ ಅನ್ನು ಹೇಗೆ ಬಳಸುವುದು</string>
   <string name="screenintrovideo_watch_video">ವೀಡಿಯೋವನ್ನು ವೀಕ್ಷಿಸಿ</string>
   <string name="screenintrovideo_skip">ಸ್ಕಿಪ್ ಮಾಡಿ</string>
+
+  <!-- Assigned Facility -->
+  <string name="assigned_facility_view_title">ಆದ್ಯತೆಯ ಸೌಲಭ್ಯ</string>
+  <string name="assigned_facility_view_change">ಬದಲಾಯಿಸಿ</string>
+
+  <!-- Facility Picker -->
+  <string name="facilitypicker_search_hint">ನಿಮ್ಮ ಕ್ಲಿನಿಕ್‌ಗಾಗಿ ಶೋಧಿಸಿ</string>
+  <!-- Street, District, State -->
+  <string name="facilitypicker_header_suggested_facilities">ಸಲಹೆ ಮಾಡಲಾದ ಕ್ಲಿನಿಕ್‌ಗಳು</string>
+  <string name="facilitypicker_header_all_facilities">ಎಲ್ಲಾ ಕ್ಲಿನಿಕ್‌ಗಳು</string>
+
+  <!--  TeleMedicine User Signature-->
+  <string name="screen_signature_sign_in_this_box">ಈ ಬಾಕ್ಸ್‌ನಲ್ಲಿ ಸಹಿ ಮಾಡಿ</string>
+
+  <!-- Drug Duration -->
+  <string name="drug_duration_title">%1$s %2$s</string>
+  <string name="drugDurationLabel">ದಿನಗಳು</string>
+  <string name="drug_duration_empty_error">ಔಷಧದ ಅವಧಿ ಖಾಲಿ ಇರಬಾರದು</string>
+  <string name="drug_duration_max_error">ಔಷಧ ಕಾಲಾವಧಿಯು %1$s ದಿನಗಳಿಗಿಂತ ಹೆಚ್ಚಾಗಿರಬಾರದು</string>
+
+  <!-- Teleconsultation success-->
+  <string name="screen_teleconsult_success_add_prescription">ಪ್ರಿಸ್ಕ್ರಿಪ್ಶನ್ ಸೇರಿಸುವುದೇ?</string>
+  <string name="screen_teleconsult_success_yes">ಹೌದು</string>
+  <string name="screen_teleconsult_success_no">ಇಲ್ಲ</string>
+  <string name="screen_teleconsult_success_teleconsult_recorded">ಟೆಲೆಕನ್ಸಲ್ಟ್ ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗಿದೆ</string>
+  <string name="screen_teleconsult_success_patient_information">%1$s, %2$s, %3$s</string>
+  <string name="sheet_medicine_frequency_od">OD</string>
+  <string name="sheet_medicine_frequency_bd">BD</string>
+  <string name="sheet_medicine_frequency_tds">TDS</string>
+  <string name="sheet_medicine_frequency_qds">QDS</string>
+  <string name="sheet_medicine_frequency_save">ಉಳಿಸಿ</string>
+
+  <!-- Teleconsult Record Screen -->
+  <string name="screen_teleconsult_record">ಟೆಲೆಕನ್ಸಲ್ಟ್ ರೆಕಾರ್ಡ್</string>
+  <string name="screen_teleconsult_record_type">ಟೆಲೆಕನ್ಸಲ್ಟೇಶನ್ ಪ್ರಕಾರ</string>
+  <string name="screen_teleconsult_record_type_audio">ಆಡಿಯೋ ಕರೆ</string>
+  <string name="screen_teleconsult_record_type_video">ವೀಡಿಯೋ ಕರೆ</string>
+  <string name="screen_teleconsult_record_type_message">ಸಂದೇಶ</string>
+  <string name="screen_teleconsult_record_patient_took_medicine">ರೋಗಿಯು ನಿಯಮಿತವಾಗಿ ಹೈಪರ್‌ಟೆನ್ಸಿವ್ ಪ್ರತಿರೋಧಕ ಮತ್ತು ಡಯಾಬಿಟಿಕ್ ಪ್ರತಿರೋಧಕ ಔಷಧಿಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದ್ದಾರೆ</string>
+  <string name="screen_teleconsult_record_patient_consented">ಟೆಲೆಕನ್ಸಲ್ಟೇಶನ್‌ಗೆ ರೋಗಿಯು ಸಮ್ಮತಿ ನೀಡಿದ್ದಾರೆ</string>
+  <string name="screen_teleconsult_record_done">ಪೂರ್ಣಗೊಳಿಸಲಾಗಿದೆ</string>
+  <string name="teleconsultnotrecordeddialog_title">ಟೆಲೆಕನ್ಸಲ್ಟ್ ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗಿಲ್ಲ</string>
+  <string name="teleconsultnotrecordeddialog_body">ನೀವು ಖಚಿತವಾಗಿ ರದ್ದುಗೊಳಿಸಲು ಬಯಸುವಿರಾ?</string>
+  <string name="teleconsultnotrecordeddialog_positive_button_text">ಹೌದು</string>
+  <string name="teleconsultnotrecordeddialog_negative_button_text">ಇಲ್ಲ</string>
+
+  <!-- Deeplink Teleconsult not authorised-->
+  <string name="deeplink_medical_officer_not_authorised_to_log_teleconsult">ಟೆಲೆಕನ್ಸಲ್ಟ್ ಲಾಗ್ ಮಾಡಲು ನೀವು ಅಧಿಕಾರ ಹೊಂದಿಲ್ಲ</string>
+  <string name="deeplink_please_check_with_your_supervisor">ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸೂಪರ್‌ವೈಸರ್ ಅವರೊಂದಿಗೆ ಪರಿಶೀಲಿಸಿ</string>
+  <string name="deeplink_okay_positive_action">ಸರಿ</string>
+
+  <string name="screen_teleconsult_prescription_next">ಮುಂದಿನ</string>
+
+  <!-- Teleconsult Medicines View -->
+  <string name="view_teleconsult_medicines">ಔಷಧಗಳು</string>
+  <string name="view_teleconsult_medicines_add">ಸೇರಿಸಿ</string>
+  <string name="view_teleconsult_medicines_edit">ಸಂಪಾದಿಸಿ</string>
+  <string name="view_teleconsult_medicines_required_error">ಕನಿಷ್ಠ ಒಂದು ಔಷಧಿಯನ್ನು ಸೇರಿಸಿ</string>
+  <plurals name="list_item_teleconsult_medicine_duration">
+    <item quantity="one">%1$s ದಿನ</item>
+    <item quantity="other">%1$s ದಿನಗಳು</item>
+  </plurals>
+
+  <!-- Teleconsult Doctor Info View -->
+  <string name="view_teleconsult_doctor_info_instructions">ರೋಗಿಗೆ ಸೂಚನೆಗಳು</string>
+  <string name="view_teleconsult_doctor_info_registration_id">ವೈದ್ಯಕೀಯ ನೋಂದಣಿ ID</string>
+  <string name="view_teleconsult_doctor_info_acknowledgement">ಈ ಪ್ರಿಸ್ಕ್ರಿಪ್ಶನ್‌ಗೆ ಸಹಿ ಮಾಡುವ ಮೂಲಕ ನಾನು %1$s ಎಂಬುದಾಗಿ ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ</string>
+  <string name="view_teleconsult_doctor_info_add_signature">ಸಹಿಯನ್ನು ಸೇರಿಸಿ</string>
+  <string name="view_teleconsult_doctor_info_signature_error">ಸಹಿಯನ್ನು ಸೇರಿಸಿ</string>
+
+  <string name="screen_teleconsult_share_prescription_download">ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ</string>
+  <string name="screen_teleconsult_share_prescription_share">ಹಂಚಿಕೊಳ್ಳಿ</string>
+  <string name="screen_teleconsult_share_prescription_done">ಪೂರ್ಣಗೊಳಿಸಲಾಗಿದೆ</string>
+  <string name="screen_teleconsult_share_prescription_image_using">ಇದನ್ನು ಬಳಸಿಕೊಂಡು ಇಮೇಜ್ ಹಂಚಿಕೊಳ್ಳಿ</string>
+  <string name="screen_teleconsult_share_prescription_title">ಪ್ರಿಸ್ಕ್ರಿಪ್ಶನ್</string>
+  <string name="screen_teleconsult_share_prescription_image_saved">ಡೌನ್‌ಲೋಡ್‌ಗಳಲ್ಲಿ ಪ್ರಿಸ್ಕ್ರಿಪ್ಶನ್ ಉಳಿಸಲಾಗಿದೆ</string>
+
+  <!-- Select diagnosis error alert dialog -->
+  <string name="select_diagnosis_error_diagnosis_required">ರೋಗನಿರ್ಣಯ ಅಗತ್ಯವಿದೆ</string>
+  <string name="select_diagnosis_error_enter_diagnosis_both_hypertension_diabetes">ಹೈಪರ್‌ಟೆನ್ಶನ್ ಮತ್ತು ಡಯಾಬಿಟಿಸ್ ಎರಡಕ್ಕೂ ರೋಗನಿರ್ಣಯ ಆಯ್ಕೆಮಾಡಿ</string>
+  <string name="select_diagnosis_error_ok">ಸರಿ</string>
+  <string name="sheet_teleconsult_status_title">ಟೆಲೆ-ಕನ್ಸಲ್ಟ್ ಪೂರ್ಣಗೊಂಡಿದೆಯೇ?</string>
+  <string name="sheet_teleconsult_status_yes">ಹೌದು</string>
+  <string name="sheet_teleconsult_status_no">ಇಲ್ಲ</string>
+  <string name="sheet_teleconsult_status_waiting">ಇನ್ನೂ ಕಾಯಲಾಗುತ್ತಿದೆ</string>
+  <string name="sheet_teleconsult_status_done">ಪೂರ್ಣಗೊಳಿಸಲಾಗಿದೆ</string>
+
+  <!-- Setup activity -->
+  <string name="setup_cannot_run">ಅಪ್ಲಿಕೇಶನ್ ರನ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ</string>
+  <string name="setup_rooted">ಸಿಂಪಲ್ ಅನ್ನು ರೂಟ್ ಮಾಡಲಾದ ಸಾಧನದಲ್ಲಿ ರನ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ.</string>
+  <string name="setup_close">ಮುಚ್ಚಿ</string>
+
+  <!-- Blood sugar unit selection dialog -->
+  <string name="blood_sugar_unit_selection_choose">ಆಯ್ಕೆಮಾಡಿ</string>
+  <string name="blood_sugar_unit_selection_done">ಮುಗಿದಿದೆ</string>
+
+  <!-- BP passport sheet -->
+  <string name="sheet_bp_passport_register_new_patient">ಹೊಸ ರೋಗಿಯನ್ನು ನೋಂದಾಯಿಸಿ</string>
+  <string name="sheet_bp_passport_add_to_existing_patient">ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ರೋಗಿಗೆ ಸೇರಿಸಿ</string>
+  <string name="sheet_bp_passport_number">ಬಿಪಿ ಪಾಸ್‌ಪೋರ್ಟ್‌ %1$s</string>
+
+  <!-- Instant search -->
+  <string name="patientinstantsearch_assigned_facility_header">%1$s ಗೆ ನಿಯೋಜಿಸಲಾಗಿದೆ</string>
+  <string name="patientinstantsearch_nearby_facilities_header">ಹತ್ತಿರದ ಸೌಲಭ್ಯ ಕೇಂದ್ರಗಳಿಂದ</string>
+  <string name="patientsearch_error_no_patients_in_facility">ನಿಮ್ಮ ಸೌಲಭ್ಯದಲ್ಲಿ ನೋಂದಾಯಿಸಿಕೊಂಡ ಎಲ್ಲಾ ರೋಗಿಗಳನ್ನು ನಿಮಗೆ ಇಲ್ಲಿ ನೋಡಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ</string>
+  <string name="patientsearch_error_no_search_results">ಯಾವುದೇ ರೋಗಿ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ</string>
+  <string name="patientsearch_error_no_patients_in_facility_heading">%1$s ನಲ್ಲಿ ಯಾವುದೇ ರೋಗಿಗಳಿಲ್ಲ</string>
+
 </resources>

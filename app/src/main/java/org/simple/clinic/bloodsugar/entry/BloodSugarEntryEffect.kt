@@ -1,6 +1,7 @@
 package org.simple.clinic.bloodsugar.entry
 
 import org.simple.clinic.bloodsugar.BloodSugarReading
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
 import org.simple.clinic.widgets.ageanddateofbirth.UserInputDateValidator
 import java.time.Instant
 import java.time.LocalDate
@@ -32,7 +33,7 @@ object Dismiss : BloodSugarEntryEffect()
 
 object ShowDateEntryScreen : BloodSugarEntryEffect()
 
-data class ShowBloodSugarValidationError(val result: ValidationResult) : BloodSugarEntryEffect()
+data class ShowBloodSugarValidationError(val result: ValidationResult, val unitPreference: BloodSugarUnitPreference) : BloodSugarEntryEffect()
 
 data class ShowBloodSugarEntryScreen(val date: LocalDate) : BloodSugarEntryEffect()
 
@@ -65,3 +66,7 @@ data class FetchBloodSugarMeasurement(val bloodSugarMeasurementUuid: UUID) : Blo
 data class SetBloodSugarReading(val bloodSugarReading: String) : BloodSugarEntryEffect()
 
 data class ShowConfirmRemoveBloodSugarDialog(val bloodSugarMeasurementUuid: UUID) : BloodSugarEntryEffect()
+
+object LoadBloodSugarUnitPreference: BloodSugarEntryEffect()
+
+data class ShowBloodSugarUnitSelectionDialog(val bloodSugarUnitPreference: BloodSugarUnitPreference) : BloodSugarEntryEffect()

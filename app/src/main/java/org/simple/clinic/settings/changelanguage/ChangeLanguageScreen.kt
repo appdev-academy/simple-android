@@ -7,15 +7,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.jakewharton.rxbinding2.view.RxView
+import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_change_language.view.*
+import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
-import org.simple.clinic.main.TheActivity
+import org.simple.clinic.databinding.ListChangeLanguageViewBinding
+import org.simple.clinic.databinding.ScreenChangeLanguageBinding
+import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
 import org.simple.clinic.settings.Language
 import org.simple.clinic.settings.changelanguage.ChangeLanguageListItem.Event.ListItemClicked
 import org.simple.clinic.util.unsafeLazy
@@ -28,7 +30,7 @@ class ChangeLanguageScreen(
 ) : ConstraintLayout(context, attributeSet), ChangeLanguageUi, UiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -36,7 +38,25 @@ class ChangeLanguageScreen(
   @Inject
   lateinit var effectHandler: ChangeLanguageEffectHandler.Factory
 
-  private val languagesAdapter = ItemAdapter(ChangeLanguageListItem.DiffCallback())
+  private var binding: ScreenChangeLanguageBinding? = null
+
+  private val toolbar
+    get() = binding!!.toolbar
+
+  private val languagesList
+    get() = binding!!.languagesList
+
+  private val doneButton
+    get() = binding!!.doneButton
+
+  private val languagesAdapter = ItemAdapter(
+      diffCallback = ChangeLanguageListItem.DiffCallback(),
+      bindings = mapOf(
+          R.layout.list_change_language_view to { layoutInflater, parent ->
+            ListChangeLanguageViewBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   private val events: Observable<ChangeLanguageEvent> by unsafeLazy {
     Observable
@@ -67,10 +87,12 @@ class ChangeLanguageScreen(
       return
     }
 
-    TheActivity.component.inject(this)
+    binding = ScreenChangeLanguageBinding.bind(this)
+
+    context.injector<Injector>().inject(this)
 
     setupLanguagesList()
-    toolbar.setNavigationOnClickListener { screenRouter.pop() }
+    toolbar.setNavigationOnClickListener { router.pop() }
   }
 
   private fun setupLanguagesList() {
@@ -90,8 +112,8 @@ class ChangeLanguageScreen(
   }
 
   private fun doneButtonClicks(): Observable<SaveCurrentLanguageEvent> {
-    return RxView
-        .clicks(doneButton)
+    return doneButton
+        .clicks()
         .map { SaveCurrentLanguageEvent }
   }
 
@@ -102,10 +124,11 @@ class ChangeLanguageScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -126,10 +149,14 @@ class ChangeLanguageScreen(
   }
 
   override fun goBackToPreviousScreen() {
-    screenRouter.pop()
+    router.pop()
   }
 
   override fun restartActivity() {
     activity.recreate()
+  }
+
+  interface Injector {
+    fun inject(target: ChangeLanguageScreen)
   }
 }

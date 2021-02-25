@@ -1,8 +1,9 @@
 package org.simple.clinic.scheduleappointment
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.facility.Facility
@@ -15,6 +16,7 @@ import org.simple.clinic.patient.Patient
 import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.protocol.Protocol
 import org.simple.clinic.protocol.ProtocolRepository
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecordRepository
 import org.simple.clinic.util.Just
 import org.simple.clinic.util.None
 import org.simple.clinic.util.Optional
@@ -37,10 +39,11 @@ class ScheduleAppointmentEffectHandler @AssistedInject constructor(
     private val userClock: UserClock,
     private val schedulers: SchedulersProvider,
     private val uuidGenerator: UuidGenerator,
-    @Assisted private val uiActions: ScheduleAppointmentUiActions
+    @Assisted private val uiActions: ScheduleAppointmentUiActions,
+    private val teleconsultRecordRepository: TeleconsultRecordRepository
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: ScheduleAppointmentUiActions): ScheduleAppointmentEffectHandler
   }
@@ -54,7 +57,38 @@ class ScheduleAppointmentEffectHandler @AssistedInject constructor(
         .addTransformer(ScheduleAppointmentForPatient::class.java, scheduleAppointmentForPatient())
         .addAction(CloseSheet::class.java, uiActions::closeSheet, schedulers.ui())
         .addTransformer(LoadPatientDefaulterStatus::class.java, loadPatientDefaulterStatus())
+        .addTransformer(LoadTeleconsultRecord::class.java, loadTeleconsultRecordDetails())
+        .addConsumer(GoToTeleconsultStatusSheet::class.java, { uiActions.openTeleconsultStatusSheet(it.teleconsultRecordUuid) }, schedulers.ui())
+        .addTransformer(ScheduleAppointmentForPatientFromNext::class.java, scheduleAppointmentForPatientFromNext())
         .build()
+  }
+
+  private fun scheduleAppointmentForPatientFromNext(): ObservableTransformer<ScheduleAppointmentForPatientFromNext, ScheduleAppointmentEvent> {
+    return ObservableTransformer { effects ->
+      effects
+          .doOnNext { scheduleAppointment ->
+            appointmentRepository.schedule(
+                patientUuid = scheduleAppointment.patientUuid,
+                appointmentUuid = uuidGenerator.v4(),
+                appointmentDate = scheduleAppointment.scheduledForDate,
+                appointmentType = scheduleAppointment.type,
+                appointmentFacilityUuid = scheduleAppointment.scheduledAtFacility.uuid,
+                creationFacilityUuid = currentFacility.get().uuid
+            )
+          }
+          .map { AppointmentScheduledForPatientFromNext }
+    }
+  }
+
+  private fun loadTeleconsultRecordDetails(): ObservableTransformer<LoadTeleconsultRecord, ScheduleAppointmentEvent> {
+    return ObservableTransformer { effects ->
+      effects
+          .observeOn(schedulers.io())
+          .map {
+            val teleconsultRecord = teleconsultRecordRepository.getPatientTeleconsultRecord(patientUuid = it.patientUuid)
+            TeleconsultRecordLoaded(teleconsultRecord)
+          }
+    }
   }
 
   private fun loadDefaultAppointmentDate(): ObservableTransformer<LoadDefaultAppointmentDate, ScheduleAppointmentEvent> {

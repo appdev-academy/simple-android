@@ -1,8 +1,9 @@
 package org.simple.clinic.login.pin
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.Single
@@ -19,7 +20,7 @@ class LoginPinEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: UiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: UiActions): LoginPinEffectHandler
   }
@@ -49,8 +50,7 @@ class LoginPinEffectHandler @AssistedInject constructor(
           .observeOn(schedulersProvider.io())
           .flatMap { (entry) ->
             userSession.storeUser(
-                user = createUserFromLoginEntry(entry),
-                facilityUuid = entry.registrationFacilityUuid!!
+                user = createUserFromLoginEntry(entry)
             ).andThen(Observable.just(UserLoggedIn))
           }
     }
@@ -89,7 +89,8 @@ class LoginPinEffectHandler @AssistedInject constructor(
         loggedInStatus = User.LoggedInStatus.OTP_REQUESTED,
         registrationFacilityUuid = entry.registrationFacilityUuid!!,
         currentFacilityUuid = entry.registrationFacilityUuid,
-        teleconsultPhoneNumber = entry.teleconsultPhoneNumber
+        teleconsultPhoneNumber = entry.teleconsultPhoneNumber,
+        capabilities = entry.capabilities
     )
   }
 }

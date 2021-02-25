@@ -7,12 +7,12 @@ import android.util.AttributeSet
 import android.widget.LinearLayout
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_help.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenHelpBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.visibleOrGone
 import javax.inject.Inject
@@ -20,10 +20,30 @@ import javax.inject.Inject
 class HelpScreen(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs), HelpScreenUi, HelpScreenUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var effectHandlerFactory: HelpScreenEffectHandler.Factory
+
+  private var binding: ScreenHelpBinding? = null
+
+  private val toolbar
+    get() = binding!!.toolbar
+
+  private val webView
+    get() = binding!!.webView
+
+  private val tryAgainButton
+    get() = binding!!.tryAgainButton
+
+  private val progressBar
+    get() = binding!!.progressBar
+
+  private val noContentView
+    get() = binding!!.noContentView
+
+  private val errorMessageTextView
+    get() = binding!!.errorMessageTextView
 
   private val events by unsafeLazy {
     tryAgainClicks()
@@ -50,6 +70,7 @@ class HelpScreen(context: Context, attrs: AttributeSet) : LinearLayout(context, 
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -69,9 +90,11 @@ class HelpScreen(context: Context, attrs: AttributeSet) : LinearLayout(context, 
       return
     }
 
+    binding = ScreenHelpBinding.bind(this)
+
     context.injector<Injector>().inject(this)
 
-    toolbar.setNavigationOnClickListener { screenRouter.pop() }
+    toolbar.setNavigationOnClickListener { router.pop() }
 
     webView.settings.javaScriptEnabled = true
   }

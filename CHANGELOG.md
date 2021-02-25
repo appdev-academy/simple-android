@@ -2,14 +2,340 @@
 
 ## Next Release
 ### Internal
-- [In Progress: 27 Aug 2020] Add support for sending teleconsult request via SMS
+- Load the current facility as a direct call instead of a reactive one in `OverdueEffectHandler`
+- Migrate `PatientSummaryScreen` to a fragment
+- Bump Dagger to v2.32
+- Bump Google truth to v1.1.2
+- Bump WorkManager to v2.5.0
+- Fix the Room query thread pool executor to run all available threads
+- Load list of `colonyOrVillage` from the `PatientAddress` table
+- Stop loading all patients after current facility is loaded in `InstantSearchScreen`
+- Change `TeleconsultRecordScreen` to a fragment
+- Change `AppLockScreen` to a fragment
+- [In Progress: 20 Jan 2021] Material Theme-ing Migration
+- [In Progress: 08 Feb 2021] Migrate app to use ViewBinding
+
+### Changes
+- Updated translations: `bn-IN`, `ti-ET`, `om-ET`, `bn-BD`, `te-IN`, `kn-IN`, `mr-IN`, `hi-IN`, `pa-IN`, `am-ET`
+- Show progress when linking bp passport to patient
+- Show progress when saving medical history for new patient
+- Change prescriptions end icon to a chevron icon instead of dropdown
+
+## On Demo
+### Internal
+- Bump Material Design Components to v1.3.0
+- Bump ConstraintLayout to v2.0.4
+- Add `Widget.Simple.TextField.Layout.PatientEntry.AutoComplete` style
+- Bump Kotlin to v1.4.30
+- Remove [JCenter](https://bintray.com/) from Maven repository sources
+- Set patient status to `migrated` whenever an overdue appointment is removed for one of the following reasons
+    - "Transferred to another public health facility"
+    - "Moved to private practitioner"
+- Build only the `PRODUCTION` release APK as part of the CI checks
+
+### Changes
+- Updated translations: `mr-IN`, `ta-IN`, `bn-BD`, `ti-ET`, `am-ET`, `kn-IN`, `bn-IN`, `hi-IN`, `te-IN`, `pa-IN`, `te-IN`, `om-ET`, `ta-IN`
+- Add next button to phone number registration screen
+- Change prescribed drugs toolbar title to `Medicines`
+- Fix downloaded prescription background color
+- Change UI for adding protocol/custom drugs
+- Show toolbar progress indicator in facility picker screen
+- Update sorting order of prescribed drugs
+
+### Fixes
+- Fix App crash when returning to the register patient screen before completing registration when patient date of birth is entered
+- Fix prescription entry sheet UI
+- Fix name string in link id with patient view
+
+## 2021-02-11-7629
+### Internal
+- Disable strict mode crash for VM policy
+- Redesign `LinkIdWithPatientView`
+- Move to Dagger assisted inject
+- Make instant search by name case insensitive
+- Change `InstantSearchScreen` to a fragment
+- Change `ScanSimpleIdScreen` to a fragment
+- Change `HomeScreen` to a fragment
+- Remove `ScanBpPassportActivity`
+- Migrate `TheActivity` to the new navigation framework
+- Add `CardViewDetector` lint for warning when using androidx/appcompat `CardView`
+- Add `TextViewTextSizeDetector` lint for warning when using `TextView#textSize`
+- Bump AGP to v4.1.2
+- Fix bottom sheet dialog theme
+- Add `NoopViewRenderer`
+- Migrate `BpPassportSheet` to `BaseBottomSheet`
+- Inject user's country code in `SentryCrashReporter`
+- Migrate `ShortCodeSearchResultScreen` to a fragment
+- Change `AccessDeniedScreen` to a fragment
+- Remove deprecated Mobius delegate usage in `BloodSugarHistoryScreen`
+- Migrate `TeleconsultSharePrescriptionScreen` to a fragment
+- Change `AlertFacilityChangeSheet` to `BaseBottomSheet`
+- Change `FacilityChangeScreen` to `BaseBottomSheet`
+- Change `ConfirmFacilityChangeScreen` to `BaseBottomSheet`
+- Change `PatientSearchResultsScreen` to a fragment
+
+### Changes
+- Updated the app icon
+
+### Features
+- Highlight patient name and number in Instant search
+
+## 2021-01-25-7605
+### Internal
+- Rename `newbranch` script to `newbranch.sh`
+- Purge the QA environment before running the instrumented tests instead of after in CI
+- Add support for reporting screen changes to Analytics for the new navigation framework
+- Migrate `ProgressBar` usage to `CircularProgressIndicator`
+- Scroll to top when instant search results are updated
+- Report time taken when loading all patients and search results in Instant Search
+- Change `RegistrationPhoneScreen` to a fragment
+- Change `RegistrationPinScreen` to a fragment
+- Change `LoginPinScreen` to a fragment
+- Change `RegistrationFullNameScreen` to a fragment
+- Change `RegistrationConfirmPinScreen` to a fragment
+- Show keyboard in Instant Search only when there is no identifier
+- Add different adapters for showing all patients and search results in Instant Search
+- Add ADR for the new navigation framework
+- Use Dagger Factory to bind instances instead of `BindX` interfaces
+- Bump Room dependency
+- Bump CameraX dependency
+- Bump Dagger dependency
+- Clean up the abstract screen types
+- Migrate `AuthenticationActivity` to the new navigation framework
+- Improve instant search ordering
+
+### Features
+- Add Instant search
+
+### Changes
+- Updated translations: `bn-IN`, `mr-IN`, `hi-IN`, `pa-IN`, `bn-BD`, `am-ET`, `ti-ET`
+
+## 2021-01-11-7589
+### Internal
+- Add shell env comment to `pre-push` hook
+- Add the Router for the new navigation framework 
+- Track code style and lint rules for project in VCS
+- Add Instant search query
+- Add `ScreenFragmentCompat` to support using the older view-based screens in the v2 navigation framework
+- Add convenience classes for creating screens for the new navigation framework
+
+### Fixes
+- Fix BPpassport prefill value to have display value
+
+### Changes
+- Change home illustration for India
+
+## 2020-12-31-7576
+### Fixes
+- Fix short code search screen crash
+
+## 2020-12-28-7571
+### Internal
+- Add PR comment commands for running instrumented tests and rebasing PR
+- Add breadcrumbs for different stages in search operations
+- Cleanup `ImageSrcDetector`
+- Bump tooling JDK to 11.0
+- Migrate `ShortCodeSearchResultScreen` to Mobius
+
+### Changes
+- Updated translations: `pa-IN`, `te-IN`, `ti-ET`, `bn-IN`, `mr-IN`, `am_ET`
+
+### Fixes
+- Fix a crash that could happen when closing the edit medicines screen
+
+## 2020-12-17-7559
+### Internal
+- Convert the `ImageProxy` to `Bitmap` when decoding the QR code using ML kit
+
+## 2020-12-14-7554
+### Internal
+- Bump appcompat -> 1.2.0
+- Bump CI JDK version to 11
+- Revert view binding migration for `RecentPatientsView`
+- Add `MLKitQrCodeAnalyzer`
+
+### Changes
+- Disable the change language feature on devices running Lollipop (API level 21, 22)
+- Updated translations: `kn-IN`, `ta-IN`, `pa-IN`, `om-ET`
+
+### Fixes
+- Fix `shortCodeText` auto focusing in `ScanSimpleIdScreen`
+- Fix app going back to home screen after scanning a BP passport
+
+## 2020-12-03-7536
+### Fixes
+- Fix BP passport scanning not working
+
+## 2020-12-01-7532
+### Internal
+- Move BP passport scan results handling to `HomeScreen`
+
+### Fixes
+- Fixed BP Passport scanning does not work after the first scan
+
+## 2020-11-30-7529
+### Features
+- Refill prescriptions in edit medicine screen
+- Add support for recording RBS, FBS, and PPBS blood sugars in two units: mmol/L or mg/dL
+
+### Internal
+- Add `recipes.md`
+- Added blood sugar unit preference
+- Move scanning of QR codes to a discrete activity
+- Bump AGP to 4.1.1
+- Convert blood sugar values to `mg/dL` when saving/updating
+
+### Changes
+- Disabled running the app on rooted devices
+- Change label of district address fields in  patient entry and edit screens to "Zone" for Ethiopia users
+- Updated translations: `ti-ET`, `pa-IN`, `ta-IN`, `te-IN`, `mr-IN`, `bn-IN`, `hi-IN`, `ta-IN`, `bn-BD`, `kn-IN`, `am-ET`
+- Render blood sugar in `mmol/L` in summary view and history.
+- Refill prescriptions in edit medicine screen
+
+### Fixes
+- Fix issue where the local user state can become inconsistent during registration
+
+## 2020-11-09-7507
+### Features
+- Add `TeleconsultStatusSheet`
+- Show `Next` in `ScheduleAppointmentSheet`
+
+### Internal
+- Update `TeleconsultRecord` to sync frequently
+- Add `TeleconsultStatus` to `TeleconsultRecord`
+- Mark strings used in prescription image as un-translatable
+- Use `ENGLISH` locale when formatting prescription date
+- Rename `TeleconsultRecord` `requestCompleted` to `requesterCompletionStatus`
+- Bump the resync token for the Facility sync
+- Bump AGP to 4.1.0
+- Add `PrescribedDrug#refill` method
+- Remove unnecessary sealed class types for different Business ID metadata versions
+- Clean up `PatientRepository`
+    - Change reactive calls for registering a patient to synchronous ones
+    - Accept the ongoing patient entry as a parameter to the register patient method
+    - Remove deprecated `Optional` class usages
+- Move registration and login flows to a separate activity
+- Update `appupdatedialog_body` string
+- Enable ViewBinding
+- Migrate `SplashScreen` to use ViewBinding
+
+### Changes
+- Update translations: `kn-IN`, `ta-IN`, `bn-IN`, `ti`, `bn-BD`, `pa-IN`, `mr-IN`, `te-IN`, `hi-IN`
+
+### Fixes
+- Fix teleconsult button in patient summary screen is broken on some devices
+
+## 2020-10-26-7490
+### Features
+- Add `SelectDiagnosisErrorDialog` when diagnosis is not selected in `NewMedicalHistoryScreen` and `MedicalHistorySummaryView` 
+
+### Changes
+- Made "SMS Reminders" to be the default consent label on the patient screen unless otherwise specified on a country level
+- Show toast message after saving prescription image on device
+- Fix `ProgressMaterialButton` AVD not animating when initial state is not `in-progress`
+
+### Internal
+- Add `syncGroup` property to the `Facility` resource
+- Remove custom WorkManager initializer
+- Bump Android Gradle Plugin version to 4.0.2
+- Add method to `AppDatabase` to clear all patient data not in the current sync group
+- Update download and share `MaterialButtons` in `TeleconsultSharePrescriptionScreen` to `ProgressMaterialButtons`
+- Purge unused data after a full sync completes
+- Register patients in sync integration tests
+- Stop registering a blood pressure measurement to associate a patient in tests with a facility
+- Report database optimization events to analytics
+- Delay purging of data from a different sync group for a fixed duration (remotely configurable) after switching facilities
+- Add support for server controller resync when switching facility sync groups
+
+### Fixes
+- Fix app freeze when pressing enter/done with empty pin in lock screen
+
+## 2020-10-13-7476
+### Features
+- Add `TeleconsultPrescriptionScreen`
+- Add `TeleconsultSharePrescriptionScreen` 
+
+### Changes
+- Updated translations: `bn-IN`, `ti-ET`, `bn-BD`, `ta-IN`, `pa-IN`, `kn-IN`, `mr-IN`, `om-ET`
+- Switch the positions of the teleconsultation and Save buttons in the `PatientSummaryScreen`
+
+### Internal
+- Remove `PrescribedDrugs` from `TeleconsultRecord`
+- Create Kotlin extension for saving Optional preferences
+- Modify `PrescribedDrug` to include `teleconsultation_id`
+- Change `BloodPressureEntryEffectHandler` create and update measurement flows to be mostly synchronous
+- Remove v1 of the QR code scanning flow
+- Add custom traces in Firebase Performance Monitoring for the following flows:
+  - Record new blood pressure measurement
+  - Update existing blood pressure measurement
+- Change registration and current facility ID columns to regular columns without foreign keys in `User`
+- Add teleconsult record sync
+- Change `RemoteConfigService` to pull updates synchronously
+- Stop injecting screens in `TheActivity` via the static component
+- Add support for sending teleconsult request via SMS
+- Show medicines required error in `TeleconsultPrescriptionScreen`
+- Remove `TeleconsultationApi` & load medical officers from `MedicalOfficer` table
+- Fix prescribed drug frequency type adapter
+- Request storage permission when downloading or sharing prescription
+- Fix small UI inconsistencies in share prescription screen
+- Hide keyboard when exiting from `TeleconsultPrescriptionScreen`
+- Add file provider for sharing prescription image below Android 10
+
+### Fixes
+- Fix deeplink screens & warning dialogs displaying again after activity restart.
+- Fix home screen tabs swiping
+- Fix issue where sync events where being triggered on an individual sync level rather than at a group level
+
+## 2020-10-01-7452
+### Fixes
+- App lock screen does not show if the app is exited and opened again while it is on the lock screen
+
+## 2020-09-28-7446
+### Features
+- Add `TeleconsultRecordScreen`
+- Show `TeleconsultLogNotAllowed` dialog when Medical officer is not allowed to teleconsult
+
+### Internal
+- Add `Capabilities` to User
+- Change `TeleconsultFacilityInfoApi` endpoint
+- Add methods to purge soft-deleted records from the database
+- Add method to purge cancelled and visited appointments from the database
+- Bump target SDK version to 30
+- Add weekly recurring task to run maintenance tasks on the database
+- Integrated Firebase Performance Monitoring
+
+### Changes
+- Updated translations for: `om-ET`, `ta-IN`, `bn-BD`, `mr-IN`, `hi-IN`, `ti-ET`
+- Add ripple on touch for overdue patient name
+- Set drug duration max limit
+
+## 2020-09-15-7432
+### Changes
+- Open patient summary screen when patient name is clicked in overdue
+- Stop loading count of overdue items on the home screen
+
+### Internal
 - Use UiRenderer for setting drug duration in `DrugDurationSheet`
 - Add teleconsultation facility sync (Disabled for now until API endpoint is live: ETA 04-09-2020)
 - Added `MedicineFrequencyBottomSheet` to update medicine frequency
 - Add support for the teleconsultation record deeplink
 - Add `frequency` & `durationInDays` to `PrescribedDrug`
 - Add `ImageSrcDetector` lint for warning when using `ImageView#src`
+- Add `TeleconsultRecord` and `TeleconsultRecordPayload`
+- Bumped internal SQLite version to 3.32.2
+- Change saving of app lock timestamp to an in-memory value
+- Pin the number of threads used for running queries in Room based on the SQLite connection pool size
+- Disable state saving and restoration for the search results view
+- Stop querying for redundant facility in `LoggedInUserHttpInterceptor`
 
+### Fixes
+- Fixed BloodPressure removal not working
+
+## 2020-09-03-7417
+### Fixes
+- Add a default RxJava error handler to ignore some classes of errors safely
+
+## 2020-09-02-7414
 ### Fixes
 - Fixed issue where patient details would not load for patients without an assigned facility ([#1127](https://app.clubhouse.io/simpledotorg/story/1127/patient-details-screen-does-not-load-for-patients-who-don-t-have-an-assigned-facility))
 

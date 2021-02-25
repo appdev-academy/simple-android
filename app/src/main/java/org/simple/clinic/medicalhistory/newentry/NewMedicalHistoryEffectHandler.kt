@@ -1,8 +1,9 @@
 package org.simple.clinic.medicalhistory.newentry
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import io.reactivex.Scheduler
@@ -27,7 +28,7 @@ class NewMedicalHistoryEffectHandler @AssistedInject constructor(
     private val uuidGenerator: UuidGenerator
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: NewMedicalHistoryUiActions): NewMedicalHistoryEffectHandler
   }
@@ -37,7 +38,7 @@ class NewMedicalHistoryEffectHandler @AssistedInject constructor(
         .subtypeEffectHandler<NewMedicalHistoryEffect, NewMedicalHistoryEvent>()
         .addConsumer(OpenPatientSummaryScreen::class.java, { effect -> uiActions.openPatientSummaryScreen(effect.patientUuid) }, schedulersProvider.ui())
         .addTransformer(RegisterPatient::class.java, registerPatient(schedulersProvider.io()))
-        .addTransformer(LoadOngoingPatientEntry::class.java, loadOngoingNewPatientEntry(schedulersProvider.io()))
+        .addTransformer(LoadOngoingPatientEntry::class.java, loadOngoingNewPatientEntry())
         .addTransformer(LoadCurrentFacility::class.java, loadCurrentFacility(schedulersProvider.io()))
         .addTransformer(TriggerSync::class.java, triggerSync())
         .build()
@@ -54,9 +55,10 @@ class NewMedicalHistoryEffectHandler @AssistedInject constructor(
 
             RegisterPatientData(loggedInUser, facility, ongoingMedicalHistoryEntry)
           }
-          .flatMapSingle { (user, facility, ongoingMedicalHistoryEntry) ->
+          .map { (user, facility, ongoingMedicalHistoryEntry) ->
             patientRepository
                 .saveOngoingEntryAsPatient(
+                    patientEntry = patientRepository.ongoingEntry(),
                     loggedInUser = user,
                     facility = facility,
                     patientUuid = uuidGenerator.v4(),
@@ -64,24 +66,24 @@ class NewMedicalHistoryEffectHandler @AssistedInject constructor(
                     supplyUuidForBpPassport = uuidGenerator::v4,
                     supplyUuidForAlternativeId = uuidGenerator::v4,
                     supplyUuidForPhoneNumber = uuidGenerator::v4
+                ) to ongoingMedicalHistoryEntry
+          }
+          .flatMapSingle { (registeredPatient, ongoingMedicalHistoryEntry) ->
+            medicalHistoryRepository
+                .save(
+                    uuid = uuidGenerator.v4(),
+                    patientUuid = registeredPatient.patientUuid,
+                    historyEntry = ongoingMedicalHistoryEntry
                 )
-                .flatMap { registeredPatient ->
-                  medicalHistoryRepository
-                      .save(
-                          uuid = uuidGenerator.v4(),
-                          patientUuid = registeredPatient.uuid,
-                          historyEntry = ongoingMedicalHistoryEntry
-                      )
-                      .toSingleDefault(PatientRegistered(registeredPatient.uuid))
-                }
+                .toSingleDefault(PatientRegistered(registeredPatient.patientUuid))
           }
     }
   }
 
-  private fun loadOngoingNewPatientEntry(scheduler: Scheduler): ObservableTransformer<LoadOngoingPatientEntry, NewMedicalHistoryEvent> {
+  private fun loadOngoingNewPatientEntry(): ObservableTransformer<LoadOngoingPatientEntry, NewMedicalHistoryEvent> {
     return ObservableTransformer { effects ->
       effects
-          .flatMapSingle { patientRepository.ongoingEntry().subscribeOn(scheduler) }
+          .map { patientRepository.ongoingEntry() }
           .map(::OngoingPatientEntryLoaded)
     }
   }

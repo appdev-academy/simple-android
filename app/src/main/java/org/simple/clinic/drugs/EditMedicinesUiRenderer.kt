@@ -1,8 +1,10 @@
 package org.simple.clinic.drugs
 
+import org.simple.clinic.drugs.EditMedicineButtonState.REFILL_MEDICINE
+import org.simple.clinic.drugs.EditMedicineButtonState.SAVE_MEDICINE
+import org.simple.clinic.drugs.selection.CustomPrescribedDrugListItem
 import org.simple.clinic.drugs.selection.EditMedicinesUi
 import org.simple.clinic.drugs.selection.ProtocolDrugListItem
-import org.simple.clinic.drugs.selection.entry.CustomPrescribedDrugListItem
 import org.simple.clinic.mobius.ViewRenderer
 import org.simple.clinic.protocol.ProtocolDrugAndDosages
 
@@ -11,6 +13,16 @@ class EditMedicinesUiRenderer(private val ui: EditMedicinesUi) : ViewRenderer<Ed
   override fun render(model: EditMedicinesModel) {
     if (model.prescribedDrugs != null && model.protocolDrugs != null)
       renderPrescribedProtocolDrugs(model, model.prescribedDrugs, model.protocolDrugs)
+    when (model.editMedicineButtonState) {
+      SAVE_MEDICINE -> {
+        ui.showDoneButton()
+        ui.hideRefillMedicineButton()
+      }
+      REFILL_MEDICINE -> {
+        ui.showRefillMedicineButton()
+        ui.hideDoneButton()
+      }
+    }
   }
 
   private fun renderPrescribedProtocolDrugs(
@@ -19,11 +31,11 @@ class EditMedicinesUiRenderer(private val ui: EditMedicinesUi) : ViewRenderer<Ed
       protocolDrugs: List<ProtocolDrugAndDosages>
   ) {
     val (prescribedProtocolDrugs, prescribedCustomDrugs) = prescribedDrugs.partition(model::isProtocolDrug)
-    val isAtLeastOneCustomDrugPrescribed = prescribedCustomDrugs.isNotEmpty()
 
-    val protocolDrugSelectionItems = protocolDrugSelectionItems(protocolDrugs, prescribedProtocolDrugs, isAtLeastOneCustomDrugPrescribed)
+    val protocolDrugSelectionItems = protocolDrugSelectionItems(protocolDrugs, prescribedProtocolDrugs)
     val customPrescribedDrugItems = customPrescribedDrugItems(prescribedCustomDrugs)
-    val drugsList = protocolDrugSelectionItems + customPrescribedDrugItems
+    val drugsList = (protocolDrugSelectionItems + customPrescribedDrugItems)
+        .sortedByDescending { it.prescribedDrug?.updatedAt }
 
     ui.populateDrugsList(drugsList)
   }
@@ -32,14 +44,16 @@ class EditMedicinesUiRenderer(private val ui: EditMedicinesUi) : ViewRenderer<Ed
       prescribedCustomDrugs: List<PrescribedDrug>
   ): List<CustomPrescribedDrugListItem> {
     return prescribedCustomDrugs
-        .sortedBy { it.updatedAt }
-        .mapIndexed { index, prescribedDrug -> CustomPrescribedDrugListItem(prescribedDrug, index == prescribedCustomDrugs.lastIndex) }
+        .map { prescribedDrug ->
+          CustomPrescribedDrugListItem(
+              prescribedDrug = prescribedDrug
+          )
+        }
   }
 
   private fun protocolDrugSelectionItems(
       protocolDrugs: List<ProtocolDrugAndDosages>,
-      prescribedProtocolDrugs: List<PrescribedDrug>,
-      isAtLeastOneCustomDrugPrescribed: Boolean
+      prescribedProtocolDrugs: List<PrescribedDrug>
   ): List<ProtocolDrugListItem> {
     // Show dosage if prescriptions exist for them.
     return protocolDrugs
@@ -48,8 +62,7 @@ class EditMedicinesUiRenderer(private val ui: EditMedicinesUi) : ViewRenderer<Ed
           ProtocolDrugListItem(
               id = index,
               drugName = drugAndDosages.drugName,
-              prescribedDrug = matchingPrescribedDrug,
-              hideDivider = isAtLeastOneCustomDrugPrescribed.not() && index == protocolDrugs.lastIndex)
+              prescribedDrug = matchingPrescribedDrug)
         }
   }
 }

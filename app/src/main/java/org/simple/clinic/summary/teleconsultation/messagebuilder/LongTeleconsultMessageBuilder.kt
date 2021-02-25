@@ -1,7 +1,11 @@
 package org.simple.clinic.summary.teleconsultation.messagebuilder
 
 import android.content.res.Resources
+import com.f2prateek.rx.preferences2.Preference
 import org.simple.clinic.R
+import org.simple.clinic.bloodsugar.BloodSugarMeasurement
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
+import org.simple.clinic.bp.BloodPressureMeasurement
 import org.simple.clinic.medicalhistory.Answer
 import org.simple.clinic.summary.PatientTeleconsultationInfo
 import org.simple.clinic.util.UserClock
@@ -13,11 +17,13 @@ import javax.inject.Named
 class LongTeleconsultMessageBuilder @Inject constructor(
     private val resources: Resources,
     private val userClock: UserClock,
-    @Named("full_date") private val dateFormatter: DateTimeFormatter
+    @Named("full_date") private val dateFormatter: DateTimeFormatter,
+    private val bloodSugarUnitPreference: Preference<BloodSugarUnitPreference>
 ) : TeleconsultationMessageBuilder {
 
   companion object {
     private const val LINE_BREAK = "\n"
+    private val SECTION_BREAKER = "-".repeat(44)
   }
 
   /**
@@ -25,81 +31,25 @@ class LongTeleconsultMessageBuilder @Inject constructor(
    * for the recipient.
    */
   override fun message(patientTeleconsultationInfo: PatientTeleconsultationInfo): String {
-    val message = StringBuilder("*${patientTeleconsultationInfo.facility.name}* teleconsult request for:")
+    val message = StringBuilder("🔔 *${patientTeleconsultationInfo.facility.name}* teleconsult request:")
         .appendLine("")
         .appendLine("")
-        .appendLine("*Patient record*:")
-        .appendLine("https://app.simple.org/patient/${patientTeleconsultationInfo.patientUuid}")
+        .appendLine("1️⃣ Review Patient:")
         .appendLine("")
 
     addDiagnosisSectionToMessage(patientTeleconsultationInfo, message)
+    addBpPassportForTeleconsultSectionToMessage(patientTeleconsultationInfo, message)
     addBloodPressuresSectionToMessage(patientTeleconsultationInfo, message)
     addBloodSugarsSectionToMessage(patientTeleconsultationInfo, message)
     addPrescriptionsSectionToMessage(patientTeleconsultationInfo, message)
 
-    if (patientTeleconsultationInfo.bpPassport.isNullOrBlank().not()) {
-      message.appendLine("*BP Passport*: ${patientTeleconsultationInfo.bpPassport}")
-          .appendLine("")
-    }
+    addCallForTeleconsultSectionToMessage(patientTeleconsultationInfo, message)
+    addLogTeleconsultSectionToMessage(patientTeleconsultationInfo, message)
+    addCallDoctorSectionToMessage(patientTeleconsultationInfo, message)
+
+    sectionBreaker(message)
 
     return message.toString()
-  }
-
-  private fun addPrescriptionsSectionToMessage(
-      patientTeleconsultationInfo: PatientTeleconsultationInfo,
-      message: StringBuilder
-  ) {
-    if (patientTeleconsultationInfo.prescriptions.isNotEmpty()) {
-      val medicines = patientTeleconsultationInfo
-          .prescriptions.joinToString(separator = LINE_BREAK) { "${it.name} ${it.dosage}" }
-      message.appendLine("*Current medicines*:")
-          .appendLine(medicines)
-          .appendLine("")
-    }
-  }
-
-  private fun addBloodSugarsSectionToMessage(
-      patientTeleconsultationInfo: PatientTeleconsultationInfo,
-      message: StringBuilder
-  ) {
-    if (patientTeleconsultationInfo.bloodSugars.isNotEmpty()) {
-      val bloodSugars = patientTeleconsultationInfo
-          .bloodSugars.joinToString(separator = LINE_BREAK) {
-            val bloodSugarRecordedAtDate = dateFormatter.format(it.recordedAt.toLocalDateAtZone(userClock.zone))
-            val bloodSugarType = resources.getString(it.reading.displayType)
-            val bloodSugarUnit = resources.getString(it.reading.displayUnit)
-
-            "$bloodSugarType ${it.reading.displayValue}${it.reading.displayUnitSeparator}${bloodSugarUnit} ($bloodSugarRecordedAtDate)"
-          }
-
-      val bloodSugarsSize = patientTeleconsultationInfo.bloodSugars.size
-      val bloodSugarsTitle = resources
-          .getQuantityString(R.plurals.patientsummary_contact_doctor_patient_info_blood_sugars, bloodSugarsSize, bloodSugarsSize.toString())
-
-      message.appendLine(bloodSugarsTitle)
-          .appendLine(bloodSugars)
-          .appendLine("")
-    }
-  }
-
-  private fun addBloodPressuresSectionToMessage(
-      patientTeleconsultationInfo: PatientTeleconsultationInfo,
-      message: StringBuilder
-  ) {
-    if (patientTeleconsultationInfo.bloodPressures.isNotEmpty()) {
-      val bloodPressures = patientTeleconsultationInfo
-          .bloodPressures.joinToString(separator = LINE_BREAK) {
-            val bpRecordedAtDate = dateFormatter.format(it.recordedAt.toLocalDateAtZone(userClock.zone))
-            "${it.reading.systolic}/${it.reading.diastolic} ($bpRecordedAtDate)"
-          }
-      val bloodPressuresSize = patientTeleconsultationInfo.bloodPressures.size
-      val bloodPressuresTitle = resources
-          .getQuantityString(R.plurals.patientsummary_contact_doctor_patient_info_bps, bloodPressuresSize, bloodPressuresSize.toString())
-
-      message.appendLine(bloodPressuresTitle)
-          .appendLine(bloodPressures)
-          .appendLine("")
-    }
   }
 
   private fun addDiagnosisSectionToMessage(patientTeleconsultationInfo: PatientTeleconsultationInfo, message: StringBuilder) {
@@ -130,5 +80,115 @@ class LongTeleconsultMessageBuilder @Inject constructor(
       Answer.No -> resources.getString(R.string.patientsummary_contact_doctor_diagnosis_answer_no)
       else -> ""
     }
+  }
+
+  private fun addBpPassportForTeleconsultSectionToMessage(
+      patientTeleconsultationInfo: PatientTeleconsultationInfo,
+      message: StringBuilder
+  ) {
+    if (patientTeleconsultationInfo.bpPassport.isNullOrBlank().not()) {
+
+      message.appendLine("*BP Passport*: ${patientTeleconsultationInfo.bpPassport}")
+          .appendLine("")
+    }
+  }
+
+  private fun addCallDoctorSectionToMessage(patientTeleconsultationInfo: PatientTeleconsultationInfo, message: StringBuilder) {
+    sectionBreaker(message)
+
+    message
+        .appendLine("*Call doctor*: ${patientTeleconsultationInfo.doctorPhoneNumber}")
+        .appendLine("")
+  }
+
+  private fun addLogTeleconsultSectionToMessage(patientTeleconsultationInfo: PatientTeleconsultationInfo, message: StringBuilder) {
+    sectionBreaker(message)
+
+    message
+        .appendLine("3️⃣ *Log teleconsult*: https://app.simple.org/consult?r=${patientTeleconsultationInfo.teleconsultRecordId}&p=${patientTeleconsultationInfo.patientUuid}")
+        .appendLine("")
+  }
+
+  private fun addCallForTeleconsultSectionToMessage(
+      patientTeleconsultationInfo: PatientTeleconsultationInfo,
+      message: StringBuilder
+  ) {
+    if (patientTeleconsultationInfo.nursePhoneNumber.isNullOrBlank().not()) {
+      sectionBreaker(message)
+
+      message
+          .appendLine("2️⃣ *Call for teleconsult*: ${patientTeleconsultationInfo.nursePhoneNumber}")
+          .appendLine("")
+    }
+  }
+
+  private fun addPrescriptionsSectionToMessage(
+      patientTeleconsultationInfo: PatientTeleconsultationInfo,
+      message: StringBuilder
+  ) {
+    if (patientTeleconsultationInfo.prescriptions.isNotEmpty()) {
+      val medicines = patientTeleconsultationInfo
+          .prescriptions.joinToString(separator = LINE_BREAK) { "${it.name} ${it.dosage}" }
+      message.appendLine("*Current medicines*:")
+          .appendLine(medicines)
+          .appendLine("")
+    }
+  }
+
+  private fun addBloodSugarsSectionToMessage(
+      patientTeleconsultationInfo: PatientTeleconsultationInfo,
+      message: StringBuilder
+  ) {
+    if (patientTeleconsultationInfo.bloodSugars.isNotEmpty()) {
+      val bloodSugars = patientTeleconsultationInfo
+          .bloodSugars
+          .joinToString(separator = LINE_BREAK, transform = ::bloodSugarToDisplayString)
+
+      val bloodSugarsSize = patientTeleconsultationInfo.bloodSugars.size
+      val bloodSugarsTitle = resources
+          .getQuantityString(R.plurals.patientsummary_contact_doctor_patient_info_blood_sugars, bloodSugarsSize, bloodSugarsSize.toString())
+
+      message.appendLine(bloodSugarsTitle)
+          .appendLine(bloodSugars)
+          .appendLine("")
+    }
+  }
+
+  private fun addBloodPressuresSectionToMessage(
+      patientTeleconsultationInfo: PatientTeleconsultationInfo,
+      message: StringBuilder
+  ) {
+    if (patientTeleconsultationInfo.bloodPressures.isNotEmpty()) {
+      val bloodPressures = patientTeleconsultationInfo
+          .bloodPressures
+          .joinToString(separator = LINE_BREAK, transform = ::bloodPressureToDisplayString)
+
+      val bloodPressuresSize = patientTeleconsultationInfo.bloodPressures.size
+      val bloodPressuresTitle = resources
+          .getQuantityString(R.plurals.patientsummary_contact_doctor_patient_info_bps, bloodPressuresSize, bloodPressuresSize.toString())
+
+      message.appendLine(bloodPressuresTitle)
+          .appendLine(bloodPressures)
+          .appendLine("")
+    }
+  }
+
+  private fun bloodPressureToDisplayString(measurement: BloodPressureMeasurement): String {
+    val bpRecordedAtDate = dateFormatter.format(measurement.recordedAt.toLocalDateAtZone(userClock.zone))
+
+    return "${measurement.reading.systolic}/${measurement.reading.diastolic} ($bpRecordedAtDate)"
+  }
+
+  private fun bloodSugarToDisplayString(measurement: BloodSugarMeasurement): String {
+    val bloodSugarRecordedAtDate = dateFormatter.format(measurement.recordedAt.toLocalDateAtZone(userClock.zone))
+    val bloodSugarType = resources.getString(measurement.reading.displayType)
+    val bloodSugarUnit = resources.getString(measurement.reading.displayUnit(bloodSugarUnitPreference.get()))
+    val displayValue = measurement.reading.displayValue(bloodSugarUnitPreference.get())
+
+    return "$bloodSugarType ${displayValue}${measurement.reading.displayUnitSeparator}${bloodSugarUnit} ($bloodSugarRecordedAtDate)"
+  }
+
+  private fun sectionBreaker(message: StringBuilder) {
+    message.appendLine(SECTION_BREAKER).appendLine("")
   }
 }

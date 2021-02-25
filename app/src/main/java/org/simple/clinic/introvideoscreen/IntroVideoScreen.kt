@@ -9,11 +9,14 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
-import kotlinx.android.synthetic.main.screen_intro_video.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenIntroVideoBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.platform.crash.CrashReporter
 import org.simple.clinic.registration.register.RegistrationLoadingScreenKey
 import org.simple.clinic.router.screen.ScreenRouter
@@ -26,8 +29,25 @@ class IntroVideoScreen(
     attrs: AttributeSet
 ) : ConstraintLayout(context, attrs), UiActions {
 
+  var binding: ScreenIntroVideoBinding? = null
+
+  private val introVideoSubtitle
+    get() = binding!!.introVideoSubtitle
+
+  private val introVideoImageView
+    get() = binding!!.introVideoImageView
+
+  private val watchVideoButton
+    get() = binding!!.watchVideoButton
+
+  private val skipButton
+    get() = binding!!.skipButton
+
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
 
   @Inject
   @Named("training_video_youtube_id")
@@ -60,6 +80,7 @@ class IntroVideoScreen(
 
   override fun onFinishInflate() {
     super.onFinishInflate()
+    binding = ScreenIntroVideoBinding.bind(this)
     if (isInEditMode) return
 
     context.injector<IntroVideoScreenInjector>().inject(this)
@@ -78,6 +99,7 @@ class IntroVideoScreen(
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     mobiusDelegate.stop()
+    binding = null
   }
 
   override fun openVideo() {
@@ -85,7 +107,8 @@ class IntroVideoScreen(
   }
 
   override fun openHome() {
-    screenRouter.push(RegistrationLoadingScreenKey())
+    val screenKey = screenKeyProvider.keyFor<IntroVideoScreenKey>(this)
+    router.push(RegistrationLoadingScreenKey(screenKey.registrationEntry).wrap())
   }
 
   private fun videoClicks(): Observable<IntroVideoEvent> {

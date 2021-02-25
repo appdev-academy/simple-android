@@ -1,15 +1,19 @@
 package org.simple.clinic.user
 
 import android.os.Parcelable
-import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Embedded
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.TypeConverter
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.ToJson
 import io.reactivex.Flowable
 import io.reactivex.Single
 import kotlinx.android.parcel.Parcelize
@@ -17,6 +21,7 @@ import org.intellij.lang.annotations.Language
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.room.RoomEnumTypeConverter
+import org.simple.clinic.util.room.SafeEnumTypeAdapter
 import java.time.Instant
 import java.util.UUID
 
@@ -24,21 +29,7 @@ import java.util.UUID
 // Room starts complaining if you try to rename a table which
 // is referenced by another table in a foreign key (technically,
 // SQLite supports renaming tables, but Room complains).
-@Entity(
-    tableName = "LoggedInUser",
-    foreignKeys = [
-      ForeignKey(
-          entity = Facility::class,
-          parentColumns = ["uuid"],
-          childColumns = ["registrationFacilityUuid"]
-      ),
-      ForeignKey(
-          entity = Facility::class,
-          parentColumns = ["uuid"],
-          childColumns = ["currentFacilityUuid"]
-      )
-    ]
-)
+@Entity(tableName = "LoggedInUser")
 @Parcelize
 data class User(
 
@@ -59,13 +50,14 @@ data class User(
 
     val loggedInStatus: LoggedInStatus,
 
-    @ColumnInfo(index = true)
     val registrationFacilityUuid: UUID,
 
-    @ColumnInfo(index = true)
     val currentFacilityUuid: UUID,
 
-    val teleconsultPhoneNumber: String?
+    val teleconsultPhoneNumber: String?,
+
+    @Embedded(prefix = "capability_")
+    val capabilities: Capabilities? // Update this to not null when API is finalized
 ) : Parcelable {
 
   val canSyncData: Boolean
@@ -83,6 +75,9 @@ data class User(
   val isNotDisapprovedForSyncing: Boolean
     get() = status != UserStatus.DisapprovedForSyncing
 
+  val isUserLoggedIn: Boolean
+    get() = loggedInStatus == LoggedInStatus.LOGGED_IN
+
   fun withStatus(status: UserStatus, clock: UtcClock): User {
     return copy(status = status, updatedAt = Instant.now(clock))
   }
@@ -96,13 +91,6 @@ data class User(
   }
 
   enum class LoggedInStatus {
-    /**
-     * Phone number match happened on the server,
-     * and information was stored locally, but the
-     * OTP request has not yet been made.
-     **/
-    NOT_LOGGED_IN,
-
     /**
      * Login OTP request has been raised with the server.
      **/
@@ -138,6 +126,60 @@ data class User(
     UNAUTHORIZED;
 
     class RoomTypeConverter : RoomEnumTypeConverter<LoggedInStatus>(LoggedInStatus::class.java)
+
+  }
+
+  @JsonClass(generateAdapter = true)
+  @Parcelize
+  data class Capabilities(
+      @Json(name = "can_teleconsult")
+      val canTeleconsult: CapabilityStatus
+  ) : Parcelable
+
+  sealed class CapabilityStatus : Parcelable {
+
+    @Parcelize
+    object Yes : CapabilityStatus() {
+      override fun toString(): String {
+        return "yes"
+      }
+    }
+
+    @Parcelize
+    object No : CapabilityStatus() {
+      override fun toString(): String {
+        return "no"
+      }
+    }
+
+    @Parcelize
+    data class Unknown(val actual: String) : CapabilityStatus()
+
+    object TypeAdapter : SafeEnumTypeAdapter<CapabilityStatus>(
+        knownMappings = mapOf(
+            Yes to "yes",
+            No to "no"
+        ),
+        unknownStringToEnumConverter = { Unknown(it) },
+        unknownEnumToStringConverter = { (it as Unknown).actual }
+    )
+
+    class RoomTypeConverter {
+
+      @TypeConverter
+      fun toEnum(value: String?) = TypeAdapter.toEnum(value)
+
+      @TypeConverter
+      fun fromEnum(anEnum: CapabilityStatus?) = TypeAdapter.fromEnum(anEnum)
+    }
+
+    class MoshiTypeAdapter {
+      @FromJson
+      fun toEnum(value: String?) = TypeAdapter.toEnum(value)
+
+      @ToJson
+      fun fromEnum(anEnum: CapabilityStatus?) = TypeAdapter.fromEnum(anEnum)
+    }
   }
 
   @Dao
@@ -155,7 +197,8 @@ data class User(
          F.createdAt, F.updatedAt, F.deletedAt,
          F.syncStatus,
          F.config_diabetesManagementEnabled,
-         F.config_teleconsultationEnabled
+         F.config_teleconsultationEnabled,
+         F.syncGroup
         FROM Facility F
         INNER JOIN LoggedInUser ON LoggedInUser.currentFacilityUuid = F.uuid
         LIMIT 1
@@ -191,5 +234,12 @@ data class User(
 
     @Query("SELECT currentFacilityUuid FROM LoggedInUser LIMIT 1")
     abstract fun currentFacilityUuid(): UUID?
+
+    @Query("""
+      SELECT U.uuid userId, F.uuid currentFacilityId, F.syncGroup currentSyncGroupId
+      FROM LoggedInUser U
+      INNER JOIN Facility F ON U.currentFacilityUuid == F.uuid
+    """)
+    abstract fun userAndFacilityDetails(): UserFacilityDetails?
   }
 }

@@ -9,11 +9,14 @@ import io.reactivex.rxkotlin.ofType
 import kotlinx.android.synthetic.main.recent_patients.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.RecentPatientItemViewBinding
+import org.simple.clinic.databinding.SeeAllItemViewBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
 import org.simple.clinic.patient.PatientConfig
 import org.simple.clinic.recentpatient.RecentPatientsScreenKey
-import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.UtcClock
@@ -34,7 +37,7 @@ class RecentPatientsView(
   lateinit var utcClock: UtcClock
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var effectHandlerFactory: LatestRecentPatientsEffectHandler.Factory
@@ -45,7 +48,17 @@ class RecentPatientsView(
   @Inject
   lateinit var config: PatientConfig
 
-  private val recentAdapter = ItemAdapter(RecentPatientItemTypeDiffCallback())
+  private val recentAdapter = ItemAdapter(
+      diffCallback = RecentPatientItemTypeDiffCallback(),
+      bindings = mapOf(
+          R.layout.recent_patient_item_view to { layoutInflater, parent ->
+            RecentPatientItemViewBinding.inflate(layoutInflater, parent, false)
+          },
+          R.layout.see_all_item_view to { layoutInflater, parent ->
+            SeeAllItemViewBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   private val events by unsafeLazy {
     adapterEvents()
@@ -66,12 +79,17 @@ class RecentPatientsView(
     )
   }
 
+  init {
+    inflate(context, R.layout.recent_patients, this)
+  }
+
   override fun onFinishInflate() {
     super.onFinishInflate()
+    if (isInEditMode) {
+      return
+    }
 
     context.injector<Injector>().inject(this)
-
-    inflate(context, R.layout.recent_patients, this)
 
     recentRecyclerView.apply {
       layoutManager = LinearLayoutManager(context)
@@ -90,7 +108,7 @@ class RecentPatientsView(
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -110,16 +128,17 @@ class RecentPatientsView(
   }
 
   override fun openRecentPatientsScreen() {
-    screenRouter.push(RecentPatientsScreenKey())
+    router.push(RecentPatientsScreenKey().wrap())
   }
 
   override fun openPatientSummary(patientUuid: UUID) {
-    screenRouter.push(
+    router.push(
         PatientSummaryScreenKey(
             patientUuid = patientUuid,
             intention = OpenIntention.ViewExistingPatient,
             screenCreatedTimestamp = Instant.now(utcClock)
-        ))
+        )
+    )
   }
 
   interface Injector {

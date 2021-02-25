@@ -9,14 +9,15 @@ import androidx.annotation.StringRes
 import com.jakewharton.rxbinding3.widget.editorActions
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_forgotpin_confirmpin.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenForgotpinConfirmpinBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.home.HomeScreenKey
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.RouterDirection
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.hideKeyboard
 import org.simple.clinic.widgets.showKeyboard
@@ -32,7 +33,36 @@ class ForgotPinConfirmPinScreen(
   lateinit var effectHandlerFactory: ForgotPinConfirmPinEffectHandler.Factory
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
+
+  private var binding: ScreenForgotpinConfirmpinBinding? = null
+
+  private val pinEntryEditText
+    get() = binding!!.pinEntryEditText
+
+  private val backButton
+    get() = binding!!.backButton
+
+  private val userNameTextView
+    get() = binding!!.userNameTextView
+
+  private val facilityNameTextView
+    get() = binding!!.facilityNameTextView
+
+  private val pinErrorTextView
+    get() = binding!!.pinErrorTextView
+
+  private val pinEntryHintTextView
+    get() = binding!!.pinEntryHintTextView
+
+  private val progressBar
+    get() = binding!!.progressBar
+
+  private val pinEntryContainer
+    get() = binding!!.pinEntryContainer
 
   private val events by unsafeLazy {
     Observable
@@ -44,7 +74,7 @@ class ForgotPinConfirmPinScreen(
   }
 
   private val delegate by unsafeLazy {
-    val screenKey = screenRouter.key<ForgotPinConfirmPinScreenKey>(this)
+    val screenKey = screenKeyProvider.keyFor<ForgotPinConfirmPinScreenKey>(this)
     val uiRenderer = ForgotPinConfirmPinUiRenderer(this)
 
     MobiusDelegate.forView(
@@ -64,11 +94,14 @@ class ForgotPinConfirmPinScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
   override fun onFinishInflate() {
     super.onFinishInflate()
+
+    binding = ScreenForgotpinConfirmpinBinding.bind(this)
 
     context.injector<Injector>().inject(this)
 
@@ -103,7 +136,7 @@ class ForgotPinConfirmPinScreen(
   }
 
   private fun goBack() {
-    screenRouter.pop()
+    router.pop()
   }
 
   override fun showPinMismatchedError() {
@@ -135,7 +168,7 @@ class ForgotPinConfirmPinScreen(
   }
 
   override fun goToHomeScreen() {
-    screenRouter.clearHistoryAndPush(HomeScreenKey, RouterDirection.FORWARD)
+    router.clearHistoryAndPush(HomeScreenKey)
   }
 
   private fun showError(@StringRes errorMessageResId: Int) {

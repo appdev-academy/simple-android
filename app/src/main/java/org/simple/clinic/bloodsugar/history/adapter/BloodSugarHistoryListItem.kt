@@ -4,15 +4,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.text.style.TextAppearanceSpan
 import android.view.View
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.list_blood_sugar_history_item.*
-import kotlinx.android.synthetic.main.list_new_blood_sugar_button.*
 import org.simple.clinic.R
 import org.simple.clinic.bloodsugar.BloodSugarMeasurement
 import org.simple.clinic.bloodsugar.BloodSugarReading
-import org.simple.clinic.util.Truss
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
+import org.simple.clinic.databinding.ListBloodSugarHistoryItemBinding
+import org.simple.clinic.databinding.ListNewBloodSugarButtonBinding
 import org.simple.clinic.widgets.PagingItemAdapter
-import org.simple.clinic.widgets.recyclerview.ViewHolderX
+import org.simple.clinic.widgets.recyclerview.BindingViewHolder
 import org.simple.clinic.widgets.visibleOrGone
 
 sealed class BloodSugarHistoryListItem : PagingItemAdapter.Item<Event> {
@@ -20,8 +22,10 @@ sealed class BloodSugarHistoryListItem : PagingItemAdapter.Item<Event> {
   object NewBloodSugarButton : BloodSugarHistoryListItem() {
     override fun layoutResId(): Int = R.layout.list_new_blood_sugar_button
 
-    override fun render(holder: ViewHolderX, subject: Subject<Event>) {
-      holder.newBloodSugarButton.setOnClickListener { subject.onNext(NewBloodSugarClicked) }
+    override fun render(holder: BindingViewHolder, subject: Subject<Event>) {
+      val binding = holder.binding as ListNewBloodSugarButtonBinding
+
+      binding.newBloodSugarButton.setOnClickListener { subject.onNext(NewBloodSugarClicked) }
     }
   }
 
@@ -29,29 +33,31 @@ sealed class BloodSugarHistoryListItem : PagingItemAdapter.Item<Event> {
       val measurement: BloodSugarMeasurement,
       val bloodSugarDate: String,
       val bloodSugarTime: String?,
-      val isBloodSugarEditable: Boolean
+      val isBloodSugarEditable: Boolean,
+      val bloodSugarUnitPreference: BloodSugarUnitPreference
   ) : BloodSugarHistoryListItem() {
     override fun layoutResId(): Int = R.layout.list_blood_sugar_history_item
 
     @SuppressLint("SetTextI18n")
-    override fun render(holder: ViewHolderX, subject: Subject<Event>) {
+    override fun render(holder: BindingViewHolder, subject: Subject<Event>) {
+      val binding = holder.binding as ListBloodSugarHistoryItemBinding
       val context = holder.itemView.context
       val bloodSugarReading = measurement.reading
-      val formattedBPDateTime = Truss()
-          .pushSpan(dateTimeTextAppearance(context))
-          .append(bloodSugarDateTime(context))
-          .popSpan()
-          .build()
+      val formattedBPDateTime = buildSpannedString {
+        inSpans(dateTimeTextAppearance(context)) {
+          append(bloodSugarDateTime(context))
+        }
+      }
 
-      val displayUnit = context.getString(bloodSugarReading.displayUnit)
+      val displayUnit = context.getString(bloodSugarReading.displayUnit(bloodSugarUnitPreference))
       val displayType = context.getString(bloodSugarReading.displayType)
-      val readingPrefix = bloodSugarReading.displayValue
+      val readingPrefix = bloodSugarReading.displayValue(bloodSugarUnitPreference)
       val readingSuffix = "$displayUnit $displayType"
 
-      renderBloodSugarLevel(holder, context, measurement.reading)
+      renderBloodSugarLevel(binding, context, measurement.reading)
 
-      holder.readingsTextView.text = "$readingPrefix${bloodSugarReading.displayUnitSeparator}$readingSuffix"
-      holder.dateTimeTextView.text = formattedBPDateTime
+      binding.readingsTextView.text = "$readingPrefix${bloodSugarReading.displayUnitSeparator}$readingSuffix"
+      binding.dateTimeTextView.text = formattedBPDateTime
 
       if (isBloodSugarEditable) {
         holder.itemView.setOnClickListener { subject.onNext(BloodSugarHistoryItemClicked(measurement)) }
@@ -60,24 +66,24 @@ sealed class BloodSugarHistoryListItem : PagingItemAdapter.Item<Event> {
       }
       holder.itemView.isClickable = isBloodSugarEditable
       holder.itemView.isFocusable = isBloodSugarEditable
-      holder.editButton.visibleOrGone(isBloodSugarEditable)
+      binding.editButton.visibleOrGone(isBloodSugarEditable)
     }
 
-    private fun renderBloodSugarLevel(holder: ViewHolderX, context: Context, reading: BloodSugarReading) {
+    private fun renderBloodSugarLevel(binding: ListBloodSugarHistoryItemBinding, context: Context, reading: BloodSugarReading) {
       when {
         reading.isLow -> {
-          holder.bloodSugarLevelTextView.visibility = View.VISIBLE
-          holder.bloodSugarLevelTextView.text = context.getString(R.string.bloodsugar_level_low)
-          holder.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_filled)
+          binding.bloodSugarLevelTextView.visibility = View.VISIBLE
+          binding.bloodSugarLevelTextView.text = context.getString(R.string.bloodsugar_level_low)
+          binding.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_filled)
         }
         reading.isHigh -> {
-          holder.bloodSugarLevelTextView.visibility = View.VISIBLE
-          holder.bloodSugarLevelTextView.text = context.getString(R.string.bloodsugar_level_high)
-          holder.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_filled)
+          binding.bloodSugarLevelTextView.visibility = View.VISIBLE
+          binding.bloodSugarLevelTextView.text = context.getString(R.string.bloodsugar_level_high)
+          binding.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_filled)
         }
         else -> {
-          holder.bloodSugarLevelTextView.visibility = View.GONE
-          holder.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_outline)
+          binding.bloodSugarLevelTextView.visibility = View.GONE
+          binding.bloodSugarIconImageView.setImageResource(R.drawable.ic_blood_sugar_outline)
         }
       }
     }
@@ -92,9 +98,9 @@ sealed class BloodSugarHistoryListItem : PagingItemAdapter.Item<Event> {
 
     private fun dateTimeTextAppearance(context: Context): TextAppearanceSpan {
       return if (bloodSugarTime != null) {
-        TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Caption_Grey1)
+        TextAppearanceSpan(context, R.style.TextAppearance_Simple_Caption)
       } else {
-        TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Body2Left_Grey1)
+        TextAppearanceSpan(context, R.style.TextAppearance_Simple_Body2)
       }
     }
   }

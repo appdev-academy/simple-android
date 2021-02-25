@@ -13,16 +13,17 @@ import com.jakewharton.rxbinding3.widget.editorActionEvents
 import com.jakewharton.rxbinding3.widget.textChanges
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_patient_search.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.allpatientsinfacility.AllPatientsInFacilityListScrolled
 import org.simple.clinic.allpatientsinfacility.AllPatientsInFacilitySearchResultClicked
 import org.simple.clinic.allpatientsinfacility.AllPatientsInFacilityView
+import org.simple.clinic.databinding.ScreenPatientSearchBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.patient.PatientSearchCriteria
-import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.search.results.PatientSearchResultsScreenKey
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
@@ -42,7 +43,7 @@ class PatientSearchScreen(
 ) : RelativeLayout(context, attrs), PatientSearchUi, PatientSearchUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -53,12 +54,32 @@ class PatientSearchScreen(
   @Inject
   lateinit var effectHandlerFactory: PatientSearchEffectHandler.Factory
 
-  private val allPatientsInFacility by unsafeLazy {
-    allPatientsInFacilityView as AllPatientsInFacilityView
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
+
+  private var binding: ScreenPatientSearchBinding? = null
+
+  private val allPatientsInFacilityView
+    get() = binding!!.allPatientsInFacilityView.rootLayout
+
+  private val searchQueryTextInputLayout
+    get() = binding!!.searchQueryTextInputLayout
+
+  private val searchQueryEditText
+    get() = binding!!.searchQueryEditText
+
+  private val searchButtonFrame
+    get() = binding!!.searchButtonFrame
+
+  private val searchButton
+    get() = binding!!.searchButton
+
+  private val allPatientsInFacility: AllPatientsInFacilityView by unsafeLazy {
+    allPatientsInFacilityView
   }
 
   private val screenKey by unsafeLazy {
-    screenRouter.key<PatientSearchScreenKey>(this)
+    screenKeyProvider.keyFor<PatientSearchScreenKey>(this)
   }
 
   private val events by unsafeLazy {
@@ -89,10 +110,13 @@ class PatientSearchScreen(
     if (isInEditMode) {
       return
     }
+
+    binding = ScreenPatientSearchBinding.bind(this)
+
     context.injector<Injector>().inject(this)
 
     searchQueryTextInputLayout.setStartIconOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
     searchQueryEditText.showKeyboard()
 
@@ -107,6 +131,7 @@ class PatientSearchScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -131,8 +156,7 @@ class PatientSearchScreen(
         .filter { it.actionId == EditorInfo.IME_ACTION_SEARCH }
         .map { SearchClicked() }
 
-    val searchClicksFromButton = searchButtonFrame
-        .button
+    val searchClicksFromButton = searchButton
         .clicks()
         .map { SearchClicked() }
 
@@ -156,7 +180,7 @@ class PatientSearchScreen(
   }
 
   override fun openSearchResultsScreen(criteria: PatientSearchCriteria) {
-    screenRouter.push(PatientSearchResultsScreenKey(criteria))
+    router.push(PatientSearchResultsScreenKey(criteria))
   }
 
   override fun setEmptyTextFieldErrorVisible(visible: Boolean) {
@@ -166,7 +190,7 @@ class PatientSearchScreen(
   }
 
   override fun openPatientSummary(patientUuid: UUID) {
-    screenRouter.push(PatientSummaryScreenKey(
+    router.push(PatientSummaryScreenKey(
         patientUuid = patientUuid,
         intention = OpenIntention.ViewExistingPatient,
         screenCreatedTimestamp = Instant.now(utcClock)

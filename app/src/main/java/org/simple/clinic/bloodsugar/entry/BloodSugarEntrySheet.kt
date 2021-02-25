@@ -3,6 +3,7 @@ package org.simple.clinic.bloodsugar.entry
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -15,11 +16,13 @@ import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.rxkotlin.toObservable
-import kotlinx.android.synthetic.main.sheet_blood_sugar_entry.*
 import org.simple.clinic.ClinicApp
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.bloodsugar.BloodSugarMeasurementType
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference.Mg
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference.Mmol
 import org.simple.clinic.bloodsugar.Fasting
 import org.simple.clinic.bloodsugar.HbA1c
 import org.simple.clinic.bloodsugar.PostPrandial
@@ -32,12 +35,15 @@ import org.simple.clinic.bloodsugar.entry.OpenAs.Update
 import org.simple.clinic.bloodsugar.entry.confirmremovebloodsugar.ConfirmRemoveBloodSugarDialog
 import org.simple.clinic.bloodsugar.entry.confirmremovebloodsugar.ConfirmRemoveBloodSugarDialog.RemoveBloodSugarListener
 import org.simple.clinic.bloodsugar.entry.di.BloodSugarEntryComponent
+import org.simple.clinic.bloodsugar.unitselection.BloodSugarUnitSelectionDialog
+import org.simple.clinic.databinding.SheetBloodSugarEntryBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.UserInputDatePaddingCharacter
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import org.simple.clinic.widgets.UiEvent
@@ -105,12 +111,15 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
   @Inject
   lateinit var locale: Locale
 
+  @Inject
+  lateinit var features: Features
+
   private lateinit var component: BloodSugarEntryComponent
 
   private val uiRenderer = BloodSugarEntryUiRenderer(this)
 
   private val openAs: OpenAs by lazy {
-    intent.getParcelableExtra<OpenAs>(KEY_OPEN_AS)!!
+    intent.getParcelableExtra(KEY_OPEN_AS)!!
   }
 
   private val delegate by unsafeLazy {
@@ -137,31 +146,70 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
         dayTextChanges(),
         monthTextChanges(),
         yearTextChanges(),
-        removeClicks()
+        removeClicks(),
+        bloodSugarReadingUnitButtonClicks()
     )
         .compose(ReportAnalyticsEvents())
         .share()
   }
 
+  private lateinit var binding: SheetBloodSugarEntryBinding
+
+  private val rootLayout
+    get() = binding.rootLayout
+
+  private val bloodSugarReadingEditText
+    get() = binding.bloodSugarReadingEditText
+
+  private val dayEditText
+    get() = binding.dayEditText
+
+  private val monthEditText
+    get() = binding.monthEditText
+
+  private val yearEditText
+    get() = binding.yearEditText
+
+  private val bloodSugarDateButton
+    get() = binding.bloodSugarDateButton
+
+  private val backImageButton
+    get() = binding.backImageButton
+
+  private val viewFlipper
+    get() = binding.viewFlipper
+
+  private val removeBloodSugarButton
+    get() = binding.removeBloodSugarButton
+
+  private val bloodSugarErrorTextView
+    get() = binding.bloodSugarErrorTextView
+
+  private val dateErrorTextView
+    get() = binding.dateErrorTextView
+
+  private val enterBloodSugarTitleTextView
+    get() = binding.enterBloodSugarTitleTextView
+
+  private val editBloodSugarTitleTextView
+    get() = binding.editBloodSugarTitleTextView
+
+  private val progressLoader
+    get() = binding.progressLoader
+
+  private val bloodSugarReadingLayout
+    get() = binding.bloodSugarReadingLayout
+
+  private val bloodSugarReadingUnitButton
+    get() = binding.bloodSugarReadingUnitButton
+
+  private val bloodSugarReadingUnitLabel
+    get() = binding.bloodSugarReadingUnitLabel
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    setContentView(R.layout.sheet_blood_sugar_entry)
-
-    openAs.let { openAs ->
-
-      when (openAs.measurementType) {
-        HbA1c -> {
-          bloodSugarReadingEditText.inputType = EditorInfo.TYPE_CLASS_NUMBER or EditorInfo.TYPE_NUMBER_FLAG_DECIMAL
-          bloodSugarReadingUnitLabel.text = getString(R.string.bloodsugarentry_percentage)
-        }
-        Random, PostPrandial, Fasting -> {
-          bloodSugarReadingEditText.inputType = EditorInfo.TYPE_CLASS_NUMBER
-          bloodSugarReadingUnitLabel.text = getString(R.string.bloodsugarentry_mg_dl)
-        }
-      }
-    }
-
+    binding = SheetBloodSugarEntryBinding.inflate(layoutInflater)
+    setContentView(binding.root)
     delegate.onRestoreInstanceState(savedInstanceState)
   }
 
@@ -184,18 +232,21 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
     setupDi()
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setupDi() {
     component = ClinicApp.appComponent
         .bloodSugarEntryComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }
@@ -219,6 +270,10 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
   private fun backClicks(): Observable<UiEvent> = backImageButton
       .clicks()
       .map { ShowBloodSugarEntryClicked }
+
+  private fun bloodSugarReadingUnitButtonClicks() = bloodSugarReadingUnitButton
+      .clicks()
+      .map { BloodSugarReadingUnitButtonClicked }
 
   private fun hardwareBackPresses(): Observable<UiEvent> {
     return Observable.create { emitter ->
@@ -275,17 +330,43 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
     showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_empty))
   }
 
-  override fun showBloodSugarHighError(measurementType: BloodSugarMeasurementType) {
+  override fun showBloodSugarHighError(measurementType: BloodSugarMeasurementType, unitPreference: BloodSugarUnitPreference) {
+    when (unitPreference) {
+      Mg -> showBloodSugarHighErrorForMg(measurementType)
+      Mmol -> showBloodSugarHighErrorForMmol(measurementType)
+    }
+  }
+
+  private fun showBloodSugarHighErrorForMg(measurementType: BloodSugarMeasurementType) {
     when (measurementType) {
       Random, PostPrandial, Fasting -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_higher_limit))
       HbA1c -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_higher_limit_hba1c))
     }
   }
 
-  override fun showBloodSugarLowError(measurementType: BloodSugarMeasurementType) {
+  private fun showBloodSugarHighErrorForMmol(measurementType: BloodSugarMeasurementType) {
+    when (measurementType) {
+      Random, PostPrandial, Fasting -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_higher_limit_mmol))
+    }
+  }
+
+  override fun showBloodSugarLowError(measurementType: BloodSugarMeasurementType, unitPreference: BloodSugarUnitPreference) {
+    when (unitPreference) {
+      Mg -> showBloodSugarLowErrorForMg(measurementType)
+      Mmol -> showBloodSugarLowErrorForMmol(measurementType)
+    }
+  }
+
+  private fun showBloodSugarLowErrorForMg(measurementType: BloodSugarMeasurementType) {
     when (measurementType) {
       Random, PostPrandial, Fasting -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_lower_limit))
       HbA1c -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_lower_limit_hba1c))
+    }
+  }
+
+  private fun showBloodSugarLowErrorForMmol(measurementType: BloodSugarMeasurementType) {
+    when (measurementType) {
+      Random, PostPrandial, Fasting -> showBloodSugarErrorMessage(getString(R.string.bloodsugarentry_error_lower_limit_mmol))
     }
   }
 
@@ -376,6 +457,50 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
     bloodSugarDateButton.visibleOrGone(isVisible = true)
   }
 
+  override fun setBloodSugarUnitPreferenceLabelToMmol() {
+    bloodSugarReadingUnitButton.text = getString(R.string.bloodsugarentry_mmol_l)
+  }
+
+  override fun setBloodSugarUnitPreferenceLabelToMg() {
+    bloodSugarReadingUnitButton.text = getString(R.string.bloodsugarentry_mg_dl)
+  }
+
+  override fun showBloodSugarUnitPreferenceButton() {
+    bloodSugarReadingUnitButton.visibility = View.VISIBLE
+  }
+
+  override fun hideBloodSugarUnitPreferenceButton() {
+    bloodSugarReadingUnitButton.visibility = View.GONE
+  }
+
+  override fun showBloodSugarUnitPreferenceLabel() {
+    bloodSugarReadingUnitLabel.visibility = View.VISIBLE
+  }
+
+  override fun hideBloodSugarUnitPreferenceLabel() {
+    bloodSugarReadingUnitLabel.visibility = View.GONE
+  }
+
+  override fun decimalOrNumericBloodSugarInputType() {
+    bloodSugarReadingEditText.inputType = EditorInfo.TYPE_CLASS_NUMBER or EditorInfo.TYPE_NUMBER_FLAG_DECIMAL
+  }
+
+  override fun numericBloodSugarInputType() {
+    bloodSugarReadingEditText.inputType = EditorInfo.TYPE_CLASS_NUMBER
+  }
+
+  override fun setLabelForHbA1c() {
+    bloodSugarReadingUnitLabel.text = getString(R.string.bloodsugarentry_percentage)
+  }
+
+  override fun setLabelForUnknown() {
+    bloodSugarReadingUnitLabel.text = getString(R.string.bloodsugarentry_mg_dl)
+  }
+
+  override fun showBloodSugarUnitSelectionDialog(bloodSugarUnitPreference: BloodSugarUnitPreference) {
+    BloodSugarUnitSelectionDialog.show(supportFragmentManager, bloodSugarUnitPreference)
+  }
+
   override fun showRemoveButton() {
     removeBloodSugarButton.visibility = View.VISIBLE
   }
@@ -393,7 +518,7 @@ class BloodSugarEntrySheet : BottomSheetActivity(), BloodSugarEntryUi, RemoveBlo
   }
 
   override fun onBackgroundClick() {
-    if (bloodSugarReadingEditText.text.isBlank()) {
+    if (bloodSugarReadingEditText.text.isNullOrBlank()) {
       super.onBackgroundClick()
     }
   }

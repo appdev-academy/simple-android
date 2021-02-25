@@ -6,9 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import kotterknife.bindView
 import org.simple.clinic.BuildConfig
-import org.simple.clinic.R
+import org.simple.clinic.databinding.BottomSheetBinding
+import org.simple.clinic.util.disablePendingTransitions
 
 /**
  * We're using Activities as fake bottom sheets instead of BottomSheetDialog because we want
@@ -20,17 +20,24 @@ import org.simple.clinic.R
  */
 abstract class BottomSheetActivity : AppCompatActivity() {
 
-  private val backgroundView by bindView<View>(R.id.bottomsheet_background)
-  private val contentContainer by bindView<ViewGroup>(R.id.bottomsheet_content_container)
+  private lateinit var bottomSheetBinding: BottomSheetBinding
+
+  private val backgroundView
+    get() = bottomSheetBinding.bottomsheetBackground
+
+  private val contentContainer
+    get() = bottomSheetBinding.bottomsheetContentContainer
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    overridePendingTransition(0, 0)
+    disablePendingTransitions()
     super.onCreate(savedInstanceState)
     @Suppress("ConstantConditionIf")
     if (BuildConfig.DISABLE_SCREENSHOT) {
       window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
     }
-    super.setContentView(R.layout.bottom_sheet)
+
+    bottomSheetBinding = BottomSheetBinding.inflate(layoutInflater)
+    super.setContentView(bottomSheetBinding.root)
 
     contentContainer.setOnClickListener {
       // Swallow clicks to avoid dismissing the sheet accidentally.
@@ -52,7 +59,7 @@ abstract class BottomSheetActivity : AppCompatActivity() {
         contentContainer = contentContainer,
         endAction = {
           super.finish()
-          overridePendingTransition(0, 0)
+          disablePendingTransitions()
         }
     )
   }

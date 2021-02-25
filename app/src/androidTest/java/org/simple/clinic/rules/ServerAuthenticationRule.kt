@@ -111,9 +111,7 @@ class ServerAuthenticationRule : TestRule {
   }
 
   private fun ensureFacilities() {
-    val result = facilitySync
-        .pullWithResult()
-        .blockingGet()
+    val result = facilitySync.pullWithResult()
 
     assertThat(result).isEqualTo(FacilityPullResult.Success)
   }
@@ -186,10 +184,12 @@ class ServerAuthenticationRule : TestRule {
   private fun registerUserAtFacility(facility: Facility): RegistrationResult {
     val user = testData.loggedInUser(
         phone = fakePhoneNumber.phoneNumber(),
-        pinDigest = passwordHasher.hash(userPin)
+        pinDigest = passwordHasher.hash(userPin),
+        currentFacilityUuid = facility.uuid,
+        registrationFacilityUuid = facility.uuid
     )
 
-    return registerUser.registerUserAtFacility(user, facility).blockingGet()
+    return registerUser.registerUserAtFacility(user).blockingGet()
   }
 
   private fun verifyAccessTokenIsPresent() {
@@ -199,7 +199,7 @@ class ServerAuthenticationRule : TestRule {
 
   private fun verifyUserCanSyncData() {
     val (loggedInUser) = userSession.loggedInUser().blockingFirst()
-    assertThat(userSession.isUserLoggedIn()).isTrue()
+    assertThat(userSession.isUserPresentLocally()).isTrue()
     assertThat(loggedInUser!!.status).isEqualTo(UserStatus.ApprovedForSyncing)
     assertThat(loggedInUser.loggedInStatus).isEqualTo(User.LoggedInStatus.LOGGED_IN)
   }

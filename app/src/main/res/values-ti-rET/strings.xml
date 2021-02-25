@@ -66,16 +66,18 @@
   <string name="patiententry_kebele">ጣብያ</string>
   <string name="patiententry_zone">ማሕበር</string>
   <string name="patiententry_district">ወረዳ</string>
-  <string name="patiententry_woreda">ወረዳ</string>
+  <string name="patiententry_woreda">Godina</string>
   <string name="patiententry_upazila">ታሕተዋይ ምምሕዳር</string>
   <string name="patiententry_state">ክልል</string>
   <string name="patiententry_region">ክልል</string>
+  <string name="patiententry_doornumber_streetname">ቁጽሪ ገዛ፣ ናይ ጎዳና ስም</string>
+  <string name="patiententry_division_area">ናይ መኽፈሊ ቦታ</string>
   <string name="patiententry_save_patient">ዝቕፅል</string>
   <string name="patiententry_error_empty_fullname">ሙሉእ ሽም ተሓካሚ ኣእትው/ዊ</string>
   <string name="patiententry_error_empty_gender">ፆታ ተሓካሚ ምረፅ</string>
-  <string name="patiententry_error_empty_colony_or_village">ናይ ተሓካሚ ጣብያ ኣእትው/ዊ</string>
-  <string name="patiententry_error_empty_district">ናይ ተሓካሚ ወረዳ ኣእትው/ዊ</string>
-  <string name="patiententry_error_state_empty">ናይ ተሓካሚ ክልል ኣእትው/ዊ</string>
+  <string name="patiententry_error_empty_colony_or_village">ዘድሊ</string>
+  <string name="patiententry_error_empty_district">ዘድሊ</string>
+  <string name="patiententry_error_state_empty">ዘድሊ</string>
   <string name="patiententry_error_both_dateofbirth_and_age_empty">ናይ ተሓካሚ ዕድመ ኣእትው/ዊ</string>
   <string name="patiententry_error_invalid_dateofbirth">ናይ ተሓካሚ ዕለተ ትውልዲ ብ ዕ/ወ/ዓ.ም መሰረት ኣእትው/ዊ</string>
   <string name="patiententry_error_dateofbirth_is_in_future">ናይ ተሓካሚ ዕለተ ትውልዲ ኣዓሪ/ዪ</string>
@@ -156,6 +158,7 @@
   <string name="patientsummary_prescriptions_update">አብ መድሓኒታት ለውጢ ግበር</string>
   <string name="patientsummary_bp_add_new">ፀቕጢ ደም</string>
   <string name="patientsummary_finish_saving_patient">ምዕቃብ</string>
+  <string name="patientsummary_finish_refill_medicine">መድሓኒት መሊስካ ምላእ</string>
   <string name="patientsummary_bp_none_added">ዝተወሰኸ ፀቕጢ ደም የለን</string>
   <string name="patientsummary_edit">ምእራም</string>
 
@@ -172,12 +175,11 @@
   <string name="patientsummary_toolbar_title">%1$s,%2$s,%3$s</string>
   <string name="patientsummary_bangladesh_national_id">መለለዪ ቁጽሪ</string>
 
-  <string name="patientsummary_contact_doctor">ሓኪም</string>
-  <string name="patientsummary_teleconsult_network_error">ብምኽኒያት ድኹም ኢንተርኔት ርክብ ምግባር ኣይተኽኣለን</string>
-  <string name="patientsummary_teleconsult_network_error_retry">ደጊምካ ፈትን</string>
+  <string name="patientsummary_teleconsult">ቴሌኮንሳልት</string>
+  <string name="patientsummary_log_teleconsult">ናብ ምኽሪ ብቴሌፎን እተው</string>
 
   <string name="patientsummary_registered_faciliy_title">ዝተመዝገበ</string>
-  <string name="patientsummary_registered_facility">%1$s at %2$s</string>
+  <string name="patientsummary_registered_facility">%1$s at%2$s</string>
 
   <string name="bloodpressuresummaryview_see_all_button">ኩሉ ርኣይ</string>
 
@@ -196,7 +198,7 @@
   <string name="timestamp_days_ago">ቅድሚ %s መዓልታት</string>
 
   <!-- Prescribed drugs -->
-  <string name="patient_prescribeddrugs_screen_title">መድሓኒታት ፀቕጢ ደም</string>
+  <string name="patient_prescribeddrugs_screen_title">መድሓኒታት</string>
   <string name="patient_prescribeddrugs_add_custom_prescription">ካልእ መድሓኒት ወስኽ</string>
 
   <string name="customprescription_enter_medicine">መድሓኒት ኣእትው/ዊ</string>
@@ -235,6 +237,8 @@
   <string name="registration_loggedout_dialog_title">ወፂእካ ኣለኻ /ኺ</string>
   <string name="registration_loggedout_dialog_message">ንምቕፃል መሊስካ እተው/ዊ</string>
   <string name="registration_loggedout_dialog_confirm">እሺ</string>
+  <string name="registrationphone_next">ዝቕፅል</string>
+
   <string name="registrationname_name_label">ሙሉእ ሽምካ/ኪ ንገረና/ርና</string>
   <string name="registrationname_error_empty_name">ሙሉእ ሽም ኣእትው/ዊ</string>
 
@@ -293,6 +297,7 @@
   <string name="scheduleappointment_next_visit_in">ዝቕፅል ዑደት መድብ</string>
   <string name="scheduleappointment_not_now">ሕዚ ኣይኮነን</string>
   <string name="scheduleappointment_done">ተፈፂሙ</string>
+  <string name="scheduleappointment_next">ዝቕፅል</string>
   <plurals name="scheduleappointment_appointment_in_days">
     <item quantity="one">%sመዓልቲ</item>
     <item quantity="other">%sመዓልታት</item>
@@ -333,10 +338,10 @@
   <string name="newmedicalhistory_no">ኣይፋሉን</string>
   <string name="newmedicalhistory_history">ታሪኽ</string>
   <string name="newmedicalhistory_diagnosis">ምርመራ (ተደልዩ)</string>
-  <string name="newmedicalhistory_diagnosis_required_error">ዓይነት ምርመራ ምረፅ/ፂ</string>
 
   <!--Prescribed Drug with Dosages Sheet-->
   <string name="prescribed_drugs_dosage_none">ዋላ ሓደ የለን</string>
+  <string name="prescribed_drugs_dosage_remove">ምልጋስ </string>
   <string name="prescribed_drug_with_dosages_sheet_drug_name">%sዓቐን</string>
 
   <!--Scan Simple ID-->
@@ -348,7 +353,7 @@
   <!--- Sync Indicator-->
   <string name="syncindicator_status_pending"> ምስናይ ንውሳነ ይፅበይ ኣሎ</string>
   <string name="syncindicator_status_failed">ምስናይ ፈሺሉ ኣሎ</string>
-  <string name="syncindicator_status_syncing">ኣብ ምስናይ</string>
+  <string name="syncindicator_status_syncing">ኣብ ምስናይ…</string>
   <string name="syncindicator_status_synced_just_now">ሕጂ ገና ተሳንዩ</string>
   <string name="syncindicator_status_synced_min_ago">ቅድሚ %s ደቒቕ ተሳንዩ</string>
   <string name="syncindicator_dialog_error_network">ናይ ተሓካሚ መዛግብቲ  ንክሳነየልካ ፅቡቕ ዝሰርሕ ኢንተርኔት ከም ዘለካ ኣረጋግፅ</string>
@@ -362,10 +367,10 @@
   <string name="help_try_again">መሊስካ/ኪ ፈትን/ኒ</string>
 
   <!-- Link Id Sheet-->
-  <string name="linkidwithpatient_button_add">ዝቕፅል</string>
-  <string name="linkidwithpatient_button_cancel"> ሰርዝ</string>
-  <string name="linkidwithpatient_add_id_text">%1$s\u0020ወስኽ</string>
-  <string name="linkidwithpatient_to_patient_text">\u0020 ናብ\ተሓካሚ ዩ00ኤ0?</string>
+  <string name="linkidwithpatient_button_yes">እወ</string>
+  <string name="linkidwithpatient_button_back">ተመለስ</string>
+  <string name="linkidwithpatient_text">ናይ ጸቕጢ ደም ፓስፖርት ናብዚ ደምር</string>
+  <string name="linkidwithpatient_patient_text">%1$s?</string>
 
   <!-- Add ID to Patient: Search -->
 
@@ -380,7 +385,7 @@
 
   <!-- App update : Dialog -->
   <string name="appupdatedialog_title">ኣፕሊኬሽን ኣሓድስ</string>
-  <string name="appupdatedialog_body">ምሕዳስ ኣፕሊኬሽን ንኸተተግብር ናብ ፕለይ ስቶር ክትውሰድ ኢኻ</string>
+  <string name="appupdatedialog_body">ምሕዳስ ኣፕሊኬሽን ሲምፕል ንኸተተግብር ናብ Google Play Store ክትውሰድ ኢኻ</string>
   <string name="appupdatedialog_positive_button_text">ኣሐድስ</string>
   <string name="appupdatedialog_negative_button_text">ሕዚ ኣይኮነን</string>
 
@@ -424,7 +429,7 @@
   <string name="changelanguage_done">ተሰሪሑ</string>
 
   <!-- Placeholder -->
-  <string name="placeholder_loading_title">ሓንሳብ ፅናሕ…..</string>
+  <string name="placeholder_loading_title">ሓንሳብ ፅናሕ…</string>
   <string name="placeholder_loading_message">ምትዕርራይ ናይ ዳታ ቤዝ ኣብ መስርሕ ኣሎ እዚ ሓደ ደቐቕ ጥራይ’ዩ ዝወስድ</string>
 
   <!-- Select Country Screen -->
@@ -448,10 +453,12 @@
   <string name="bloodsugarentry_day">መዓልቲ</string>
   <string name="bloodsugarentry_month">ወርሒ</string>
   <string name="bloodsugarentry_year">ዓመት</string>
-  <string name="bloodsugarentry_error_lower_limit">ዓቐን ካብ 30 ሚግ/ደሊ ንታሕቲ ክኸውን ኣይኽእልን</string>
+  <string name="bloodsugarentry_error_lower_limit">ዓቐን ካብ 30 mg/dL ንታሕቲ ክኸውን ኣይኽእልን</string>
   <string name="bloodsugarentry_error_lower_limit_hba1c">ዓቐን ትሕቲ 30/uoo25 ክኸውን ኣይክእልን</string>
-  <string name="bloodsugarentry_error_higher_limit">ዓቐን ካብ 1000 ሚግ/ደሊ ንላዕሊ ክኸውን ኣይኽእልን</string>
+  <string name="bloodsugarentry_error_lower_limit_mmol">ዓቐን ካብ 1.66 mmol/L ንታሕቲ ክኸውን ኣይኽእልን</string>
+  <string name="bloodsugarentry_error_higher_limit">ዓቐን ካብ 1000 mg/dL ንላዕሊ ክኸውን ኣይኽእልን</string>
   <string name="bloodsugarentry_error_higher_limit_hba1c">ዓቐን ልዕሊ 25/u0025 ክኽውን ኣይኽእልን</string>
+  <string name="bloodsugarentry_error_higher_limit_mmol">ዓቐን ካብ 55.49 mmol/L ንላዕሊ ክኸውን ኣይኽእልን</string>
   <string name="bloodsugarentry_error_empty">ዓቕን ጥራዩ ክኸውን ኣይኽእልን</string>
   <string name="bloodsugarentry_error_date_invalid_pattern">ቅቡል ዕለት ብ መሰረት ዕለት/ወርሒ/ዓመተ ምህረት ኣእትው/ዊ</string>
   <string name="bloodsugarentry_error_date_is_in_future">ዕለት ኣብ መፃኢ ክኸውን ኣይኽእልን</string>
@@ -514,8 +521,8 @@
 
   <!-- Contact patient -->
   <string name="contactpatient_agreed_to_visit">ንተሓካሚ “መሊሱ ዑደት ንምግባር ዝተሰማምዐ” ዝብል ምልክት ግበረሉ</string>
-  <string name="contactpatient_remind_call_later">ፀኒሕካ ንምድዋል ኣዘክር</string>
-  <string name="contactpatient_remove_from_list">ካብ መዝገብ ዝደንጎዩ ኣውጽኣዮ</string>
+  <string name="contactpatient_remind_call_later">ፀኒሕካ ንምድዋል ኣዘክር…</string>
+  <string name="contactpatient_remove_from_list">ካብ መዝገብ ዝደንጎዩ ኣውጽኣዮ…</string>
   <string name="contactpatient_result_of_call">ውፅኢት ፃውዒት ስልኪ</string>
   <string name="contactpatient_call_normal">ንቡር</string>
   <string name="contactpatient_call_secure">ውሕስነት ዘለዎ</string>
@@ -566,8 +573,8 @@
   <string name="screensplash_next">ዝቕፅል</string>
 
   <!-- Contact doctor sheet -->
-  <string name="contactdoctor_title">ሓካይም</string>
-  <string name="contactdoctor_subtitle">ዝተመደቦ ናብ %1$s</string>
+  <string name="contactdoctor_new_title">ዶክተራት ኣለዉ</string>
+  <string name="contactdoctor_new_subtitle">እንተተኻኢሉ WhatsApp ተተቐም</string>
 
   <!-- Intro Video Screen -->
   <string name="screenintrovideo_how_to_use_simple_app">Simple መተግበሪ ከመይ ጌርካ ትጥቀመሉ</string>
@@ -579,9 +586,106 @@
   <string name="assigned_facility_view_change">ለውጢ</string>
 
   <!-- Facility Picker -->
-  <string name="facilitypicker_screen_title">ሕክምናኻ ምረፅ</string>
   <string name="facilitypicker_search_hint">ሕክምናኻ ድለይ</string>
   <!-- Street, District, State -->
   <string name="facilitypicker_header_suggested_facilities">ከም ሓሳብ ዝቐረቡ ሕክምናታት</string>
   <string name="facilitypicker_header_all_facilities">ኩሎም ሕክምናታት</string>
+
+  <!--  TeleMedicine User Signature-->
+  <string name="screen_signature_sign_in_this_box">ኣብዚ ሳጹን ፈርም</string>
+
+  <!-- Drug Duration -->
+  <string name="drug_duration_title">%1$s %2$s</string>
+  <string name="drugDurationLabel">መዓልታት</string>
+  <string name="drug_duration_empty_error">ናይ መድሃኒት ዕለት ባዶ ክኸውን ኣይክእልን</string>
+  <string name="drug_duration_max_error">ናይ መድሃኒት ዕለት ባዶ ክኸውን ካብ %1$s ዕለት ንላዕሊ ክኸውን የብሉን</string>
+
+  <!-- Teleconsultation success-->
+  <string name="screen_teleconsult_success_add_prescription">ናይ መድሃኒት ትእዛዝ የእቱ</string>
+  <string name="screen_teleconsult_success_yes">እወ</string>
+  <string name="screen_teleconsult_success_no">ኣይፋሉን</string>
+  <string name="screen_teleconsult_success_teleconsult_recorded">ምኽሪ ብቴሌፎን ተቐዲሑ ኣሎ</string>
+  <string name="screen_teleconsult_success_patient_information">%1$s,%2$s,%3$s</string>
+  <string name="sheet_medicine_frequency_od">OD</string>
+  <string name="sheet_medicine_frequency_bd">BD</string>
+  <string name="sheet_medicine_frequency_tds">TDS</string>
+  <string name="sheet_medicine_frequency_qds">QDS</string>
+  <string name="sheet_medicine_frequency_save">ምዕቃብ</string>
+
+  <!-- Teleconsult Record Screen -->
+  <string name="screen_teleconsult_record">ናይ ቴሌኮንሳልት ቅዳሕ</string>
+  <string name="screen_teleconsult_record_type">ናይ ቴለኮንሳልቴሽን ዓይነት</string>
+  <string name="screen_teleconsult_record_type_audio">ናይ ድምጺ ደወል</string>
+  <string name="screen_teleconsult_record_type_video">ናይ ቪድዮ ደወል</string>
+  <string name="screen_teleconsult_record_type_message">መልእኽቲ</string>
+  <string name="screen_teleconsult_record_patient_took_medicine">እቲ ተሓካማይ ናይ anti-hypertensive ከምኡ ውን anti-diabetic መድሓኒት ብስሩዕ እናወሰደ ይርከብ</string>
+  <string name="screen_teleconsult_record_patient_consented">ተሓካማይ ንናይ ቴሌኮንሳልቴሽን ፍቓድ ሂቡ ኣሎ</string>
+  <string name="screen_teleconsult_record_done">ተሰሪሑ</string>
+  <string name="teleconsultnotrecordeddialog_title">ቴሌኮንሳልት ኣይተቐሐን</string>
+  <string name="teleconsultnotrecordeddialog_body">ንምስራዝ ርግፀኛ ዲኻ/ኺ?</string>
+  <string name="teleconsultnotrecordeddialog_positive_button_text">እወ</string>
+  <string name="teleconsultnotrecordeddialog_negative_button_text">ኣይፋሉን</string>
+
+  <!-- Deeplink Teleconsult not authorised-->
+  <string name="deeplink_medical_officer_not_authorised_to_log_teleconsult">ናብ ቴለኮንሰልት ንኽትእቱ ፍቓድ የብልካን</string>
+  <string name="deeplink_please_check_with_your_supervisor">ብኽብረትካ ምስ ተቖጻጻሪኻ ኣረጋግጽ</string>
+  <string name="deeplink_okay_positive_action">እሺ</string>
+
+  <string name="screen_teleconsult_prescription_next">ዝቕፅል</string>
+
+  <!-- Teleconsult Medicines View -->
+  <string name="view_teleconsult_medicines">መድሓኒታት</string>
+  <string name="view_teleconsult_medicines_add">ወስኽ</string>
+  <string name="view_teleconsult_medicines_edit">ምእራም</string>
+  <string name="view_teleconsult_medicines_required_error">እንተወሓደ ሓደ መድሓኒት ወስኽ</string>
+  <plurals name="list_item_teleconsult_medicine_duration">
+    <item quantity="one">%1$s መዓልታት</item>
+    <item quantity="other">%1$s መዓልታት</item>
+  </plurals>
+
+  <!-- Teleconsult Doctor Info View -->
+  <string name="view_teleconsult_doctor_info_instructions">መምርሒታት ንተሓከምቲ</string>
+  <string name="view_teleconsult_doctor_info_registration_id">ናይ ሜዲካል ምዝገባ መለለዪ መንነት ID</string>
+  <string name="view_teleconsult_doctor_info_acknowledgement">ነዚ ናይ መድሃኒት መአዘዚ ብምፍራ ኣነ ኣፍልጦ ዝህብ ኣነ %1$s</string>
+  <string name="view_teleconsult_doctor_info_add_signature">ፌርማ ግበር</string>
+  <string name="view_teleconsult_doctor_info_signature_error">ፌርማ ግበር</string>
+
+  <string name="screen_teleconsult_share_prescription_download">ዳውንሎድ</string>
+  <string name="screen_teleconsult_share_prescription_share">ኣካፍል</string>
+  <string name="screen_teleconsult_share_prescription_done">ተሰሪሑ</string>
+  <string name="screen_teleconsult_share_prescription_image_using">ስእሊ በዚ ብምጥቃም ኣካፍል</string>
+  <string name="screen_teleconsult_share_prescription_title">ናይ መድሃኒት ትእዛዝ</string>
+  <string name="screen_teleconsult_share_prescription_image_saved">ናይ መድሃኒት ትእዛዝ ኣብ ዳውንሎድ ተዓቚሩ ኣሎ</string>
+
+  <!-- Select diagnosis error alert dialog -->
+  <string name="select_diagnosis_error_diagnosis_required">ምርመራ የድሊ</string>
+  <string name="select_diagnosis_error_enter_diagnosis_both_hypertension_diabetes">ናይ ጸቕጢ-ደምን ናይ ሕማም ሽኮርን ምርመራ ምረጽ</string>
+  <string name="select_diagnosis_error_ok">እሺ</string>
+  <string name="sheet_teleconsult_status_title">ቴሌኮንሳልት ተዛዚሙ?</string>
+  <string name="sheet_teleconsult_status_yes">እወ</string>
+  <string name="sheet_teleconsult_status_no">ኣይፋሉን</string>
+  <string name="sheet_teleconsult_status_waiting">ክሳብ ሕጂ ኣብ ትጽቢት</string>
+  <string name="sheet_teleconsult_status_done">ተሰሪሑ</string>
+
+  <!-- Setup activity -->
+  <string name="setup_cannot_run">ኣፕሊኬሽን ክኽፈት ኣይከኣለን</string>
+  <string name="setup_rooted">ቀሊል ኣብ ሱር ዝሰደደ መሳርሒ ክኽፈት ኣይከኣልን።</string>
+  <string name="setup_close">ዕጾ</string>
+
+  <!-- Blood sugar unit selection dialog -->
+  <string name="blood_sugar_unit_selection_choose">ምረጽ</string>
+  <string name="blood_sugar_unit_selection_done">ተወዲኡ</string>
+
+  <!-- BP passport sheet -->
+  <string name="sheet_bp_passport_register_new_patient">ሓድሽ ተሓካሚ መዝግብ</string>
+  <string name="sheet_bp_passport_add_to_existing_patient">ምስ ዝጸንሐ ተሓካሚ ጸምብር</string>
+  <string name="sheet_bp_passport_number">BP ፓስፖርት %1$s</string>
+
+  <!-- Instant search -->
+  <string name="patientinstantsearch_assigned_facility_header">ዝተመደቦ ናብ %1$s</string>
+  <string name="patientinstantsearch_nearby_facilities_header">ካብ ቀረባ ትካላት</string>
+  <string name="patientsearch_error_no_patients_in_facility">ኩሎም ኣብ ናትካ ትካል ዝተመዝገቡ ተሓከምቲ ኣብዚ ክትርእዮም ትኽእል ኢኻ</string>
+  <string name="patientsearch_error_no_search_results">ዝዛመዱ ሕሙማት የለውን</string>
+  <string name="patientsearch_error_no_patients_in_facility_heading">ተሓከምቲ ኣብዚ የለዉን  %1$s</string>
+
 </resources>

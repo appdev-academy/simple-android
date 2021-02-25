@@ -4,19 +4,20 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import com.jakewharton.rxbinding2.view.RxView
-import com.jakewharton.rxbinding2.widget.RxTextView
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.widget.editorActions
+import com.jakewharton.rxbinding3.widget.textChanges
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.rxkotlin.toObservable
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.sheet_blood_pressure_entry.*
 import org.simple.clinic.ClinicApp
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
@@ -27,12 +28,14 @@ import org.simple.clinic.bp.entry.OpenAs.Update
 import org.simple.clinic.bp.entry.confirmremovebloodpressure.ConfirmRemoveBloodPressureDialog
 import org.simple.clinic.bp.entry.confirmremovebloodpressure.ConfirmRemoveBloodPressureDialog.RemoveBloodPressureListener
 import org.simple.clinic.bp.entry.di.BloodPressureEntryComponent
+import org.simple.clinic.databinding.SheetBloodPressureEntryBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.UserInputDatePaddingCharacter
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import org.simple.clinic.widgets.ScreenDestroyed
@@ -57,6 +60,9 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
 
   @Inject
   lateinit var locale: Locale
+
+  @Inject
+  lateinit var features: Features
 
   private val screenDestroys = PublishSubject.create<ScreenDestroyed>()
 
@@ -136,11 +142,61 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
         .share()
   }
 
+  private lateinit var binding: SheetBloodPressureEntryBinding
+
+  private val systolicEditText
+    get() = binding.systolicEditText
+
+  private val diastolicEditText
+    get() = binding.diastolicEditText
+
+  private val dayEditText
+    get() = binding.dayEditText
+
+  private val monthEditText
+    get() = binding.monthEditText
+
+  private val yearEditText
+    get() = binding.yearEditText
+
+  private val removeBloodPressureButton
+    get() = binding.removeBloodPressureButton
+
+  private val bpDateButton
+    get() = binding.bpDateButton
+
+  private val backImageButton
+    get() = binding.backImageButton
+
+  private val rootLayout
+    get() = binding.rootLayout
+
+  private val viewFlipper
+    get() = binding.viewFlipper
+
+  private val bpErrorTextView
+    get() = binding.bpErrorTextView
+
+  private val enterBloodPressureTitleTextView
+    get() = binding.enterBloodPressureTitleTextView
+
+  private val editBloodPressureTitleTextView
+    get() = binding.editBloodPressureTitleTextView
+
+  private val dateErrorTextView
+    get() = binding.dateErrorTextView
+
+  private val progressLoader
+    get() = binding.progressLoader
+
+  private val bloodPressureEntryLayout
+    get() = binding.bloodPressureEntryLayout
+
   @SuppressLint("CheckResult")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    setContentView(R.layout.sheet_blood_pressure_entry)
+    binding = SheetBloodPressureEntryBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     delegate.onRestoreInstanceState(savedInstanceState)
   }
@@ -149,18 +205,21 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
     setupDiGraph()
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setupDiGraph() {
     component = ClinicApp.appComponent
         .bloodPressureEntryComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }
@@ -186,22 +245,24 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
   }
 
   override fun onBackgroundClick() {
-    if (systolicEditText.text.isBlank() && diastolicEditText.text.isBlank()) {
+    if (systolicEditText.text.isNullOrBlank() && diastolicEditText.text.isNullOrBlank()) {
       super.onBackgroundClick()
     }
   }
 
-  private fun systolicTextChanges() = RxTextView.textChanges(systolicEditText)
+  private fun systolicTextChanges() = systolicEditText
+      .textChanges()
       .map(CharSequence::toString)
       .map(::SystolicChanged)
 
-  private fun diastolicTextChanges() = RxTextView.textChanges(diastolicEditText)
+  private fun diastolicTextChanges() = diastolicEditText
+      .textChanges()
       .map(CharSequence::toString)
       .map(::DiastolicChanged)
 
   private fun imeDoneClicks(): Observable<SaveClicked> {
     return listOf(systolicEditText, diastolicEditText, dayEditText, monthEditText, yearEditText)
-        .map { RxTextView.editorActions(it) { actionId -> actionId == EditorInfo.IME_ACTION_DONE } }
+        .map { it.editorActions { actionId -> actionId == EditorInfo.IME_ACTION_DONE } }
         .toObservable()
         .flatMap { it }
         .map { SaveClicked }
@@ -214,18 +275,18 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
   }
 
   private fun removeClicks(): Observable<UiEvent> =
-      RxView
-          .clicks(removeBloodPressureButton)
+      removeBloodPressureButton
+          .clicks()
           .map { RemoveBloodPressureClicked }
 
   private fun bpDateClicks(): Observable<UiEvent> =
-      RxView
-          .clicks(bpDateButton)
+      bpDateButton
+          .clicks()
           .map { BloodPressureDateClicked }
 
   private fun backClicks(): Observable<UiEvent> =
-      RxView
-          .clicks(backImageButton)
+      backImageButton
+          .clicks()
           .map { ShowBpClicked }
 
   private fun hardwareBackPresses(): Observable<UiEvent> {
@@ -250,17 +311,20 @@ class BloodPressureEntrySheet : BottomSheetActivity(), BloodPressureEntryUi, Rem
           }
 
   private fun dayTextChanges() =
-      RxTextView.textChanges(dayEditText)
+      dayEditText
+          .textChanges()
           .map(CharSequence::toString)
           .map(::DayChanged)
 
   private fun monthTextChanges() =
-      RxTextView.textChanges(monthEditText)
+      monthEditText
+          .textChanges()
           .map(CharSequence::toString)
           .map(::MonthChanged)
 
   private fun yearTextChanges() =
-      RxTextView.textChanges(yearEditText)
+      yearEditText
+          .textChanges()
           .map(CharSequence::toString)
           .map(::YearChanged)
 

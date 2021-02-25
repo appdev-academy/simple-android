@@ -2,6 +2,7 @@ package org.simple.clinic.contactpatient
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -10,11 +11,10 @@ import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.sheet_contact_patient.*
 import org.simple.clinic.ClinicApp
-import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.contactpatient.di.ContactPatientBottomSheetComponent
+import org.simple.clinic.databinding.SheetContactPatientBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
 import org.simple.clinic.feature.Feature.SecureCalling
 import org.simple.clinic.feature.Features
@@ -26,11 +26,11 @@ import org.simple.clinic.phone.Dialer
 import org.simple.clinic.phone.PhoneCaller
 import org.simple.clinic.phone.PhoneNumberMaskerConfig
 import org.simple.clinic.router.screen.ActivityPermissionResult
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.RequestPermissions
 import org.simple.clinic.util.RuntimePermissions
 import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import org.simple.clinic.widgets.ThreeTenBpDatePickerDialog
@@ -104,7 +104,7 @@ class ContactPatientBottomSheet : BottomSheetActivity(), ContactPatientUi, Conta
         )
         .compose(RequestPermissions<ContactPatientEvent>(runtimePermissions, permissionResults))
         .compose(ReportAnalyticsEvents())
-        .cast<ContactPatientEvent>()
+        .cast()
 
   }
 
@@ -125,10 +125,22 @@ class ContactPatientBottomSheet : BottomSheetActivity(), ContactPatientUi, Conta
     )
   }
 
+  private lateinit var binding: SheetContactPatientBinding
+
+  private val callPatientView
+    get() = binding.callPatientView
+
+  private val setAppointmentReminderView
+    get() = binding.setAppointmentReminderView
+
+  private val removeAppointmentView
+    get() = binding.removeAppointmentView
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    setContentView(R.layout.sheet_contact_patient)
+    binding = SheetContactPatientBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     delegate.onRestoreInstanceState(savedInstanceState)
   }
@@ -156,18 +168,21 @@ class ContactPatientBottomSheet : BottomSheetActivity(), ContactPatientUi, Conta
     setupDiGraph()
 
     val wrappedContext = baseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
 
     super.attachBaseContext(wrappedContext)
+    applyOverrideConfiguration(Configuration())
+  }
+
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setupDiGraph() {
     component = ClinicApp.appComponent
         .patientContactBottomSheetComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }

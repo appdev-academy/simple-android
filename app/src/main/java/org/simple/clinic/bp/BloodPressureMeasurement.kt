@@ -87,6 +87,9 @@ data class BloodPressureMeasurement(
     @Query("SELECT * FROM bloodpressuremeasurement WHERE uuid = :uuid")
     fun bloodPressure(uuid: UUID): Flowable<BloodPressureMeasurement>
 
+    @Query("SELECT * FROM bloodpressuremeasurement WHERE uuid = :uuid")
+    fun bloodPressureImmediate(uuid: UUID): BloodPressureMeasurement
+
     @Query("SELECT COUNT(uuid) FROM bloodpressuremeasurement")
     fun count(): Flowable<Int>
 
@@ -160,5 +163,25 @@ data class BloodPressureMeasurement(
       ORDER BY recordedAt DESC
     """)
     fun allBloodPressuresDataSource(patientUuid: UUID): DataSource.Factory<Int, BloodPressureMeasurement>
+
+    @Query("""
+      DELETE FROM BloodPressureMeasurement
+      WHERE deletedAt IS NOT NULL AND syncStatus == 'DONE'
+    """)
+    fun purgeDeleted()
+
+    @Query("SELECT * FROM BloodPressureMeasurement")
+    fun getAllBloodPressureMeasurements(): List<BloodPressureMeasurement>
+
+    @Query("""
+        DELETE FROM BloodPressureMeasurement
+        WHERE 
+            uuid NOT IN (
+                SELECT BP.uuid FROM BloodPressureMeasurement BP
+                INNER JOIN Patient P ON P.uuid == BP.patientUuid
+            ) AND
+            syncStatus == 'DONE'
+    """)
+    fun deleteWithoutLinkedPatient()
   }
 }

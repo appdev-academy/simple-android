@@ -60,6 +60,10 @@ class ScreenRouter(
   /**
    * Get the key that was used for inflating a <var>view</var>.
    */
+  @Deprecated(
+      message = "",
+      replaceWith = ReplaceWith("screenKeyProvider.keyFor<T>(view)")
+  )
   fun <T> key(view: View): T {
     var name = "<nameless>"
     try {
@@ -150,7 +154,11 @@ class ScreenRouter(
     }
   }
 
-  private fun flow(): Flow {
+  inline fun <reified T> hasKeyOfType(): Boolean {
+    return flow().history.any { it is T }
+  }
+
+  fun flow(): Flow {
     try {
       return flowSupplier.get()
     } catch (e: IllegalStateException) {

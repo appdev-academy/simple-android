@@ -2,10 +2,6 @@
 <lint>
   <issue id="GoogleAppIndexingWarning" severity="informational" />
   <issue id="AllowBackup" severity="informational" />
-  <issue id="UnusedResources">
-    <ignore path="src/main/res/values/colors_material.xml" />
-    <ignore path="src/main/res/values/colors_v2.xml" />
-  </issue>
 
   <!-- Ignore this for now due to time constraints. Switch to static images later. -->
   <issue id="VectorPath">
@@ -22,6 +18,13 @@
     <ignore path="src/main/res/drawable/illustration_overdue.xml" />
     <ignore path="src/main/res/drawable/illustration_reports.xml" />
     <ignore path="src/main/res/drawable/ic_whatsapp_circular.xml" />
+    <ignore path="src/main/res/drawable/ic_homescreen_india" />
+  </issue>
+
+  <issue id="UnusedResources">
+    <ignore regexp="Widget.Simple.TextField.Layout.PatientEntry.AutoComplete" />
+    <ignore regexp="Widget.Simple.TextField.AutoComplete" />
+    <ignore regexp="ThemeOverlay.Simple.TextField.AutoComplete" />
   </issue>
 
   <issue id="ParcelCreator" severity="informational" />
@@ -56,5 +59,6 @@
     <ignore path="src/main/res/drawable/illustration_location.xml" />
     <ignore path="src/main/res/drawable/illustration_overdue.xml" />
     <ignore path="src/main/res/drawable/illustration_reports.xml" />
+    <ignore path="src/main/res/drawable/ic_homescreen_india" />
   </issue>
 </lint>

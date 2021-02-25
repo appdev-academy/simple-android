@@ -1,33 +1,68 @@
 package org.simple.clinic.home
 
 import android.content.Context
+import android.os.Bundle
 import android.os.Parcelable
-import android.util.AttributeSet
-import android.widget.RelativeLayout
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.tabs.TabLayoutMediator
 import com.jakewharton.rxbinding3.view.clicks
-import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_home.view.*
+import io.reactivex.Observable
+import io.reactivex.rxkotlin.cast
+import io.reactivex.subjects.PublishSubject
+import kotlinx.android.parcel.Parcelize
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenHomeBinding
 import org.simple.clinic.di.injector
-import org.simple.clinic.facility.change.FacilityChangeActivity
+import org.simple.clinic.facility.change.FacilityChangeScreen
+import org.simple.clinic.feature.Feature
+import org.simple.clinic.feature.Features
+import org.simple.clinic.home.HomeScreen.ScreenRequest.ChangeCurrentFacility
+import org.simple.clinic.home.HomeScreen.ScreenRequest.ScanPassportRequest
 import org.simple.clinic.home.HomeTab.OVERDUE
 import org.simple.clinic.home.HomeTab.PATIENTS
 import org.simple.clinic.home.HomeTab.REPORTS
 import org.simple.clinic.home.help.HelpScreenKey
-import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.instantsearch.InstantSearchScreenKey
+import org.simple.clinic.navigation.v2.ExpectsResult
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.ScreenResult
+import org.simple.clinic.navigation.v2.Succeeded
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.fragments.BaseScreen
+import org.simple.clinic.patient.businessid.Identifier
+import org.simple.clinic.router.ScreenResultBus
+import org.simple.clinic.scanid.ScanSimpleIdScreen
+import org.simple.clinic.search.PatientSearchScreenKey
 import org.simple.clinic.settings.SettingsScreenKey
-import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.shortcodesearchresult.ShortCodeSearchResultScreenKey
+import org.simple.clinic.summary.OpenIntention
+import org.simple.clinic.summary.PatientSummaryScreenKey
+import org.simple.clinic.util.UtcClock
 import org.simple.clinic.widgets.hideKeyboard
+import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 
-class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), HomeScreenUi, HomeScreenUiActions {
+class HomeScreen :
+    BaseScreen<
+        HomeScreenKey,
+        ScreenHomeBinding,
+        HomeScreenModel,
+        HomeScreenEvent,
+        HomeScreenEffect>(),
+    HomeScreenUi,
+    HomeScreenUiActions,
+    ExpectsResult {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenResults: ScreenResultBus
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -35,52 +70,62 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
   @Inject
   lateinit var effectHandlerFactory: HomeScreenEffectHandler.Factory
 
+  @Inject
+  lateinit var utcClock: UtcClock
+
+  @Inject
+  lateinit var features: Features
+
+  private val homeScreenRootLayout
+    get() = binding.homeScreenRootLayout
+
+  private val viewPager
+    get() = binding.viewPager
+
+  private val homeTabLayout
+    get() = binding.homeTabLayout
+
+  private val toolbar
+    get() = binding.toolbar
+
+  private val helpButton
+    get() = binding.helpButton
+
+  private val facilitySelectButton
+    get() = binding.facilitySelectButton
+
   private val tabs = listOf(PATIENTS, OVERDUE, REPORTS)
 
-  private val events by unsafeLazy {
-    facilitySelectionClicks()
-        .compose(ReportAnalyticsEvents())
-  }
+  private val scanResults = PublishSubject.create<BusinessIdScanned>()
 
-  private val delegate by unsafeLazy {
-    val uiRenderer = HomeScreenUiRenderer(this)
+  override fun defaultModel() = HomeScreenModel.create()
 
-    MobiusDelegate.forView(
-        events = events.ofType(),
-        defaultModel = HomeScreenModel.create(),
-        init = HomeScreenInit(),
-        update = HomeScreenUpdate(),
-        effectHandler = effectHandlerFactory.create(this).build(),
-        modelUpdateListener = uiRenderer::render
-    )
-  }
+  override fun uiRenderer() = HomeScreenUiRenderer(this)
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    delegate.start()
-  }
+  override fun bindView(layoutInflater: LayoutInflater, container: ViewGroup?) =
+      ScreenHomeBinding.inflate(layoutInflater, container, false)
 
-  override fun onDetachedFromWindow() {
-    delegate.stop()
-    super.onDetachedFromWindow()
-  }
+  override fun events() = Observable
+      .merge(
+          facilitySelectionClicks(),
+          scanResults
+      )
+      .compose(ReportAnalyticsEvents())
+      .cast<HomeScreenEvent>()
 
-  override fun onSaveInstanceState(): Parcelable? {
-    return delegate.onSaveInstanceState(super.onSaveInstanceState())
-  }
+  override fun createUpdate() = HomeScreenUpdate()
 
-  override fun onRestoreInstanceState(state: Parcelable?) {
-    super.onRestoreInstanceState(delegate.onRestoreInstanceState(state))
-  }
+  override fun createInit() = HomeScreenInit()
 
-  override fun onFinishInflate() {
-    super.onFinishInflate()
-    if (isInEditMode) {
-      return
-    }
+  override fun createEffectHandler() = effectHandlerFactory.create(this).build()
 
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
     context.injector<Injector>().inject(this)
+  }
 
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     setupToolBar()
     setupHelpClicks()
 
@@ -91,11 +136,27 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
     TabLayoutMediator(homeTabLayout, viewPager) { tab, position ->
       tab.text = resources.getString(tabs[position].title)
     }.attach()
-    viewPager.isUserInputEnabled = false
 
     // The WebView in "Progress" tab is expensive to load. Pre-instantiating
     // it when the app starts reduces its time-to-display.
-    viewPager.offscreenPageLimit = HomeTab.REPORTS.ordinal - HomeTab.PATIENTS.ordinal
+    viewPager.offscreenPageLimit = REPORTS.ordinal - PATIENTS.ordinal
+  }
+
+  override fun onScreenResult(requestType: Parcelable, result: ScreenResult) {
+    when (requestType as ScreenRequest) {
+      ScanPassportRequest -> handleScanResults(result)
+      ChangeCurrentFacility -> {
+        // We don't really do anything with the result here
+      }
+    }
+  }
+
+  private fun handleScanResults(result: ScreenResult) {
+    if (result is Succeeded) {
+      val scanResult = ScanSimpleIdScreen.readScanResult(result)
+
+      scanResults.onNext(BusinessIdScanned.fromScanResult(scanResult))
+    }
   }
 
   private fun setupToolBar() {
@@ -104,7 +165,7 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
       setOnMenuItemClickListener { menuItem ->
         when (menuItem.itemId) {
           R.id.openSettings -> {
-            screenRouter.push(SettingsScreenKey())
+            router.push(SettingsScreenKey().wrap())
             true
           }
           else -> false
@@ -115,7 +176,7 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
 
   private fun setupHelpClicks() {
     helpButton.setOnClickListener {
-      screenRouter.push(HelpScreenKey())
+      router.push(HelpScreenKey().wrap())
     }
   }
 
@@ -128,7 +189,7 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
   }
 
   override fun openFacilitySelection() {
-    activity.startActivity(FacilityChangeActivity.intent(context))
+    router.pushExpectingResult(ChangeCurrentFacility, FacilityChangeScreen.Key())
   }
 
   override fun showOverdueAppointmentCount(count: Int) {
@@ -152,7 +213,34 @@ class HomeScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context
     overdueTab?.removeBadge()
   }
 
+  override fun openShortCodeSearchScreen(shortCode: String) {
+    router.push(ShortCodeSearchResultScreenKey(shortCode))
+  }
+
+  override fun openPatientSearchScreen(additionalIdentifier: Identifier?) {
+    val screenKey = if (features.isEnabled(Feature.InstantSearch)) {
+      InstantSearchScreenKey(additionalIdentifier)
+    } else {
+      PatientSearchScreenKey(additionalIdentifier).wrap()
+    }
+
+    router.push(screenKey)
+  }
+
+  override fun openPatientSummary(patientId: UUID) {
+    router.push(PatientSummaryScreenKey(patientId, OpenIntention.ViewExistingPatient, Instant.now(utcClock)))
+  }
+
   interface Injector {
     fun inject(target: HomeScreen)
+  }
+
+  sealed class ScreenRequest : Parcelable {
+
+    @Parcelize
+    object ScanPassportRequest : ScreenRequest()
+
+    @Parcelize
+    object ChangeCurrentFacility : ScreenRequest()
   }
 }

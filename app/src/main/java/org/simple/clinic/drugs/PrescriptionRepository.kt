@@ -9,8 +9,11 @@ import org.simple.clinic.drugs.sync.PrescribedDrugPayload
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.patient.SyncStatus
 import org.simple.clinic.protocol.ProtocolDrug
+import org.simple.clinic.storage.Timestamps
 import org.simple.clinic.sync.SynceableRepository
+import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency
 import org.simple.clinic.util.UtcClock
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -64,11 +67,10 @@ class PrescriptionRepository @Inject constructor(
               patientUuid = patientUuid,
               facilityUuid = facility.uuid,
               syncStatus = SyncStatus.PENDING,
-              createdAt = now,
-              updatedAt = now,
-              deletedAt = null,
+              timestamps = Timestamps(now, now, null),
               frequency = null,
-              durationInDays = null
+              durationInDays = null,
+              teleconsultationId = null
           )
         }
         .flatMapCompletable { save(listOf(it)) }
@@ -76,6 +78,10 @@ class PrescriptionRepository @Inject constructor(
 
   override fun save(records: List<PrescribedDrug>): Completable {
     return Completable.fromAction { dao.save(records) }
+  }
+
+  fun saveImmediate(records: List<PrescribedDrug>) {
+    return dao.save(records)
   }
 
   fun softDeletePrescription(prescriptionUuid: UUID): Completable {
@@ -136,5 +142,41 @@ class PrescriptionRepository @Inject constructor(
     return dao
         .count(SyncStatus.PENDING)
         .toObservable()
+  }
+
+  fun updateDrugDuration(id: UUID, duration: Duration) {
+    dao.updateDrugDuration(
+        id = id,
+        durationInDays = duration.toDays().toInt(),
+        updatedAt = Instant.now(utcClock),
+        syncStatus = SyncStatus.PENDING
+    )
+  }
+
+  fun updateDrugFrequency(id: UUID, drugFrequency: MedicineFrequency) {
+    dao.updateDrugFrequenecy(
+        id = id,
+        drugFrequency = drugFrequency,
+        updatedAt = Instant.now(utcClock),
+        syncStatus = SyncStatus.PENDING
+    )
+  }
+
+  fun addTeleconsultationIdToDrugs(prescribedDrugs: List<PrescribedDrug>, teleconsultationId: UUID) {
+    dao.addTeleconsultationIdToDrugs(
+        drugUuids = prescribedDrugs.map { it.uuid },
+        teleconsultationId = teleconsultationId,
+        updatedAt = Instant.now(utcClock),
+        syncStatus = SyncStatus.PENDING
+    )
+  }
+
+  fun softDeletePrescriptions(prescriptionDrugs: List<PrescribedDrug>) {
+    dao.softDelete(
+        prescriptionIds = prescriptionDrugs.map { it.uuid },
+        deleted = true,
+        updatedAt = Instant.now(utcClock),
+        syncStatus = SyncStatus.PENDING
+    )
   }
 }

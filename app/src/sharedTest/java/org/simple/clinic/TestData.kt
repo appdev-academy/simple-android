@@ -42,7 +42,6 @@ import org.simple.clinic.patient.SyncStatus
 import org.simple.clinic.patient.businessid.BusinessId
 import org.simple.clinic.patient.businessid.BusinessId.MetaDataVersion
 import org.simple.clinic.patient.businessid.BusinessId.MetaDataVersion.BpPassportMetaDataV1
-import org.simple.clinic.patient.businessid.BusinessIdMetaData
 import org.simple.clinic.patient.businessid.Identifier
 import org.simple.clinic.patient.sync.BusinessIdPayload
 import org.simple.clinic.patient.sync.PatientAddressPayload
@@ -53,8 +52,6 @@ import org.simple.clinic.protocol.ProtocolDrug
 import org.simple.clinic.protocol.sync.ProtocolDrugPayload
 import org.simple.clinic.protocol.sync.ProtocolPayload
 import org.simple.clinic.storage.Timestamps
-import org.simple.clinic.summary.teleconsultation.api.TeleconsultPhoneNumber
-import org.simple.clinic.summary.teleconsultation.api.TeleconsultationsResponse
 import org.simple.clinic.summary.teleconsultation.sync.MedicalOfficer
 import org.simple.clinic.summary.teleconsultation.sync.MedicalOfficerPayload
 import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityInfo
@@ -62,6 +59,11 @@ import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityI
 import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityMedicalOfficersCrossRef
 import org.simple.clinic.summary.teleconsultation.sync.TeleconsultationFacilityWithMedicalOfficers
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecord
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRecordInfo
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultRequestInfo
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultStatus
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultationType
 import org.simple.clinic.user.LoggedInUserPayload
 import org.simple.clinic.user.OngoingLoginEntry
 import org.simple.clinic.user.OngoingRegistrationEntry
@@ -72,12 +74,15 @@ import org.simple.clinic.util.randomGender
 import org.simple.clinic.util.randomMedicalHistoryAnswer
 import org.simple.clinic.util.randomOfEnum
 import org.simple.clinic.util.randomPatientPhoneNumberType
+import org.simple.clinic.util.randomTeleconsultRecordAnswer
+import org.simple.clinic.util.randomTeleconsultationType
 import java.net.URI
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset.UTC
 import java.util.UUID
 import kotlin.random.nextInt
+import org.simple.clinic.teleconsultlog.teleconsultrecord.Answer as TeleconsultRecordAnswer
 
 object TestData {
 
@@ -333,13 +338,7 @@ object TestData {
       identifier: String = UUID.randomUUID().toString(),
       identifierType: Identifier.IdentifierType = Identifier.IdentifierType.BpPassport,
       metaDataVersion: MetaDataVersion = BpPassportMetaDataV1,
-      meta: String = run {
-        BusinessIdMetaData.BpPassportMetaDataV1(
-            assigningUserUuid = UUID.fromString("4e3442df-ffa4-4a66-9d5f-672d3135c460"),
-            assigningFacilityUuid = UUID.fromString("faec54dc-1c5d-4768-83c5-80e7f272f8fe")
-        )
-        ""
-      },
+      meta: String = "",
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now(),
       deletedAt: Instant? = null
@@ -379,7 +378,8 @@ object TestData {
       updatedAt: Instant = Instant.now(),
       syncStatus: SyncStatus = randomOfEnum(SyncStatus::class),
       deletedAt: Instant? = null,
-      facilityConfig: FacilityConfig = FacilityConfig(diabetesManagementEnabled = false, teleconsultationEnabled = false)
+      facilityConfig: FacilityConfig = FacilityConfig(diabetesManagementEnabled = false, teleconsultationEnabled = false),
+      syncGroup: String = ""
   ): Facility {
     return Facility(
         uuid = uuid,
@@ -398,7 +398,8 @@ object TestData {
         updatedAt = updatedAt,
         syncStatus = syncStatus,
         deletedAt = deletedAt,
-        config = facilityConfig
+        config = facilityConfig,
+        syncGroup = syncGroup
     )
   }
 
@@ -419,7 +420,8 @@ object TestData {
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now(),
       deletedAt: Instant? = null,
-      facilityConfig: FacilityConfig = FacilityConfig(diabetesManagementEnabled = false, teleconsultationEnabled = false)
+      facilityConfig: FacilityConfig = FacilityConfig(diabetesManagementEnabled = false, teleconsultationEnabled = false),
+      syncGroup: String? = null
   ): FacilityPayload {
     return FacilityPayload(
         uuid = uuid,
@@ -438,7 +440,8 @@ object TestData {
         createdAt = createdAt,
         updatedAt = updatedAt,
         deletedAt = deletedAt,
-        config = facilityConfig
+        config = facilityConfig,
+        syncGroup = syncGroup
     )
   }
 
@@ -453,7 +456,8 @@ object TestData {
       updatedAt: Instant = Instant.now(),
       registrationFacilityUuid: UUID = UUID.fromString("fa85410a-54ca-449c-b3d6-7caf9def1474"),
       currentFacilityUuid: UUID = registrationFacilityUuid,
-      teleconsultPhoneNumber: String = "1111111111"
+      teleconsultPhoneNumber: String = "1111111111",
+      capabilities: User.Capabilities? = null
   ): User {
     return User(
         uuid = uuid,
@@ -466,22 +470,25 @@ object TestData {
         loggedInStatus = loggedInStatus,
         registrationFacilityUuid = registrationFacilityUuid,
         currentFacilityUuid = currentFacilityUuid,
-        teleconsultPhoneNumber = teleconsultPhoneNumber
+        teleconsultPhoneNumber = teleconsultPhoneNumber,
+        capabilities = capabilities
     )
   }
 
   fun ongoingRegistrationEntry(
       uuid: UUID = UUID.randomUUID(),
       phoneNumber: String = faker.number.number(10),
+      fullName: String? = faker.name.name(),
       pin: String = "1111",
-      registrationFacility: Facility
+      registrationFacility: Facility? = null
   ): OngoingRegistrationEntry {
     return OngoingRegistrationEntry(
         uuid = uuid,
         phoneNumber = phoneNumber,
-        fullName = faker.name.name(),
+        fullName = fullName,
         pin = pin,
-        facilityId = registrationFacility.uuid)
+        facilityId = registrationFacility?.uuid
+    )
   }
 
   fun bpPayload(
@@ -546,8 +553,10 @@ object TestData {
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now(),
       deletedAt: Instant? = null,
+      timestamps: Timestamps = Timestamps(createdAt, updatedAt, deletedAt),
       frequency: MedicineFrequency? = null,
-      durationInDays: Int? = null
+      durationInDays: Int? = null,
+      teleconsultationId: UUID? = null
   ): PrescribedDrug {
     return PrescribedDrug(
         uuid = uuid,
@@ -559,11 +568,10 @@ object TestData {
         patientUuid = patientUuid,
         facilityUuid = facilityUuid,
         syncStatus = syncStatus,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        deletedAt = deletedAt,
+        timestamps = timestamps,
         frequency = frequency,
-        durationInDays = durationInDays
+        durationInDays = durationInDays,
+        teleconsultationId = teleconsultationId
     )
   }
 
@@ -580,7 +588,8 @@ object TestData {
       updatedAt: Instant = Instant.now(),
       deletedAt: Instant? = null,
       frequency: MedicineFrequency? = null,
-      durationInDays: Int? = null
+      durationInDays: Int? = null,
+      teleconsultationId: UUID? = null
   ): PrescribedDrugPayload {
     return PrescribedDrugPayload(
         uuid = uuid,
@@ -595,7 +604,8 @@ object TestData {
         updatedAt = updatedAt,
         deletedAt = deletedAt,
         frequency = frequency,
-        durationInDays = durationInDays
+        durationInDays = durationInDays,
+        teleconsultationId = teleconsultationId
     )
   }
 
@@ -962,7 +972,8 @@ object TestData {
       status: UserStatus = UserStatus.WaitingForApproval,
       createdAt: Instant = Instant.now(),
       updatedAt: Instant = Instant.now(),
-      teleconsultPhoneNumber: String = "1111111111"
+      teleconsultPhoneNumber: String = "1111111111",
+      capabilities: User.Capabilities? = null
   ): LoggedInUserPayload {
     return LoggedInUserPayload(
         uuid = uuid,
@@ -973,7 +984,9 @@ object TestData {
         createdAt = createdAt,
         status = status,
         updatedAt = updatedAt,
-        teleconsultPhoneNumber = teleconsultPhoneNumber)
+        teleconsultPhoneNumber = teleconsultPhoneNumber,
+        capabilities = capabilities
+    )
   }
 
   fun patientSearchResult(
@@ -997,7 +1010,8 @@ object TestData {
           lastSeenOn = Instant.now(),
           lastSeenAtFacilityName = "Some Facility",
           lastSeenAtFacilityUuid = UUID.randomUUID()
-      )
+      ),
+      assignedFacilityId: UUID? = null
   ): PatientSearchResult {
     return PatientSearchResult(
         uuid = uuid,
@@ -1005,14 +1019,15 @@ object TestData {
         gender = gender,
         dateOfBirth = dateOfBirth,
         age = age,
+        assignedFacilityId = assignedFacilityId,
         status = status,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        address = address,
         syncStatus = syncStatus,
+        address = address,
+        phoneUuid = phoneNumberUuid,
         phoneNumber = phoneNumber,
         phoneType = phoneType,
-        phoneUuid = phoneNumberUuid,
         phoneActive = phoneActive,
         phoneCreatedAt = phoneCreatedAt,
         phoneUpdatedAt = phoneUpdatedAt,
@@ -1047,7 +1062,9 @@ object TestData {
       registrationFacilityUuid: UUID? = UUID.fromString("d91fb2ba-9c87-4de0-b425-eea44457c746"),
       status: UserStatus? = UserStatus.ApprovedForSyncing,
       createdAt: Instant? = Instant.parse("2018-01-01T00:00:00Z"),
-      updatedAt: Instant? = Instant.parse("2018-01-01T00:00:00Z")
+      updatedAt: Instant? = Instant.parse("2018-01-01T00:00:00Z"),
+      teleconsultPhoneNumber: String = "+911111111111",
+      capabilities: User.Capabilities? = null
   ) = OngoingLoginEntry(
       uuid = uuid,
       phoneNumber = phoneNumber,
@@ -1057,28 +1074,9 @@ object TestData {
       registrationFacilityUuid = registrationFacilityUuid,
       status = status,
       createdAt = createdAt,
-      updatedAt = updatedAt
-  )
-
-  fun facilityTeleconsultationsResponse(
-      phoneNumber: String? = "+911111111111",
-      phoneNumbers: List<TeleconsultPhoneNumber> = listOf(
-          teleconsultPhoneNumber(
-              phoneNumber = "+911111111111"
-          ),
-          teleconsultPhoneNumber(
-              phoneNumber = "+912222222222"
-          ))
-  ) = TeleconsultationsResponse(
-      teleconsultationPhoneNumber = phoneNumber,
-      teleconsultationPhoneNumbers = phoneNumbers
-  )
-
-
-  fun teleconsultPhoneNumber(
-      phoneNumber: String = "+911111111111"
-  ) = TeleconsultPhoneNumber(
-      phoneNumber = phoneNumber
+      updatedAt = updatedAt,
+      capabilities = capabilities,
+      teleconsultPhoneNumber = teleconsultPhoneNumber
   )
 
   fun medicalOfficer(
@@ -1158,6 +1156,59 @@ object TestData {
         createdAt = createdAt,
         updatedAt = updatedAt,
         deletedAt = deletedAt
+    )
+  }
+
+  fun teleconsultRecord(
+      id: UUID = UUID.randomUUID(),
+      patientId: UUID = UUID.randomUUID(),
+      medicalOfficerId: UUID = UUID.randomUUID(),
+      teleconsultRequestInfo: TeleconsultRequestInfo? = null,
+      teleconsultRecordInfo: TeleconsultRecordInfo? = null,
+      createdAt: Instant = Instant.now(),
+      updatedAt: Instant = Instant.now(),
+      deletedAt: Instant? = null,
+      timestamps: Timestamps = Timestamps(createdAt, updatedAt, deletedAt),
+      syncStatus: SyncStatus = randomOfEnum(SyncStatus::class)
+  ): TeleconsultRecord {
+    return TeleconsultRecord(
+        id = id,
+        patientId = patientId,
+        medicalOfficerId = medicalOfficerId,
+        teleconsultRequestInfo = teleconsultRequestInfo,
+        teleconsultRecordInfo = teleconsultRecordInfo,
+        timestamp = timestamps,
+        syncStatus = syncStatus
+    )
+  }
+
+  fun teleconsultRecordInfo(
+      recordedAt: Instant = Instant.parse("2020-09-03T00:00:00Z"),
+      teleconsultationType: TeleconsultationType = randomTeleconsultationType(),
+      patientTookMedicines: TeleconsultRecordAnswer = randomTeleconsultRecordAnswer(),
+      patientConsented: TeleconsultRecordAnswer = randomTeleconsultRecordAnswer(),
+      medicalOfficerNumber: String? = "22222222"
+  ): TeleconsultRecordInfo {
+    return TeleconsultRecordInfo(
+        recordedAt = recordedAt,
+        teleconsultationType = teleconsultationType,
+        patientTookMedicines = patientTookMedicines,
+        patientConsented = patientConsented,
+        medicalOfficerNumber = medicalOfficerNumber
+    )
+  }
+
+  fun teleconsultRequestInfo(
+      requesterId: UUID = UUID.randomUUID(),
+      facilityId: UUID = UUID.randomUUID(),
+      requestedAt: Instant = Instant.parse("2020-09-02T00:00:00Z"),
+      requesterCompletionStatus: TeleconsultStatus? = null
+  ): TeleconsultRequestInfo {
+    return TeleconsultRequestInfo(
+        requesterId = requesterId,
+        facilityId = facilityId,
+        requestedAt = requestedAt,
+        requesterCompletionStatus = requesterCompletionStatus
     )
   }
 }

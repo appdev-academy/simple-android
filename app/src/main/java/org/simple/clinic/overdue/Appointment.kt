@@ -243,5 +243,31 @@ data class Appointment(
         newUpdatedAt: Instant,
         createdBefore: Instant
     )
+
+    @Query("""
+      DELETE FROM Appointment
+      WHERE deletedAt IS NOT NULL AND syncStatus == 'DONE'
+    """)
+    fun purgeDeleted()
+
+    @Query("""
+      DELETE FROM Appointment
+      WHERE status IN ('cancelled', 'visited') AND syncStatus == 'DONE'
+    """)
+    fun purgeUnusedAppointments()
+
+    @Query(""" SELECT * FROM Appointment """)
+    fun getAllAppointments(): List<Appointment>
+
+    @Query("""
+        DELETE FROM Appointment
+        WHERE 
+            uuid NOT IN (
+                SELECT A.uuid FROM Appointment A
+                INNER JOIN Patient P ON P.uuid == A.patientUuid
+            ) AND
+            syncStatus == 'DONE'
+    """)
+    fun deleteWithoutLinkedPatient()
   }
 }

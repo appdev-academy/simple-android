@@ -5,12 +5,12 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.medicalhistory_summary_view.view.*
-import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.MedicalhistorySummaryViewBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.medicalhistory.Answer
 import org.simple.clinic.medicalhistory.MedicalHistory
@@ -20,8 +20,9 @@ import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.DIAGNOSED_WITH_HY
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_HEART_ATTACK
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_KIDNEY_DISEASE
 import org.simple.clinic.medicalhistory.MedicalHistoryQuestion.HAS_HAD_A_STROKE
+import org.simple.clinic.medicalhistory.SelectDiagnosisErrorDialog
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.summary.PatientSummaryChildView
 import org.simple.clinic.summary.PatientSummaryModelUpdateCallback
 import org.simple.clinic.summary.PatientSummaryScreenKey
@@ -35,21 +36,48 @@ class MedicalHistorySummaryView(
     attributeSet: AttributeSet
 ) : FrameLayout(context, attributeSet), MedicalHistorySummaryUi, PatientSummaryChildView {
 
+  private var binding: MedicalhistorySummaryViewBinding? = null
+
+  private val heartAttackQuestionView
+    get() = binding!!.heartAttackQuestionView
+
+  private val strokeQuestionView
+    get() = binding!!.strokeQuestionView
+
+  private val kidneyDiseaseQuestionView
+    get() = binding!!.kidneyDiseaseQuestionView
+
+  private val diabetesQuestionView
+    get() = binding!!.diabetesQuestionView
+
+  private val hypertensionDiagnosisView
+    get() = binding!!.hypertensionDiagnosisView
+
+  private val diabetesDiagnosisView
+    get() = binding!!.diabetesDiagnosisView
+
+  private val diagnosisViewContainer
+    get() = binding!!.diagnosisViewContainer
+
   private val internalEvents = PublishSubject.create<MedicalHistorySummaryEvent>()
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var activity: AppCompatActivity
 
   @Inject
-  lateinit var effectHandlerFactory: MedicalHistorySummaryEffectHandler.Factory
+  lateinit var effectHandler: MedicalHistorySummaryEffectHandler
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
 
   init {
-    LayoutInflater.from(context).inflate(R.layout.medicalhistory_summary_view, this, true)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = MedicalhistorySummaryViewBinding.inflate(layoutInflater, this, true)
   }
 
   private var modelUpdateCallback: PatientSummaryModelUpdateCallback? = null
 
-  private val screenKey by unsafeLazy { screenRouter.key<PatientSummaryScreenKey>(this) }
+  private val screenKey by unsafeLazy { screenKeyProvider.keyFor<PatientSummaryScreenKey>(this) }
 
   private val events by unsafeLazy {
     Observable
@@ -68,7 +96,7 @@ class MedicalHistorySummaryView(
         defaultModel = MedicalHistorySummaryModel.create(screenKey.patientUuid),
         update = MedicalHistorySummaryUpdate(),
         init = MedicalHistorySummaryInit(),
-        effectHandler = effectHandlerFactory.create(this).build(),
+        effectHandler = effectHandler.build(),
         modelUpdateListener = { model ->
           modelUpdateCallback?.invoke(model)
           uiRenderer.render(model)
@@ -92,10 +120,11 @@ class MedicalHistorySummaryView(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -142,16 +171,12 @@ class MedicalHistorySummaryView(
     kidneyDiseaseQuestionView.hideDivider()
   }
 
-  override fun hideDiagnosisError() {
-    diagnosisRequiredError.visibility = GONE
-  }
-
   override fun registerSummaryModelUpdateCallback(callback: PatientSummaryModelUpdateCallback?) {
     modelUpdateCallback = callback
   }
 
   fun showDiagnosisError() {
-    diagnosisRequiredError.visibility = VISIBLE
+    SelectDiagnosisErrorDialog.show(activity.supportFragmentManager)
   }
 
   private fun answerToggled(question: MedicalHistoryQuestion, answer: Answer) {

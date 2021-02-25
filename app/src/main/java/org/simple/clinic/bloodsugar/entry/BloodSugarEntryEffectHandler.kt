@@ -1,8 +1,10 @@
 package org.simple.clinic.bloodsugar.entry
 
+import com.f2prateek.rx.preferences2.Preference
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import io.reactivex.Scheduler
@@ -11,6 +13,7 @@ import io.reactivex.rxkotlin.cast
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.bloodsugar.BloodSugarMeasurement
 import org.simple.clinic.bloodsugar.BloodSugarRepository
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
 import org.simple.clinic.bloodsugar.entry.PrefillDate.PrefillSpecificDate
 import org.simple.clinic.bloodsugar.entry.ValidationResult.ErrorBloodSugarEmpty
 import org.simple.clinic.bloodsugar.entry.ValidationResult.ErrorBloodSugarTooHigh
@@ -42,9 +45,10 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
     private val schedulersProvider: SchedulersProvider,
     private val currentUser: Lazy<User>,
     private val currentFacility: Lazy<Facility>,
-    private val uuidGenerator: UuidGenerator
+    private val uuidGenerator: UuidGenerator,
+    private val bloodSugarUnitPreference: Preference<BloodSugarUnitPreference>
 ) {
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(ui: BloodSugarEntryUi): BloodSugarEntryEffectHandler
   }
@@ -58,7 +62,7 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
         .addAction(HideDateErrorMessage::class.java, ui::hideDateErrorMessage, schedulersProvider.ui())
         .addAction(Dismiss::class.java, ui::dismiss, schedulersProvider.ui())
         .addAction(ShowDateEntryScreen::class.java, ui::showDateEntryScreen, schedulersProvider.ui())
-        .addConsumer(ShowBloodSugarValidationError::class.java, { showBloodSugarValidationError(it.result) }, schedulersProvider.ui())
+        .addConsumer(ShowBloodSugarValidationError::class.java, { showBloodSugarValidationError(it.result, it.unitPreference) }, schedulersProvider.ui())
         .addConsumer(ShowBloodSugarEntryScreen::class.java, { showBloodSugarEntryScreen(it.date) }, schedulersProvider.ui())
         .addTransformer(PrefillDate::class.java, prefillDate(schedulersProvider.ui()))
         .addConsumer(ShowDateValidationError::class.java, { showDateValidationError(it.result) }, schedulersProvider.ui())
@@ -68,7 +72,18 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
         .addConsumer(SetBloodSugarReading::class.java, { ui.setBloodSugarReading(it.bloodSugarReading) }, schedulersProvider.ui())
         .addTransformer(UpdateBloodSugarEntry::class.java, updateBloodSugarEntryTransformer(schedulersProvider.io()))
         .addConsumer(ShowConfirmRemoveBloodSugarDialog::class.java, { ui.showConfirmRemoveBloodSugarDialog(it.bloodSugarMeasurementUuid) }, schedulersProvider.ui())
+        .addTransformer(LoadBloodSugarUnitPreference::class.java, loadBloodSugarUnitPreference())
+        .addConsumer(ShowBloodSugarUnitSelectionDialog::class.java, { ui.showBloodSugarUnitSelectionDialog(it.bloodSugarUnitPreference) }, schedulersProvider.ui())
         .build()
+  }
+
+  private fun loadBloodSugarUnitPreference(): ObservableTransformer<LoadBloodSugarUnitPreference, BloodSugarEntryEvent> {
+    return ObservableTransformer { effect ->
+      effect
+          .observeOn(schedulersProvider.io())
+          .switchMap { bloodSugarUnitPreference.asObservable() }
+          .map(::BloodSugarUnitPreferenceLoaded)
+    }
   }
 
   private fun fetchBloodSugarMeasurement(
@@ -85,11 +100,11 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
   private fun getExistingBloodSugarMeasurement(bloodSugarMeasurementUuid: UUID): BloodSugarMeasurement? =
       bloodSugarRepository.measurement(bloodSugarMeasurementUuid)
 
-  private fun showBloodSugarValidationError(result: ValidationResult) {
+  private fun showBloodSugarValidationError(result: ValidationResult, unitPreference: BloodSugarUnitPreference) {
     when (result) {
       ErrorBloodSugarEmpty -> ui.showBloodSugarEmptyError()
-      is ErrorBloodSugarTooHigh -> ui.showBloodSugarHighError(result.measurementType)
-      is ErrorBloodSugarTooLow -> ui.showBloodSugarLowError(result.measurementType)
+      is ErrorBloodSugarTooHigh -> ui.showBloodSugarHighError(result.measurementType, unitPreference)
+      is ErrorBloodSugarTooLow -> ui.showBloodSugarLowError(result.measurementType, unitPreference)
     }
   }
 
@@ -135,6 +150,7 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
   private fun createNewBloodSugarEntryTransformer(): ObservableTransformer<CreateNewBloodSugarEntry, BloodSugarEntryEvent> {
     return ObservableTransformer { createNewBloodSugarEntries ->
       createNewBloodSugarEntries
+          .observeOn(schedulersProvider.io())
           .flatMapSingle { createNewBloodSugarEntry ->
             val user = currentUser.get()
             val facility = currentFacility.get()
@@ -144,12 +160,6 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
           .compose(reportAnalyticsEvents)
           .cast()
     }
-  }
-
-  private fun userAndCurrentFacility(): Pair<User, Facility> {
-    val user = currentUser.get()
-    val facility = currentFacility.get()
-    return user to facility
   }
 
   private fun storeNewBloodSugarMeasurement(
@@ -173,13 +183,11 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
       bloodSugarMeasurement: BloodSugarMeasurement
   ): Single<BloodSugarSaved> {
     val entryDate = createNewBloodSugarEntry.userEnteredDate.toUtcInstant(userClock)
-    val compareAndUpdateRecordedAt = patientRepository
-        .compareAndUpdateRecordedAt(bloodSugarMeasurement.patientUuid, entryDate)
 
-    return appointmentsRepository
-        .markAppointmentsCreatedBeforeTodayAsVisited(bloodSugarMeasurement.patientUuid)
-        .andThen(compareAndUpdateRecordedAt)
-        .toSingleDefault(BloodSugarSaved(createNewBloodSugarEntry.wasDateChanged))
+    appointmentsRepository.markAppointmentsCreatedBeforeTodayAsVisited(bloodSugarMeasurement.patientUuid)
+    patientRepository.compareAndUpdateRecordedAt(bloodSugarMeasurement.patientUuid, entryDate)
+
+    return Single.just(BloodSugarSaved(createNewBloodSugarEntry.wasDateChanged))
   }
 
   private fun updateBloodSugarEntryTransformer(scheduler: Scheduler): ObservableTransformer<UpdateBloodSugarEntry, BloodSugarEntryEvent> {
@@ -212,6 +220,6 @@ class BloodSugarEntryEffectHandler @AssistedInject constructor(
 
   private fun storeUpdateBloodSugarMeasurement(bloodSugarMeasurement: BloodSugarMeasurement) {
     bloodSugarRepository.updateMeasurement(bloodSugarMeasurement)
-    patientRepository.compareAndUpdateRecordedAtImmediate(bloodSugarMeasurement.patientUuid, bloodSugarMeasurement.recordedAt)
+    patientRepository.compareAndUpdateRecordedAt(bloodSugarMeasurement.patientUuid, bloodSugarMeasurement.recordedAt)
   }
 }

@@ -3,13 +3,15 @@ package org.simple.clinic.home.patients
 import android.annotation.SuppressLint
 import com.f2prateek.rx.preferences2.Preference
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.appupdate.AppUpdateState
 import org.simple.clinic.appupdate.CheckAppUpdateAvailability
+import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.user.UserSession
 import org.simple.clinic.user.refreshuser.RefreshCurrentUser
 import org.simple.clinic.util.UserClock
@@ -28,6 +30,7 @@ class PatientsEffectHandler @AssistedInject constructor(
     private val utcClock: UtcClock,
     private val userClock: UserClock,
     private val checkAppUpdate: CheckAppUpdateAvailability,
+    private val patientRepository: PatientRepository,
     @Named("approval_status_changed_at") private val approvalStatusUpdatedAtPref: Preference<Instant>,
     @Named("approved_status_dismissed") private val hasUserDismissedApprovedStatusPref: Preference<Boolean>,
     @Named("number_of_patients_registered") private val numberOfPatientsRegisteredPref: Preference<Int>,
@@ -35,7 +38,7 @@ class PatientsEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: PatientsTabUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: PatientsTabUiActions): PatientsEffectHandler
   }
@@ -44,7 +47,7 @@ class PatientsEffectHandler @AssistedInject constructor(
     return RxMobius
         .subtypeEffectHandler<PatientsTabEffect, PatientsTabEvent>()
         .addAction(OpenEnterOtpScreen::class.java, uiActions::openEnterCodeManuallyScreen, schedulers.ui())
-        .addAction(OpenPatientSearchScreen::class.java, uiActions::openPatientSearchScreen, schedulers.ui())
+        .addConsumer(OpenPatientSearchScreen::class.java, { uiActions.openPatientSearchScreen(it.additionalIdentifier) }, schedulers.ui())
         .addTransformer(RefreshUserDetails::class.java, refreshCurrentUser())
         .addTransformer(LoadUser::class.java, loadUser())
         .addTransformer(LoadInfoForShowingApprovalStatus::class.java, loadRequiredInfoForShowingApprovalStatus())

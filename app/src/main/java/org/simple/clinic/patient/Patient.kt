@@ -197,6 +197,9 @@ data class Patient(
     @Query("$patientProfileQuery WHERE P.uuid == :patientUuid")
     protected abstract fun loadPatientQueryModelsForPatientUuidImmediate(patientUuid: UUID): List<PatientQueryModel>
 
+    @Query(patientProfileQuery)
+    protected abstract fun loadAllPatientQueryModels(): List<PatientQueryModel>
+
     @Query("""
       UPDATE Patient
       SET
@@ -244,6 +247,12 @@ data class Patient(
       val patientQueryModels = loadPatientQueryModelsForPatientUuidImmediate(patientUuid)
 
       return if (patientQueryModels.isNotEmpty()) queryModelsToPatientProfiles(patientQueryModels).first() else null
+    }
+
+    fun allPatientProfiles(): List<PatientProfile> {
+      val patientQueryModels = loadAllPatientQueryModels()
+
+      return queryModelsToPatientProfiles(patientQueryModels)
     }
 
     private fun queryModelsToPatientProfiles(patientQueryModels: List<PatientQueryModel>): List<PatientProfile> {
@@ -364,5 +373,55 @@ data class Patient(
         LEFT JOIN BusinessId BI ON BI.patientUuid == P.uuid
       """
     }
+
+    // This depends on the foreign key references between address, patient
+    // phone numbers, and business IDs to cascade the deletes.
+    @Query("""
+      DELETE FROM PatientAddress
+      WHERE uuid IN (
+        SELECT addressUuid FROM Patient
+        WHERE deletedAt IS NOT NULL AND syncStatus == 'DONE'
+      )
+    """)
+    abstract fun purgeDeleted()
+
+    @Query("""
+      DELETE FROM PatientPhoneNumber
+      WHERE uuid IN (
+        SELECT PPN.uuid FROM PatientPhoneNumber PPN
+        INNER JOIN Patient P ON P.uuid == PPN.patientUuid
+        WHERE P.syncStatus == 'DONE' AND PPN.deletedAt IS NOT NULL
+      )
+    """)
+    abstract fun purgeDeletedPhoneNumbers()
+
+    @Query("""
+      DELETE FROM BusinessId
+      WHERE uuid IN (
+        SELECT BI.uuid FROM BusinessId BI
+        INNER JOIN Patient P ON P.uuid == BI.patientUuid
+        WHERE P.syncStatus == 'DONE' AND BI.deletedAt IS NOT NULL
+      )
+    """)
+    abstract fun purgeDeletedBusinessIds()
+
+    // This depends on the foreign key references between address, patient
+    // phone numbers, and business IDs to cascade the deletes.
+    @Query("""
+      DELETE FROM PatientAddress
+      WHERE uuid NOT IN (
+        SELECT DISTINCT P.addressUuid FROM Patient P
+        LEFT JOIN Appointment A ON A.patientUuid == P.uuid
+        WHERE (
+            P.registeredFacilityId IN (:facilityIds) OR
+            P.assignedFacilityId IN (:facilityIds) OR
+            P.syncStatus == 'PENDING'
+        ) OR (
+            A.facilityUuid IN (:facilityIds) AND
+            A.status = 'scheduled'
+        )
+      )
+    """)
+    abstract fun deletePatientsNotInFacilities(facilityIds: List<UUID>)
   }
 }

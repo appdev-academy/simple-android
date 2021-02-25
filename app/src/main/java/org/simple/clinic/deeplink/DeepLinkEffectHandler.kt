@@ -1,8 +1,9 @@
 package org.simple.clinic.deeplink
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.patient.PatientRepository
@@ -16,7 +17,7 @@ class DeepLinkEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: DeepLinkUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: DeepLinkUiActions): DeepLinkEffectHandler
   }
@@ -35,6 +36,7 @@ class DeepLinkEffectHandler @AssistedInject constructor(
       }, schedulerProvider.ui())
       .addAction(ShowPatientDoesNotExist::class.java, { uiActions.showPatientDoesNotExist() }, schedulerProvider.ui())
       .addAction(ShowNoPatientUuidError::class.java, { uiActions.showNoPatientUuidError() }, schedulerProvider.ui())
+      .addAction(ShowTeleconsultLogNotAllowed::class.java, { uiActions.showTeleconsultLogNotAllowed() }, schedulerProvider.ui())
       .build()
 
   private fun fetchUser(): ObservableTransformer<FetchUser, DeepLinkEvent> {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.simple.clinic.home.HomeScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/homeScreenRootLayout"
@@ -13,13 +13,12 @@
     android:layout_height="wrap_content"
     app:elevation="@dimen/elevation_toolbar">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
       android:id="@+id/toolbar"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:elevation="@dimen/spacing_0"
-      app:logo="@drawable/ic_icons_logo"
-      tools:targetApi="lollipop">
+      app:logo="@drawable/ic_icons_logo">
 
       <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -43,21 +42,24 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textAlignment="textStart"
-            android:textAppearance="@style/Clinic.V2.TextAppearance.H6"
-            android:textColor="?attr/colorOnPrimary"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="?attr/colorOnToolbarPrimary"
             app:icon="@drawable/ic_keyboard_arrow_down_24dp"
             app:iconGravity="textEnd"
             app:iconPadding="@dimen/spacing_4"
-            app:iconTint="?attr/colorOnPrimary"
-            app:rippleColor="@color/ripple_grey1"
+            app:iconTint="?attr/colorOnToolbarPrimary"
+            app:rippleColor="?attr/colorToolbarPrimaryVariant"
             tools:text="CHC Facility Name" />
 
         </FrameLayout>
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
           android:id="@+id/helpButton"
-          style="@style/Clinic.V2.ToolbarButton"
+          style="@style/Widget.Simple.Button.Toolbar"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
           android:layout_gravity="end"
+          android:layout_marginEnd="@dimen/spacing_16"
           android:text="@string/home_help"
           app:layout_constraintBottom_toBottomOf="parent"
           app:layout_constraintEnd_toEndOf="parent"
@@ -67,17 +69,13 @@
 
       </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <com.google.android.material.tabs.TabLayout
       android:id="@+id/homeTabLayout"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:background="?colorPrimary"
-      app:tabIndicatorColor="@color/red1"
-      app:tabIndicatorHeight="4dp"
-      app:tabSelectedTextColor="@color/white100"
-      app:tabTextColor="@color/white48"
+      app:tabIndicatorHeight="@dimen/spacing_4"
       tools:ignore="UnusedAttribute" />
 
   </com.google.android.material.appbar.AppBarLayout>
@@ -88,4 +86,4 @@
     android:layout_height="match_parent"
     android:layout_below="@id/appbar" />
 
-</org.simple.clinic.home.HomeScreen>
+</RelativeLayout>

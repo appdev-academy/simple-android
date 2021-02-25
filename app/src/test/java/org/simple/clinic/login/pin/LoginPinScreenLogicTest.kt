@@ -107,6 +107,7 @@ class LoginPinScreenLogicTest {
     val createdAt = Instant.parse("2019-07-25T06:01:03.325Z")
     val updatedAt = Instant.parse("2019-07-26T06:01:03.325Z")
     val teleconsultPhoneNumber = "1111111111"
+    val capabilities = User.Capabilities(User.CapabilityStatus.Yes)
     val ongoingLoginEntry = ongoingLoginEntry
         .copy(
             pinDigest = pinDigest,
@@ -115,7 +116,8 @@ class LoginPinScreenLogicTest {
             status = status,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            teleconsultPhoneNumber = teleconsultPhoneNumber
+            teleconsultPhoneNumber = teleconsultPhoneNumber,
+            capabilities = capabilities
         )
     val expectedUser = User(
         uuid = loginUserUuid,
@@ -128,13 +130,14 @@ class LoginPinScreenLogicTest {
         loggedInStatus = User.LoggedInStatus.OTP_REQUESTED,
         registrationFacilityUuid = registrationFacilityUuid,
         currentFacilityUuid = registrationFacilityUuid,
-        teleconsultPhoneNumber = teleconsultPhoneNumber
+        teleconsultPhoneNumber = teleconsultPhoneNumber,
+        capabilities = capabilities
     )
 
     whenever(ongoingLoginEntryRepository.entryImmediate()) doReturn ongoingLoginEntry
     whenever(ongoingLoginEntryRepository.saveLoginEntry(ongoingLoginEntry))
         .thenReturn(Completable.complete())
-    whenever(userSession.storeUser(expectedUser, registrationFacilityUuid))
+    whenever(userSession.storeUser(expectedUser))
         .thenReturn(Completable.complete())
 
     // when
@@ -146,7 +149,7 @@ class LoginPinScreenLogicTest {
     verify(ongoingLoginEntryRepository).saveLoginEntry(ongoingLoginEntry)
     verifyNoMoreInteractions(ongoingLoginEntryRepository)
 
-    verify(userSession).storeUser(user = expectedUser, facilityUuid = registrationFacilityUuid)
+    verify(userSession).storeUser(user = expectedUser)
     verifyNoMoreInteractions(userSession)
 
     verify(ui, times(2)).showPhoneNumber(phoneNumber)

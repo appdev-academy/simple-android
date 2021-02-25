@@ -11,15 +11,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jakewharton.rxbinding3.view.detaches
 import io.reactivex.rxkotlin.ofType
 import kotlinx.android.synthetic.main.screen_overdue.view.*
+import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.contactpatient.ContactPatientBottomSheet
+import org.simple.clinic.databinding.ItemOverdueListPatientBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.summary.OpenIntention
+import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.UserClock
+import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.PagingItemAdapter
 import org.simple.clinic.widgets.visibleOrGone
+import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -35,10 +41,13 @@ class OverdueScreen(
   lateinit var activity: AppCompatActivity
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var userClock: UserClock
+
+  @Inject
+  lateinit var utcClock: UtcClock
 
   @Inject
   @Named("full_date")
@@ -51,7 +60,14 @@ class OverdueScreen(
   @Named("for_overdue_appointments")
   lateinit var pagedListConfig: PagedList.Config
 
-  private val overdueListAdapter = PagingItemAdapter(OverdueAppointmentRow.DiffCallback())
+  private val overdueListAdapter = PagingItemAdapter(
+      diffCallback = OverdueAppointmentRow.DiffCallback(),
+      bindings = mapOf(
+          R.layout.item_overdue_list_patient to { layoutInflater, parent ->
+            ItemOverdueListPatientBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   private val events by unsafeLazy {
     overdueListAdapter
@@ -121,6 +137,16 @@ class OverdueScreen(
           overdueRecyclerView.visibleOrGone(isVisible = areOverdueAppointmentsAvailable)
         }
         .subscribe(overdueListAdapter::submitList)
+  }
+
+  override fun openPatientSummary(patientUuid: UUID) {
+    router.push(
+        PatientSummaryScreenKey(
+            patientUuid = patientUuid,
+            intention = OpenIntention.ViewExistingPatient,
+            screenCreatedTimestamp = Instant.now(utcClock)
+        )
+    )
   }
 
   interface Injector {

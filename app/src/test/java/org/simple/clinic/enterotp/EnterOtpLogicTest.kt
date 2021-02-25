@@ -73,7 +73,8 @@ class EnterOtpLogicTest {
       registrationFacilityUuid = registrationFacilityUuid,
       status = user.status,
       createdAt = user.createdAt,
-      updatedAt = user.updatedAt
+      updatedAt = user.updatedAt,
+      capabilities = user.capabilities
   )
   private val userPayload = TestData.loggedInUserPayload(
       uuid = loggedInUserUuid,
@@ -119,7 +120,6 @@ class EnterOtpLogicTest {
     verify(ui).showProgress()
     verify(ui, never()).showIncorrectOtpError()
     verify(ui, times(2)).hideProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 
@@ -157,7 +157,6 @@ class EnterOtpLogicTest {
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
     verify(ui, times(2)).hideProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 
@@ -196,7 +195,6 @@ class EnterOtpLogicTest {
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
     verify(ui, times(2)).hideProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 
@@ -211,7 +209,6 @@ class EnterOtpLogicTest {
     uiEvents.onNext(EnterOtpSubmitted(otp))
 
     // then
-    verify(uiActions).goBack()
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
     verify(ui, times(2)).hideProgress()
@@ -233,7 +230,6 @@ class EnterOtpLogicTest {
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
     verify(ui, times(2)).hideProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 
@@ -386,7 +382,6 @@ class EnterOtpLogicTest {
     verify(ui, times(2)).hideProgress()
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 
@@ -887,7 +882,6 @@ class EnterOtpLogicTest {
     verify(ui).showUserPhoneNumber(phoneNumber)
     verify(ui).showProgress()
     verify(ui, times(2)).hideProgress()
-    verify(uiActions).goBack()
     verifyNoMoreInteractions(ui, uiActions)
   }
 

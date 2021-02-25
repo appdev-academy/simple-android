@@ -7,11 +7,15 @@ import android.widget.RelativeLayout
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_registration_location_permission.view.*
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenRegistrationLocationPermissionBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.registration.facility.RegistrationFacilitySelectionScreenKey
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.router.screen.ActivityPermissionResult
 import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.user.OngoingRegistrationEntry
@@ -27,8 +31,22 @@ class RegistrationLocationPermissionScreen(
     attrs: AttributeSet
 ) : RelativeLayout(context, attrs), RegistrationLocationPermissionUi {
 
+  var binding: ScreenRegistrationLocationPermissionBinding? = null
+
+  private val allowAccessButton
+    get() = binding!!.allowAccessButton
+
+  private val skipButton
+    get() = binding!!.skipButton
+
+  private val toolbar
+    get() = binding!!.toolbar
+
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
 
   @Inject
   lateinit var runtimePermissions: RuntimePermissions
@@ -36,11 +54,14 @@ class RegistrationLocationPermissionScreen(
   @Inject
   lateinit var effectHandlerFactory: RegistrationLocationPermissionEffectHandler.Factory
 
-  private val screenKey by unsafeLazy { screenRouter.key<RegistrationLocationPermissionScreenKey>(this) }
+  @Inject
+  lateinit var screenResults: ScreenResultBus
+
+  private val screenKey by unsafeLazy { screenKeyProvider.keyFor<RegistrationLocationPermissionScreenKey>(this) }
 
   private val events by unsafeLazy {
-    val permissionResults = screenRouter
-        .streamScreenResults()
+    val permissionResults = screenResults
+        .streamResults()
         .ofType<ActivityPermissionResult>()
 
     Observable
@@ -68,13 +89,14 @@ class RegistrationLocationPermissionScreen(
 
   override fun onFinishInflate() {
     super.onFinishInflate()
+    binding = ScreenRegistrationLocationPermissionBinding.bind(this)
     if (isInEditMode) {
       return
     }
     context.injector<Injector>().inject(this)
 
     toolbar.setOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
 
     // Can't tell why, but the keyboard stays
@@ -89,6 +111,7 @@ class RegistrationLocationPermissionScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -113,7 +136,7 @@ class RegistrationLocationPermissionScreen(
   }
 
   override fun openFacilitySelectionScreen(registrationEntry: OngoingRegistrationEntry) {
-    screenRouter.push(RegistrationFacilitySelectionScreenKey(registrationEntry))
+    router.push(RegistrationFacilitySelectionScreenKey(registrationEntry).wrap())
   }
 
   interface Injector {

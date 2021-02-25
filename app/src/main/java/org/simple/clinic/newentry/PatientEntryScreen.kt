@@ -11,6 +11,8 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RelativeLayout
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.transition.ChangeBounds
 import androidx.transition.Fade
@@ -24,17 +26,17 @@ import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_manual_patient_entry.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.appconfig.Country
+import org.simple.clinic.databinding.ScreenManualPatientEntryBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.medicalhistory.newentry.NewMedicalHistoryScreenKey
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
 import org.simple.clinic.newentry.country.InputFields
-import org.simple.clinic.newentry.form.AgeField
 import org.simple.clinic.newentry.form.AlternativeIdInputField
-import org.simple.clinic.newentry.form.DateOfBirthField
 import org.simple.clinic.newentry.form.DistrictField
 import org.simple.clinic.newentry.form.GenderField
 import org.simple.clinic.newentry.form.LandlineOrMobileField
@@ -54,8 +56,6 @@ import org.simple.clinic.patient.ReminderConsent.Granted
 import org.simple.clinic.patient.businessid.Identifier
 import org.simple.clinic.platform.crash.CrashReporter
 import org.simple.clinic.registration.phone.PhoneNumberValidator
-import org.simple.clinic.router.screen.ScreenRouter
-import org.simple.clinic.util.Truss
 import org.simple.clinic.util.toOptional
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.ProgressMaterialButton
@@ -66,7 +66,6 @@ import org.simple.clinic.widgets.ageanddateofbirth.UserInputAgeValidator
 import org.simple.clinic.widgets.ageanddateofbirth.UserInputDateValidator
 import org.simple.clinic.widgets.hideKeyboard
 import org.simple.clinic.widgets.scrollToChild
-import org.simple.clinic.widgets.setCompoundDrawableStartWithTint
 import org.simple.clinic.widgets.setTextAndCursor
 import org.simple.clinic.widgets.showKeyboard
 import org.simple.clinic.widgets.textChanges
@@ -77,7 +76,7 @@ import javax.inject.Inject
 class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), PatientEntryUi, PatientEntryValidationActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var crashReporter: CrashReporter
@@ -97,12 +96,123 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
   @Inject
   lateinit var effectHandlerInjectionFactory: PatientEntryEffectHandler.InjectionFactory
 
+  private var binding: ScreenManualPatientEntryBinding? = null
+
+  private val fullNameEditText
+    get() = binding!!.fullNameEditText
+
+  private val ageEditText
+    get() = binding!!.ageEditText
+
+  private val dateOfBirthEditText
+    get() = binding!!.dateOfBirthEditText
+
+  private val phoneNumberEditText
+    get() = binding!!.phoneNumberEditText
+
+  private val colonyOrVillageEditText
+    get() = binding!!.colonyOrVillageEditText
+
+  private val districtEditText
+    get() = binding!!.districtEditText
+
+  private val stateEditText
+    get() = binding!!.stateEditText
+
+  private val backButton
+    get() = binding!!.backButton
+
+  private val identifierTextView
+    get() = binding!!.identifierTextView
+
+  private val fullNameInputLayout
+    get() = binding!!.fullNameInputLayout
+
+  private val ageEditTextInputLayout
+    get() = binding!!.ageEditTextInputLayout
+
+  private val dateOfBirthInputLayout
+    get() = binding!!.dateOfBirthInputLayout
+
+  private val phoneNumberInputLayout
+    get() = binding!!.phoneNumberInputLayout
+
+  private val genderRadioGroup
+    get() = binding!!.genderRadioGroup
+
+  private val alternativeIdInputLayout
+    get() = binding!!.alternativeIdInputLayout
+
+  private val streetAddressInputLayout
+    get() = binding!!.streetAddressInputLayout
+
+  private val colonyOrVillageInputLayout
+    get() = binding!!.colonyOrVillageInputLayout
+
+  private val zoneInputLayout
+    get() = binding!!.zoneInputLayout
+
+  private val districtInputLayout
+    get() = binding!!.districtInputLayout
+
+  private val stateInputLayout
+    get() = binding!!.stateInputLayout
+
+  private val maleRadioButton
+    get() = binding!!.maleRadioButton
+
+  private val femaleRadioButton
+    get() = binding!!.femaleRadioButton
+
+  private val transgenderRadioButton
+    get() = binding!!.transgenderRadioButton
+
+  private val consentTextView
+    get() = binding!!.consentTextView
+
+  private val consentLabel
+    get() = binding!!.consentLabel
+
+  private val alternativeIdInputEditText
+    get() = binding!!.alternativeIdInputEditText
+
+  private val zoneEditText
+    get() = binding!!.zoneEditText
+
+  private val streetAddressEditText
+    get() = binding!!.streetAddressEditText
+
+  private val consentSwitch
+    get() = binding!!.consentSwitch
+
+  private val dateOfBirthAndAgeSeparator
+    get() = binding!!.dateOfBirthAndAgeSeparator
+
+  private val genderErrorTextView
+    get() = binding!!.genderErrorTextView
+
+  private val formScrollView
+    get() = binding!!.formScrollView
+
+  private val patientEntryRoot
+    get() = binding!!.patientEntryRoot
+
+  private val identifierContainer
+    get() = binding!!.identifierContainer
+
+  private val saveButton
+    get() = binding!!.saveButton
+
   // FIXME This is temporally coupled to `scrollToFirstFieldWithError()`.
   private val allTextInputFields: List<EditText> by unsafeLazy {
+    val ageOrDateOfBirthEditText = if (ageEditTextInputLayout.visibility == View.VISIBLE) {
+      ageEditText
+    } else {
+      dateOfBirthEditText
+    }
     listOf(
         fullNameEditText,
-        ageEditText,
-        dateOfBirthEditText,
+        ageOrDateOfBirthEditText,
         phoneNumberEditText,
         colonyOrVillageEditText,
         districtEditText,
@@ -144,9 +254,11 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
       return
     }
 
+    binding = ScreenManualPatientEntryBinding.bind(this)
+
     context.injector<Injector>().inject(this)
 
-    backButton.setOnClickListener { screenRouter.pop() }
+    backButton.setOnClickListener { router.pop() }
   }
 
   override fun setupUi(inputFields: InputFields) {
@@ -163,10 +275,6 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
       }
     }
 
-    // Compound drawable tinting is only supported in API23+. AppCompatTextView does not have
-    // support for compound drawable tinting either, so we need to do this in code.
-    identifierTextView.setCompoundDrawableStartWithTint(R.drawable.patient_id_card, R.color.grey1)
-
     setConsentText()
     setConsentLabelText()
 
@@ -178,8 +286,6 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
   private fun showOrHideInputFields(inputFields: InputFields) {
     val allTypesOfInputFields: Map<Class<*>, View> = mapOf(
         PatientNameField::class.java to fullNameInputLayout,
-        AgeField::class.java to ageEditTextInputLayout,
-        DateOfBirthField::class.java to dateOfBirthInputLayout,
         LandlineOrMobileField::class.java to phoneNumberInputLayout,
         GenderField::class.java to genderRadioGroup,
         AlternativeIdInputField::class.java to alternativeIdInputLayout,
@@ -228,22 +334,23 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
   }
 
   private fun setConsentText() {
-    val consentText = Truss()
-        .pushSpan(StyleSpan(BOLD))
-        .append(resources.getString(R.string.patiententry_consent_header))
-        .popSpan()
-        .append(resources.getString(R.string.patiententry_consent_first_para))
-        .append("\n\n")
-        .append(resources.getString(R.string.patiententry_consent_second_para))
-        .build()
+    val consentText = buildSpannedString {
+      inSpans(StyleSpan(BOLD)) {
+        append(resources.getString(R.string.patiententry_consent_header))
+      }
+
+      append(resources.getString(R.string.patiententry_consent_first_para))
+      append("\n\n")
+      append(resources.getString(R.string.patiententry_consent_second_para))
+    }
     consentTextView.text = consentText
   }
 
   private fun setConsentLabelText() {
-    val consentLabelTextResId = when (country.isoCountryCode) {
-      Country.BANGLADESH -> R.string.patiententry_consent_sms_reminders
-      else -> R.string.patiententry_consent_whatsapp_sms_reminders
-    }
+    val consentLabelTextResId = if (country.areWhatsAppRemindersSupported)
+      R.string.patiententry_consent_whatsapp_sms_reminders
+    else
+      R.string.patiententry_consent_sms_reminders
     consentLabel.setText(consentLabelTextResId)
   }
 
@@ -254,10 +361,11 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -308,8 +416,7 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
         .editorActions() { it == EditorInfo.IME_ACTION_DONE }
         .map { SaveClicked }
 
-    val saveButtonClicks = saveButtonFrame
-        .button
+    val saveButtonClicks = saveButton
         .clicks()
         .map { SaveClicked }
 
@@ -366,7 +473,7 @@ class PatientEntryScreen(context: Context, attrs: AttributeSet) : RelativeLayout
 
   override fun openMedicalHistoryEntryScreen() {
     hideKeyboard()
-    screenRouter.push(NewMedicalHistoryScreenKey())
+    router.push(NewMedicalHistoryScreenKey().wrap())
   }
 
   override fun setDateOfBirthAndAgeVisibility(visibility: DateOfBirthAndAgeVisibility) {

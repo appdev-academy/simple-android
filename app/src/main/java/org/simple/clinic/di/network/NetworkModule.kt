@@ -19,7 +19,11 @@ import org.simple.clinic.patient.businessid.BusinessId
 import org.simple.clinic.patient.businessid.Identifier
 import org.simple.clinic.patient.sync.PatientPayload
 import org.simple.clinic.remoteconfig.ConfigReader
+import org.simple.clinic.user.User
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultStatus
+import org.simple.clinic.teleconsultlog.teleconsultrecord.TeleconsultationType
+import org.simple.clinic.teleconsultlog.teleconsultrecord.Answer as TeleconsultAnswer
 import org.simple.clinic.user.UserStatus
 import org.simple.clinic.util.moshi.InstantMoshiAdapter
 import org.simple.clinic.util.moshi.LocalDateMoshiAdapter
@@ -53,7 +57,11 @@ class NetworkModule {
         .add(URIMoshiAdapter())
         .add(BloodSugarMeasurementType.MoshiTypeAdapter())
         .add(DeletedReason.MoshiTypeConverter())
+        .add(User.CapabilityStatus.MoshiTypeAdapter())
         .add(MedicineFrequency.MoshiTypeConverter())
+        .add(TeleconsultAnswer.MoshiTypeAdapter())
+        .add(TeleconsultationType.MoshiTypeAdapter())
+        .add(TeleconsultStatus.MoshiTypeAdapter())
         .build()
 
     val patientPayloadNullSerializingAdapter = moshi.adapter(PatientPayload::class.java).serializeNulls()

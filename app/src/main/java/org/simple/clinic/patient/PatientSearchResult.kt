@@ -6,14 +6,13 @@ import androidx.room.DatabaseView
 import androidx.room.Embedded
 import androidx.room.Query
 import io.reactivex.Flowable
-import io.reactivex.Single
 import kotlinx.android.parcel.Parcelize
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
 @DatabaseView("""
-  SELECT P.uuid, P.fullName, P.gender, P.dateOfBirth, P.age_value, P.age_updatedAt, P.status, P.createdAt, P.updatedAt, P.syncStatus, P.recordedAt,
+  SELECT P.uuid, P.fullName, P.gender, P.dateOfBirth, P.age_value, P.age_updatedAt, P.assignedFacilityId, P.status, P.createdAt, P.updatedAt, P.syncStatus, P.recordedAt,
   PA.uuid addr_uuid, PA.streetAddress addr_streetAddress, PA.colonyOrVillage addr_colonyOrVillage, PA.zone addr_zone, PA.district addr_district,
   PA.state addr_state, PA.country addr_country,
   PA.createdAt addr_createdAt, PA.updatedAt addr_updatedAt,
@@ -70,6 +69,8 @@ data class PatientSearchResult(
     @Embedded(prefix = "age_")
     val age: Age?,
 
+    val assignedFacilityId: UUID?,
+
     val status: PatientStatus,
 
     val createdAt: Instant,
@@ -97,7 +98,7 @@ data class PatientSearchResult(
 
     @Embedded(prefix = "lastSeen_")
     val lastSeen: LastSeen?
-): Parcelable {
+) : Parcelable {
 
   override fun toString(): String {
     return "Name: $fullName, UUID: $uuid, Facility UUID: ${lastSeen?.lastSeenAtFacilityUuid}"
@@ -112,10 +113,10 @@ data class PatientSearchResult(
       LEFT JOIN Patient P ON P.uuid = searchResult.uuid
       WHERE P.uuid IN (:uuids) AND P.status = :status AND P.deletedAt IS NULL
       """)
-    fun searchByIds(uuids: List<UUID>, status: PatientStatus): Single<List<PatientSearchResult>>
+    fun searchByIds(uuids: List<UUID>, status: PatientStatus): List<PatientSearchResult>
 
     @Query("""SELECT Patient.uuid, Patient.fullName FROM Patient WHERE Patient.status = :status AND Patient.deletedAt IS NULL""")
-    fun nameAndId(status: PatientStatus): Flowable<List<PatientNameAndId>>
+    fun nameAndId(status: PatientStatus): List<PatientNameAndId>
 
     @Suppress("AndroidUnresolvedRoomSqlReference")
     @Query("""
@@ -133,7 +134,23 @@ data class PatientSearchResult(
       ) PatientsAtFacility ON searchResults.uuid = PatientsAtFacility.uuid
       ORDER BY searchResults.fullName COLLATE NOCASE ASC
     """)
-    fun searchInFacilityAndSortByName(facilityUuid: UUID, status: PatientStatus): Flowable<List<PatientSearchResult>>
+    fun searchInFacilityAndSortByName_Old(facilityUuid: UUID, status: PatientStatus): Flowable<List<PatientSearchResult>>
+
+    @Query("""
+        SELECT * FROM (
+            SELECT searchResult.*, 1 priority FROM 
+            PatientSearchResult searchResult
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.status = :status AND P.deletedAt IS NULL AND P.assignedFacilityId = :facilityUuid
+            UNION
+            SELECT searchResult.*, 0 priority FROM 
+            PatientSearchResult searchResult
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.status = :status AND P.deletedAt IS NULL AND P.assignedFacilityId != :facilityUuid
+            )
+        ORDER BY priority DESC, fullName COLLATE NOCASE
+    """)
+    fun searchInFacilityAndSortByName(facilityUuid: UUID, status: PatientStatus): List<PatientSearchResult>
 
     @Suppress("AndroidUnresolvedRoomSqlReference")
     @Query("""
@@ -143,7 +160,39 @@ data class PatientSearchResult(
         WHERE phoneNumber LIKE '%' || :phoneNumber || '%' AND P.deletedAt IS NULL
         ORDER BY P.fullName COLLATE NOCASE ASC LIMIT :limit
     """)
-    fun searchByPhoneNumber(phoneNumber: String, limit: Int): Flowable<List<PatientSearchResult>>
+    fun searchByPhoneNumber(phoneNumber: String, limit: Int): List<PatientSearchResult>
+
+    @Query("""
+        SELECT * FROM (
+            SELECT searchResult.*, 0 priority, INSTR(lower(P.fullName), lower(:name)) namePosition FROM 
+            PatientSearchResult searchResult
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.deletedAt IS NULL AND P.assignedFacilityId = :facilityId AND namePosition > 0
+            UNION
+            SELECT searchResult.*, 1 priority, INSTR(lower(P.fullName), lower(:name)) namePosition FROM 
+            PatientSearchResult searchResult
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.deletedAt IS NULL AND P.assignedFacilityId != :facilityId AND namePosition > 0
+        )
+        ORDER BY priority ASC, namePosition ASC
+    """)
+    fun searchByName(name: String, facilityId: UUID): List<PatientSearchResult>
+
+    @Query("""
+        SELECT * FROM (
+            SELECT searchResult.*, 0 priority, INSTR(phoneNumber, :phoneNumber) phoneNumberPosition FROM 
+            PatientSearchResult searchResult
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.deletedAt IS NULL AND P.assignedFacilityId = :facilityId AND phoneNumberPosition > 0
+            UNION
+            SELECT searchResult.*, 1 priority, INSTR(phoneNumber, :phoneNumber) phoneNumberPosition FROM 
+            PatientSearchResult searchResult                                       
+            LEFT JOIN Patient P ON P.uuid = searchResult.uuid
+            WHERE P.deletedAt IS NULL AND P.assignedFacilityId != :facilityId AND phoneNumberPosition > 0
+            )
+        ORDER BY priority ASC, phoneNumberPosition ASC
+    """)
+    fun searchByPhoneNumber2(phoneNumber: String, facilityId: UUID): List<PatientSearchResult>
   }
 
   data class PatientNameAndId(val uuid: UUID, val fullName: String)

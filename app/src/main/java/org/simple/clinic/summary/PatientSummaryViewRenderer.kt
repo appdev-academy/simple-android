@@ -1,13 +1,15 @@
 package org.simple.clinic.summary
 
 import org.simple.clinic.mobius.ViewRenderer
-import org.simple.clinic.summary.teleconsultation.api.TeleconsultInfo
 
 class PatientSummaryViewRenderer(
-    private val ui: PatientSummaryScreenUi
+    private val ui: PatientSummaryScreenUi,
+    private val modelUpdateCallback: PatientSummaryModelUpdateCallback
 ) : ViewRenderer<PatientSummaryModel> {
 
   override fun render(model: PatientSummaryModel) {
+    modelUpdateCallback?.invoke(model)
+
     with(ui) {
       if (model.hasLoadedPatientSummaryProfile) {
         populatePatientProfile(model.patientSummaryProfile!!)
@@ -39,25 +41,24 @@ class PatientSummaryViewRenderer(
   }
 
   private fun renderMedicalOfficerView() {
-    ui.hideContactDoctorButton()
+    ui.hideTeleconsultButton()
     ui.hideDoneButton()
     ui.showTeleconsultLogButton()
   }
 
   private fun renderUserView(model: PatientSummaryModel) {
     if (model.isTeleconsultationEnabled && model.isUserLoggedIn) {
-      renderContactDoctorButton(model)
+      renderTeleconsultButton(model)
     } else {
-      ui.hideContactDoctorButton()
+      ui.hideTeleconsultButton()
     }
   }
 
-  private fun renderContactDoctorButton(model: PatientSummaryModel) {
-    ui.showContactDoctorButton()
-    when (model.teleconsultInfo) {
-      is TeleconsultInfo.Fetched -> ui.enableContactDoctorButton()
-      is TeleconsultInfo.MissingPhoneNumber, is TeleconsultInfo.NetworkError -> ui.disableContactDoctorButton()
-      is TeleconsultInfo.Fetching -> ui.fetchingTeleconsultInfo()
+  private fun renderTeleconsultButton(model: PatientSummaryModel) {
+    if (model.hasMedicalOfficers) {
+      ui.showTeleconsultButton()
+    } else {
+      ui.hideTeleconsultButton()
     }
   }
 

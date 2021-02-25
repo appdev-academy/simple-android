@@ -1,19 +1,20 @@
 package org.simple.clinic.scanid
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.util.scheduler.SchedulersProvider
 
 class ScanSimpleIdEffectHandler @AssistedInject constructor(
-    private val patientRepository: PatientRepository,
     private val schedulersProvider: SchedulersProvider,
+    private val patientRepository: PatientRepository,
     @Assisted private val uiActions: ScanSimpleIdUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: ScanSimpleIdUiActions): ScanSimpleIdEffectHandler
   }
@@ -25,22 +26,19 @@ class ScanSimpleIdEffectHandler @AssistedInject constructor(
       .addAction(HideShortCodeValidationError::class.java, uiActions::hideShortCodeValidationError, schedulersProvider.ui())
       .addConsumer(ShowShortCodeValidationError::class.java, { uiActions.showShortCodeValidationError(it.failure) }, schedulersProvider.ui())
       .addTransformer(ValidateShortCode::class.java, validateShortCode())
-      .addConsumer(OpenPatientShortCodeSearch::class.java, { uiActions.openPatientShortCodeSearch(it.shortCode) }, schedulersProvider.ui())
-      .addConsumer(OpenPatientSummary::class.java, { uiActions.openPatientSummary(it.patientUuid) }, schedulersProvider.ui())
-      .addConsumer(OpenAddIdToPatientScreen::class.java, { uiActions.openAddIdToPatientScreen(it.identifier) }, schedulersProvider.ui())
-      .addTransformer(SearchPatient::class.java, searchPatient())
+      .addConsumer(SendScannedIdentifierResult::class.java, { uiActions.sendScannedId(it.scannedId) }, schedulersProvider.ui())
+      .addTransformer(SearchPatientByIdentifier::class.java, searchPatientByIdentifier())
       .build()
 
-  private fun searchPatient(): ObservableTransformer<SearchPatient, ScanSimpleIdEvent> {
+  private fun searchPatientByIdentifier(): ObservableTransformer<SearchPatientByIdentifier, ScanSimpleIdEvent> {
     return ObservableTransformer { effects ->
       effects
-          .switchMap { effect ->
-            val scannedUuid = effect.scannedUuid
-
+          .map(SearchPatientByIdentifier::identifier)
+          .switchMap { identifier ->
             patientRepository
-                .findPatientWithBusinessId(scannedUuid.toString())
+                .findPatientWithBusinessId(identifier.value)
                 .subscribeOn(schedulersProvider.io())
-                .map { PatientSearchCompleted(it, scannedUuid) }
+                .map { foundPatient -> PatientSearchByIdentifierCompleted(foundPatient, identifier) }
           }
     }
   }

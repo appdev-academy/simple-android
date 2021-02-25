@@ -27,23 +27,40 @@ import org.simple.clinic.appconfig.Country
 import org.simple.clinic.appupdate.dialog.AppUpdateDialog
 import org.simple.clinic.di.injector
 import org.simple.clinic.enterotp.EnterOtpScreenKey
+import org.simple.clinic.feature.Feature
+import org.simple.clinic.feature.Features
+import org.simple.clinic.home.HomeScreen
+import org.simple.clinic.instantsearch.InstantSearchScreenKey
+import org.simple.clinic.mobius.DeferredEventSource
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.patient.businessid.Identifier
 import org.simple.clinic.platform.crash.CrashReporter
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.scanid.ScanSimpleIdScreenKey
 import org.simple.clinic.search.PatientSearchScreenKey
+import org.simple.clinic.shortcodesearchresult.ShortCodeSearchResultScreenKey
+import org.simple.clinic.summary.OpenIntention
+import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.RequestPermissions
 import org.simple.clinic.util.RuntimePermissions
+import org.simple.clinic.util.UtcClock
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.UiEvent
 import org.simple.clinic.widgets.indexOfChildId
+import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Named
 
 class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), PatientsTabUi, PatientsTabUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenResults: ScreenResultBus
 
   @Inject
   lateinit var activityLifecycle: Observable<ActivityLifecycle>
@@ -67,6 +84,14 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
   @Inject
   lateinit var effectHandlerFactory: PatientsEffectHandler.Factory
 
+  @Inject
+  lateinit var utcClock: UtcClock
+
+  @Inject
+  lateinit var features: Features
+
+  private val deferredEvents = DeferredEventSource<PatientsTabEvent>()
+
   @IdRes
   private var currentStatusViewId: Int = R.id.userStatusHiddenView
 
@@ -80,7 +105,7 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
             scanCardIdButtonClicks(),
             simpleVideoClicked()
         )
-        .compose<UiEvent>(RequestPermissions(runtimePermissions, screenRouter.streamScreenResults().ofType()))
+        .compose<UiEvent>(RequestPermissions(runtimePermissions, screenResults.streamResults().ofType()))
         .compose(ReportAnalyticsEvents())
   }
 
@@ -93,7 +118,8 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
         update = PatientsTabUpdate(),
         init = PatientsInit(),
         effectHandler = effectHandlerFactory.create(this).build(),
-        modelUpdateListener = uiRenderer::render
+        modelUpdateListener = uiRenderer::render,
+        additionalEventSources = listOf(deferredEvents)
     )
   }
 
@@ -160,8 +186,14 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
       .mergeWith(simpleVideoImage.clicks())
       .map { SimpleVideoClicked }
 
-  override fun openPatientSearchScreen() {
-    screenRouter.push(PatientSearchScreenKey(additionalIdentifier = null))
+  override fun openPatientSearchScreen(additionalIdentifier: Identifier?) {
+    val screenKey = if (features.isEnabled(Feature.InstantSearch)) {
+      InstantSearchScreenKey(additionalIdentifier)
+    } else {
+      PatientSearchScreenKey(additionalIdentifier).wrap()
+    }
+
+    router.push(screenKey)
   }
 
   private fun showStatus(@IdRes statusViewId: Int) {
@@ -200,11 +232,12 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
   }
 
   override fun openEnterCodeManuallyScreen() {
-    screenRouter.push(EnterOtpScreenKey())
+    router.push(EnterOtpScreenKey().wrap())
   }
 
   override fun openScanSimpleIdCardScreen() {
-    screenRouter.push(ScanSimpleIdScreenKey())
+    // This is dependent on this screen being used within `org.simple.clinic.home.HomeScreen`
+    router.pushExpectingResult(HomeScreen.ScreenRequest.ScanPassportRequest, ScanSimpleIdScreenKey())
   }
 
   override fun hideSyncIndicator() {
@@ -217,6 +250,14 @@ class PatientsTabScreen(context: Context, attrs: AttributeSet) : RelativeLayout(
 
   override fun showAppUpdateDialog() {
     AppUpdateDialog.show(activity.supportFragmentManager)
+  }
+
+  override fun openShortCodeSearchScreen(shortCode: String) {
+    router.push(ShortCodeSearchResultScreenKey(shortCode))
+  }
+
+  override fun openPatientSummary(patientId: UUID) {
+    router.push(PatientSummaryScreenKey(patientId, OpenIntention.ViewExistingPatient, Instant.now(utcClock)))
   }
 
   private fun showHomeScreenBackground(@IdRes viewId: Int) {

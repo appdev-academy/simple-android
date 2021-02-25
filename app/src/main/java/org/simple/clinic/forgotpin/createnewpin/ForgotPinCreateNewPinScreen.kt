@@ -9,12 +9,13 @@ import android.widget.RelativeLayout
 import com.jakewharton.rxbinding3.widget.editorActions
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_forgotpin_createpin.view.*
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenForgotpinCreatepinBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.forgotpin.confirmpin.ForgotPinConfirmPinScreenKey
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.hideKeyboard
 import org.simple.clinic.widgets.showKeyboard
@@ -26,10 +27,24 @@ class ForgotPinCreateNewPinScreen(
 ) : RelativeLayout(context, attributeSet), ForgotPinCreateNewPinUi, UiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
   lateinit var effectHandlerFactory: ForgotPinCreateNewEffectHandler.Factory
+
+  private var binding: ScreenForgotpinCreatepinBinding? = null
+
+  private val createPinEditText
+    get() = binding!!.createPinEditText
+
+  private val userFullNameTextView
+    get() = binding!!.userFullNameTextView
+
+  private val facilityNameTextView
+    get() = binding!!.facilityNameTextView
+
+  private val createPinErrorTextView
+    get() = binding!!.createPinErrorTextView
 
   private val events by unsafeLazy {
     Observable
@@ -59,6 +74,8 @@ class ForgotPinCreateNewPinScreen(
       return
     }
 
+    binding = ScreenForgotpinCreatepinBinding.bind(this)
+
     context.injector<Injector>().inject(this)
 
     createPinEditText.showKeyboard()
@@ -71,10 +88,11 @@ class ForgotPinCreateNewPinScreen(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -106,7 +124,7 @@ class ForgotPinCreateNewPinScreen(
 
   override fun showConfirmPinScreen(pin: String) {
     hideKeyboard()
-    screenRouter.push(ForgotPinConfirmPinScreenKey(pin))
+    router.push(ForgotPinConfirmPinScreenKey(pin).wrap())
   }
 
   override fun hideInvalidPinError() {

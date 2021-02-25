@@ -1,8 +1,9 @@
 package org.simple.clinic.teleconsultlog.success
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.reactivex.ObservableTransformer
 import io.reactivex.Scheduler
 import org.simple.clinic.patient.PatientRepository
@@ -17,7 +18,7 @@ class TeleConsultSuccessEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: TeleConsultSuccessScreenUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: TeleConsultSuccessScreenUiActions): TeleConsultSuccessEffectHandler
   }
@@ -27,7 +28,7 @@ class TeleConsultSuccessEffectHandler @AssistedInject constructor(
         .subtypeEffectHandler<TeleConsultSuccessEffect, TeleConsultSuccessEvent>()
         .addTransformer(LoadPatientDetails::class.java, loadPatientDetails(schedulersProvider.io()))
         .addAction(GoToHomeScreen::class.java, { uiActions.goToHomeScreen() }, schedulersProvider.ui())
-        .addConsumer(GoToPrescriptionScreen::class.java, { uiActions.goToPrescriptionScreen(it.patient) }, schedulersProvider.ui())
+        .addConsumer(GoToPrescriptionScreen::class.java, { uiActions.goToPrescriptionScreen(it.patientUuid, it.teleconsultRecordId) }, schedulersProvider.ui())
         .build()
   }
 

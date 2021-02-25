@@ -1,15 +1,12 @@
 package org.simple.clinic.scanid
 
-import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
-import org.simple.clinic.R
-import org.simple.clinic.router.screen.FullScreenKey
+import org.simple.clinic.navigation.v2.ScreenKey
 
 @Parcelize
-class ScanSimpleIdScreenKey : FullScreenKey {
+class ScanSimpleIdScreenKey : ScreenKey() {
 
-  @IgnoredOnParcel
-  override val analyticsName = "ScanSimpleId"
+  override val analyticsName: String = "ScanSimpleId"
 
-  override fun layoutRes() = R.layout.screen_scan_simple
+  override fun instantiateFragment() = ScanSimpleIdScreen()
 }

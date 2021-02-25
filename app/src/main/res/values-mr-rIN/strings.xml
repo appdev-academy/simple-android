@@ -66,19 +66,22 @@
   <string name="patiententry_kebele">कबियल</string>
   <string name="patiententry_zone">युनियन</string>
   <string name="patiententry_district">जिल्‍हा</string>
-  <string name="patiententry_woreda">वॉरेदा</string>
+  <string name="patiententry_woreda">क्षेत्र</string>
   <string name="patiententry_upazila">उपजिल्‍हा</string>
   <string name="patiententry_state">राज्‍य</string>
   <string name="patiententry_region">प्रदेश</string>
+  <string name="patiententry_doornumber_streetname">दरवाजा क्रमांक, रस्‍त्‍याचे नाव</string>
+  <string name="patiententry_division_area">विभाग आणि क्षेत्र</string>
   <string name="patiententry_save_patient">पुढील</string>
   <string name="patiententry_error_empty_fullname">रूग्णाचे संपूर्ण नाव प्रविष्‍ट करा</string>
   <string name="patiententry_error_empty_gender">रूग्णाचे लिंग निवडा</string>
-  <string name="patiententry_error_empty_colony_or_village">कॉलनी / गाव / वॉर्ड प्रविष्‍ट करा</string>
-  <string name="patiententry_error_empty_district">रूग्णाचा मुख्‍य जिल्‍हा प्रविष्‍ट करा</string>
-  <string name="patiententry_error_state_empty">रूग्णाचे मुख्‍य राज्‍य प्रविष्‍ट करा</string>
+  <string name="patiententry_error_empty_colony_or_village">आवश्‍यक</string>
+  <string name="patiententry_error_empty_district">आवश्‍यक</string>
+  <string name="patiententry_error_state_empty">आवश्‍यक</string>
   <string name="patiententry_error_both_dateofbirth_and_age_empty">रूग्णाचे वय प्रविष्‍ट करा</string>
   <string name="patiententry_error_invalid_dateofbirth">रूग्णाची जन्‍मतारीख DD/MM/YYYY मध्‍ये प्रविष्‍ट करा</string>
   <string name="patiententry_error_dateofbirth_is_in_future">रूग्णाची जन्‍मतारीख निश्चित करा</string>
+  <string name="patiententry_error_phonenumber_blank">फोन नंबर रिक्‍त असू शकत नाही</string>
   <string name="patiententry_error_phonenumber_length_less">फोन नंबर  %1$s अंकीपेक्षा कमी असू शकत नाही</string>
   <string name="patiententry_error_phonenumber_length_more">फोन नंबर  %1$s अंकीपेक्षा जास्त असू शकत नाही</string>
   <string name="patiententry_identifier">बीपी पासपोर्ट</string>
@@ -155,6 +158,7 @@
   <string name="patientsummary_prescriptions_update">औषध संपादित करा</string>
   <string name="patientsummary_bp_add_new">रक्‍तदाब</string>
   <string name="patientsummary_finish_saving_patient">जतन करा</string>
+  <string name="patientsummary_finish_refill_medicine">औषध रिफिल करा</string>
   <string name="patientsummary_bp_none_added">कोणतेही रक्‍तदाब जोडलेले नाहीत</string>
   <string name="patientsummary_edit">संपादित करा</string>
 
@@ -171,9 +175,11 @@
   <string name="patientsummary_toolbar_title">%1$s, %2$s, %3$s</string>
   <string name="patientsummary_bangladesh_national_id">आयडी</string>
 
-  <string name="patientsummary_contact_doctor">डॉक्‍टर</string>
-  <string name="patientsummary_teleconsult_network_error">खराब इंटरनेटमुळे कनेक्‍ट करू शकत नाही</string>
-  <string name="patientsummary_teleconsult_network_error_retry">पुन्‍हा प्रयत्‍न करा</string>
+  <string name="patientsummary_teleconsult">टेलि-कन्सल्ट</string>
+  <string name="patientsummary_log_teleconsult">टेलिकंसल्‍टचा लॉग ठेवा</string>
+
+  <string name="patientsummary_registered_faciliy_title">नोंदणीकृत</string>
+  <string name="patientsummary_registered_facility">%2$s येथे %1$s</string>
 
   <string name="bloodpressuresummaryview_see_all_button">सर्व पहा</string>
 
@@ -192,7 +198,7 @@
   <string name="timestamp_days_ago">%s दिवसांपूर्वी</string>
 
   <!-- Prescribed drugs -->
-  <string name="patient_prescribeddrugs_screen_title">बीपीची औषधे</string>
+  <string name="patient_prescribeddrugs_screen_title">औषधे</string>
   <string name="patient_prescribeddrugs_add_custom_prescription">दुसरे औषध जोडा</string>
 
   <string name="customprescription_enter_medicine">औषध प्रविष्‍ट करा</string>
@@ -231,6 +237,8 @@
   <string name="registration_loggedout_dialog_title">तुम्‍ही लॉग आउट केले आहे</string>
   <string name="registration_loggedout_dialog_message">कृपया सुरू ठेवण्‍यासाठी पुन्‍हा लॉगइन करा</string>
   <string name="registration_loggedout_dialog_confirm">ठीक आहे</string>
+  <string name="registrationphone_next">पुढील</string>
+
   <string name="registrationname_name_label">कृपया तुमचे संपूर्ण नाव आम्‍हाला सांगा</string>
   <string name="registrationname_error_empty_name">कृपया तुमचे संपूर्ण नाव प्रविष्‍ट करा</string>
 
@@ -247,12 +255,6 @@
   <string name="registrationlocation_permission_rationale_description">तुमचे ठिकाण आपल्याला आपले दवाखाने शोधण्यास मदत करेल</string>
   <string name="registrationlocation_permission_rationale_title">आपले दवाखाने लवकर शोधा</string>
   <string name="registrationlocation_allow_access">स्‍थान ऍक्‍सेसला अनुमती द्या</string>
-
-  <string name="facilitypicker_screen_title">तुमचे क्लिनिक निवडा</string>
-  <string name="facilitypicker_search_hint">तुमचे क्लिनिक शोधा</string>
-  <!-- Street, District, State -->
-  <string name="facilitypicker_header_suggested_facilities">सूचित क्लिनिक</string>
-  <string name="facilitypicker_header_all_facilities">सर्व क्लिनिक</string>
 
   <!-- Onboarding -->
   <string name="onboarding_get_started">सुरुवात करा</string>
@@ -280,6 +282,7 @@
   <string name="overduelist_diagnosis_label">Dx</string>
   <string name="overduelist_visited">भेट दिली</string>
   <string name="overduelist_high_risk">उच्‍च धोका</string>
+  <string name="overduelist_transferred">यांना स्‍थानांतरित केले</string>
 
   <!-- Facility change -->
 
@@ -294,6 +297,7 @@
   <string name="scheduleappointment_next_visit_in">मध्‍ये पुढील भेट शेड्यूल करा</string>
   <string name="scheduleappointment_not_now">आता नाही</string>
   <string name="scheduleappointment_done">पूर्ण झाले</string>
+  <string name="scheduleappointment_next">पुढील</string>
   <plurals name="scheduleappointment_appointment_in_days">
     <item quantity="one">%s दिवस</item>
     <item quantity="other">%s दिवस</item>
@@ -334,10 +338,10 @@
   <string name="newmedicalhistory_no">नाही</string>
   <string name="newmedicalhistory_history">इतिहास</string>
   <string name="newmedicalhistory_diagnosis">निदान (आवश्यक)</string>
-  <string name="newmedicalhistory_diagnosis_required_error">कृपया निदान निवडा</string>
 
   <!--Prescribed Drug with Dosages Sheet-->
   <string name="prescribed_drugs_dosage_none">काही नाही</string>
+  <string name="prescribed_drugs_dosage_remove">काढून टाका</string>
   <string name="prescribed_drug_with_dosages_sheet_drug_name">%s डोस</string>
 
   <!--Scan Simple ID-->
@@ -363,10 +367,10 @@
   <string name="help_try_again">पुन्‍हा प्रयत्‍न करा</string>
 
   <!-- Link Id Sheet-->
-  <string name="linkidwithpatient_button_add">पुढील</string>
-  <string name="linkidwithpatient_button_cancel">रद्द करा</string>
-  <string name="linkidwithpatient_add_id_text">%1$s\u0020 जोडा</string>
-  <string name="linkidwithpatient_to_patient_text">\u0020\u00A0रूग्णाला?</string>
+  <string name="linkidwithpatient_button_yes">होय</string>
+  <string name="linkidwithpatient_button_back">मागे</string>
+  <string name="linkidwithpatient_text">यावर बीपी पासपोर्ट जोडा</string>
+  <string name="linkidwithpatient_patient_text">%1$s?</string>
 
   <!-- Add ID to Patient: Search -->
 
@@ -381,7 +385,7 @@
 
   <!-- App update : Dialog -->
   <string name="appupdatedialog_title">ॲप अद्यतनित करा</string>
-  <string name="appupdatedialog_body">तुम्‍हाला सिंपल अद्यतनित करण्‍यासाठी प्‍ले स्‍टोअरवर नेण्‍यात येईल</string>
+  <string name="appupdatedialog_body">आपल्‍याला सिंपल अपडेट करण्‍यासाठी Google Play Store वर नेण्‍यात येईल.</string>
   <string name="appupdatedialog_positive_button_text">अद्यतनित करा</string>
   <string name="appupdatedialog_negative_button_text">आता नाही</string>
 
@@ -431,7 +435,7 @@
   <!-- Select Country Screen -->
   <string name="selectcountry_logo_contentdescription">सिंपल लोगो</string>
   <string name="selectcountry_next">पुढील</string>
-  <string name="selectcountry_title">तुमचा देश निवडा</string>
+  <string name="selectcountry_title">आपला देश निवडा</string>
   <string name="selectcountry_networkerror">इंटरनेट कनेक्‍शन नाही!</string>
   <string name="selectcountry_servererror">सर्व्‍हर त्रुटी! कृपया पुन्‍हा प्रयत्‍न करा!</string>
   <string name="selectcountry_genericerror">काहीतरी चुकले! कृपया पुन्‍हा प्रयत्‍न करा!</string>
@@ -450,9 +454,11 @@
   <string name="bloodsugarentry_month">महिना</string>
   <string name="bloodsugarentry_year">वर्ष</string>
   <string name="bloodsugarentry_error_lower_limit">मूल्य 30 mg/dL पेक्षा कमी असू शकत नाही</string>
-  <string name="bloodsugarentry_error_lower_limit_hba1c">मूल्य 3% पेक्षा कमी असू शकत नाही</string>
+  <string name="bloodsugarentry_error_lower_limit_hba1c">मूल्य 3\u0025 पेक्षा कमी असू शकत नाही</string>
+  <string name="bloodsugarentry_error_lower_limit_mmol">मूल्य 1.66 mmol/L पेक्षा कमी असू शकत नाही</string>
   <string name="bloodsugarentry_error_higher_limit">मूल्य 1000 mg/dL पेक्षा जास्‍त असू शकत नाही</string>
-  <string name="bloodsugarentry_error_higher_limit_hba1c">मूल्‍य 25% पेक्षा जास्‍त असू शकत नाही</string>
+  <string name="bloodsugarentry_error_higher_limit_hba1c">मूल्‍य 25\u0025 पेक्षा जास्‍त असू शकत नाही</string>
+  <string name="bloodsugarentry_error_higher_limit_mmol">मूल्य 55.49 mmol/L पेक्षा जास्‍त असू शकत नाही</string>
   <string name="bloodsugarentry_error_empty">मूल्‍य रिक्‍त असू शकत नाही</string>
   <string name="bloodsugarentry_error_date_invalid_pattern">वैध तारीख DD/MM/YYYY मध्‍ये प्रविष्ट करा</string>
   <string name="bloodsugarentry_error_date_is_in_future">तारीख भविष्‍यातील असू शकत नाही</string>
@@ -567,11 +573,119 @@
   <string name="screensplash_next">पुढील</string>
 
   <!-- Contact doctor sheet -->
-  <string name="contactdoctor_title">डॉक्टर</string>
-  <string name="contactdoctor_subtitle">%1$s यांना नियुक्त</string>
+  <string name="contactdoctor_new_title">डॉक्‍टर्स उपलब्‍ध आहेत</string>
+  <string name="contactdoctor_new_subtitle">शक्‍य असल्‍यास WhatsApp वापरा</string>
 
   <!-- Intro Video Screen -->
   <string name="screenintrovideo_how_to_use_simple_app">सिंपल ॲप कसे वापरायचे</string>
   <string name="screenintrovideo_watch_video">व्हिडिओ पहा</string>
   <string name="screenintrovideo_skip">वगळा</string>
+
+  <!-- Assigned Facility -->
+  <string name="assigned_facility_view_title">प्राधान्‍यकृत सुविधा</string>
+  <string name="assigned_facility_view_change">बदला</string>
+
+  <!-- Facility Picker -->
+  <string name="facilitypicker_search_hint">तुमचे क्लिनिक शोधा</string>
+  <!-- Street, District, State -->
+  <string name="facilitypicker_header_suggested_facilities">सूचित क्लिनिक</string>
+  <string name="facilitypicker_header_all_facilities">सर्व क्लिनिक</string>
+
+  <!--  TeleMedicine User Signature-->
+  <string name="screen_signature_sign_in_this_box">या बॉक्‍समध्‍ये साइन इन करा</string>
+
+  <!-- Drug Duration -->
+  <string name="drug_duration_title">%1$s %2$s</string>
+  <string name="drugDurationLabel">दिवस</string>
+  <string name="drug_duration_empty_error">औषध कालावधी रिक्‍त असू शकत नाही</string>
+  <string name="drug_duration_max_error">औषधाचा कालावधी %1$s दिवसांपेक्षा जास्त असू शकत नाही</string>
+
+  <!-- Teleconsultation success-->
+  <string name="screen_teleconsult_success_add_prescription">औषध सूची जोडायची?</string>
+  <string name="screen_teleconsult_success_yes">होय</string>
+  <string name="screen_teleconsult_success_no">नाही</string>
+  <string name="screen_teleconsult_success_teleconsult_recorded">टेलिकंसल्‍ट रेकॉर्ड केले</string>
+  <string name="screen_teleconsult_success_patient_information">%1$s, %2$s, %3$s</string>
+  <string name="sheet_medicine_frequency_od">OD</string>
+  <string name="sheet_medicine_frequency_bd">BD</string>
+  <string name="sheet_medicine_frequency_tds">TDS</string>
+  <string name="sheet_medicine_frequency_qds">QDS</string>
+  <string name="sheet_medicine_frequency_save">जतन करा</string>
+
+  <!-- Teleconsult Record Screen -->
+  <string name="screen_teleconsult_record">टेलिकंसल्‍ट रेकॉर्ड</string>
+  <string name="screen_teleconsult_record_type">टेलिकंसल्‍ट प्रकार</string>
+  <string name="screen_teleconsult_record_type_audio">ऑडिओ कॉल</string>
+  <string name="screen_teleconsult_record_type_video">व्हिडिओ कॉल</string>
+  <string name="screen_teleconsult_record_type_message">संदेश</string>
+  <string name="screen_teleconsult_record_patient_took_medicine">रुग्‍ण अतिरक्‍तदाब-रोधी आणि मधुमेह-रोधी औषधे नियमितपणे घेतात</string>
+  <string name="screen_teleconsult_record_patient_consented">रुग्‍णाने टेलिकंसल्‍टेशनसाठी संमती दिली</string>
+  <string name="screen_teleconsult_record_done">पूर्ण झाले</string>
+  <string name="teleconsultnotrecordeddialog_title">टेलिकंसल्‍ट रेकॉर्ड केले नाही</string>
+  <string name="teleconsultnotrecordeddialog_body">आपण रद्द करू इच्छित असल्‍याची आपल्‍याला खात्री आहे?</string>
+  <string name="teleconsultnotrecordeddialog_positive_button_text">होय</string>
+  <string name="teleconsultnotrecordeddialog_negative_button_text">नाही</string>
+
+  <!-- Deeplink Teleconsult not authorised-->
+  <string name="deeplink_medical_officer_not_authorised_to_log_teleconsult">आपण टेलिकंसल्‍ट लॉग करण्‍यासाठी अधिकृत नाही</string>
+  <string name="deeplink_please_check_with_your_supervisor">कृपया आपल्‍या पर्यवेक्षकाकडे तपासा</string>
+  <string name="deeplink_okay_positive_action">ठीक आहे</string>
+
+  <string name="screen_teleconsult_prescription_next">पुढील</string>
+
+  <!-- Teleconsult Medicines View -->
+  <string name="view_teleconsult_medicines">औषधे</string>
+  <string name="view_teleconsult_medicines_add">जोडा</string>
+  <string name="view_teleconsult_medicines_edit">संपादित करा</string>
+  <string name="view_teleconsult_medicines_required_error">कमीत कमी एक औषध समाविष्ट करा</string>
+  <plurals name="list_item_teleconsult_medicine_duration">
+    <item quantity="one">%1$s दिवस</item>
+    <item quantity="other">%1$s दिवस</item>
+  </plurals>
+
+  <!-- Teleconsult Doctor Info View -->
+  <string name="view_teleconsult_doctor_info_instructions">रुग्‍णासाठी सूचना</string>
+  <string name="view_teleconsult_doctor_info_registration_id">वैद्यकीय नोंदणी ID</string>
+  <string name="view_teleconsult_doctor_info_acknowledgement">या निर्देशपत्रावर स्‍वाक्षरी करून, मी %1$s असल्‍याचे कबूल करता</string>
+  <string name="view_teleconsult_doctor_info_add_signature">स्‍वाक्षरी जोडा</string>
+  <string name="view_teleconsult_doctor_info_signature_error">स्‍वाक्षरी जोडा</string>
+
+  <string name="screen_teleconsult_share_prescription_download">डाउनलोड करा</string>
+  <string name="screen_teleconsult_share_prescription_share">सामायिक करा</string>
+  <string name="screen_teleconsult_share_prescription_done">पूर्ण झाले</string>
+  <string name="screen_teleconsult_share_prescription_image_using">वापरून प्रतिमा सामायिक करा</string>
+  <string name="screen_teleconsult_share_prescription_title">प्रिस्क्रिप्शन</string>
+  <string name="screen_teleconsult_share_prescription_image_saved">प्रिस्क्रिप्शन डाउनलोड्समध्ये जतन केले आहे</string>
+
+  <!-- Select diagnosis error alert dialog -->
+  <string name="select_diagnosis_error_diagnosis_required">निदान आवश्यक आहे</string>
+  <string name="select_diagnosis_error_enter_diagnosis_both_hypertension_diabetes">अतिरक्तदाब आणि मधुमेह या दोन्हीसाठी निदान निवडा</string>
+  <string name="select_diagnosis_error_ok">ठीक आहे</string>
+  <string name="sheet_teleconsult_status_title">टेलि-कन्‍सल्‍ट पूर्ण झाले?</string>
+  <string name="sheet_teleconsult_status_yes">होय</string>
+  <string name="sheet_teleconsult_status_no">नाही</string>
+  <string name="sheet_teleconsult_status_waiting">अद्याप प्रतीक्षा करत आहे</string>
+  <string name="sheet_teleconsult_status_done">पूर्ण झाले</string>
+
+  <!-- Setup activity -->
+  <string name="setup_cannot_run">ॲप्लिकेशन चालू करू शकत नाही</string>
+  <string name="setup_rooted">सिंपल रूट केलेल्या उपकरणावर चालू केले जाऊ शकत नाही.</string>
+  <string name="setup_close">बंद करा</string>
+
+  <!-- Blood sugar unit selection dialog -->
+  <string name="blood_sugar_unit_selection_choose">निवडा</string>
+  <string name="blood_sugar_unit_selection_done">झाले</string>
+
+  <!-- BP passport sheet -->
+  <string name="sheet_bp_passport_register_new_patient">नवीन रुग्णाची नोंदणी करा</string>
+  <string name="sheet_bp_passport_add_to_existing_patient">विद्यमान रुग्णाला जोडा</string>
+  <string name="sheet_bp_passport_number">बीपी पासपोर्ट %1$s</string>
+
+  <!-- Instant search -->
+  <string name="patientinstantsearch_assigned_facility_header">%1$s यांना नियुक्त</string>
+  <string name="patientinstantsearch_nearby_facilities_header">जवळपासच्या सुविधांमधून</string>
+  <string name="patientsearch_error_no_patients_in_facility">आपण आपल्या सुविधेवर नोंदणीकृत सर्व रुग्णांना येथे पाहण्यास सक्षम असाल</string>
+  <string name="patientsearch_error_no_search_results">कोणतेही रूग्ण जुळत नाहीत</string>
+  <string name="patientsearch_error_no_patients_in_facility_heading">%1$s मध्ये कोणतेही रूग्ण नाहीत</string>
+
 </resources>

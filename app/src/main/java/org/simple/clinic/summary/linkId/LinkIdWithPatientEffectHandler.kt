@@ -1,8 +1,9 @@
 package org.simple.clinic.summary.linkId
 
 import com.spotify.mobius.rx2.RxMobius
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.Lazy
 import io.reactivex.ObservableTransformer
 import org.simple.clinic.patient.PatientRepository
@@ -18,7 +19,7 @@ class LinkIdWithPatientEffectHandler @AssistedInject constructor(
     @Assisted private val uiActions: LinkIdWithPatientUiActions
 ) {
 
-  @AssistedInject.Factory
+  @AssistedFactory
   interface Factory {
     fun create(uiActions: LinkIdWithPatientUiActions): LinkIdWithPatientEffectHandler
   }
@@ -28,6 +29,7 @@ class LinkIdWithPatientEffectHandler @AssistedInject constructor(
       .addAction(CloseSheetWithOutIdLinked::class.java, uiActions::closeSheetWithoutIdLinked, schedulersProvider.ui())
       .addAction(CloseSheetWithLinkedId::class.java, uiActions::closeSheetWithIdLinked, schedulersProvider.ui())
       .addTransformer(AddIdentifierToPatient::class.java, addIdentifierToPatient())
+      .addTransformer(GetPatientNameFromId::class.java, getPatientNameFromId())
       .build()
 
   private fun addIdentifierToPatient(): ObservableTransformer<AddIdentifierToPatient, LinkIdWithPatientEvent> {
@@ -45,5 +47,15 @@ class LinkIdWithPatientEffectHandler @AssistedInject constructor(
           }
           .map { IdentifierAddedToPatient }
     }
+  }
+
+  private fun getPatientNameFromId(): ObservableTransformer<GetPatientNameFromId, LinkIdWithPatientEvent> {
+    return ObservableTransformer { effects ->
+      effects
+          .observeOn(schedulersProvider.io())
+          .map { patientRepository.patientImmediate(it.patientUuid)!!.fullName }
+          .map(::PatientNameReceived)
+    }
+
   }
 }

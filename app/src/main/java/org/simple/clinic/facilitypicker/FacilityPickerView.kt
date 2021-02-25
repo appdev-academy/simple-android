@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,9 +16,11 @@ import io.reactivex.Observable
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.view_facilitypicker.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ListFacilitySelectionHeaderBinding
+import org.simple.clinic.databinding.ListFacilitySelectionOptionBinding
+import org.simple.clinic.databinding.ViewFacilitypickerBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.facility.change.FacilityListItem
@@ -25,7 +28,6 @@ import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.ItemAdapter
 import org.simple.clinic.widgets.RecyclerViewUserScrollDetector
-import org.simple.clinic.widgets.displayedChildResId
 import org.simple.clinic.widgets.hideKeyboard
 import javax.inject.Inject
 
@@ -50,12 +52,37 @@ class FacilityPickerView(
 
   var backClicked: OnBackClicked? = null
 
-  private val recyclerViewAdapter = ItemAdapter(FacilityListItem.Differ())
+  private val recyclerViewAdapter = ItemAdapter(
+      diffCallback = FacilityListItem.Differ(),
+      bindings = mapOf(
+          R.layout.list_facility_selection_header to { layoutInflater, parent ->
+            ListFacilitySelectionHeaderBinding.inflate(layoutInflater, parent, false)
+          },
+          R.layout.list_facility_selection_option to { layoutInflater, parent ->
+            ListFacilitySelectionOptionBinding.inflate(layoutInflater, parent, false)
+          }
+      )
+  )
 
   private val pickFrom: PickFrom
 
+  private var binding: ViewFacilitypickerBinding? = null
+
+  private val toolbarViewWithSearch
+    get() = binding!!.toolbarViewWithSearch
+
+  private val facilityRecyclerView
+    get() = binding!!.facilityRecyclerView
+
+  private val searchEditText
+    get() = binding!!.searchEditText
+
+  private val progressIndicator
+    get() = binding!!.progressIndicator
+
   init {
-    inflate(context, R.layout.view_facilitypicker, this)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = ViewFacilitypickerBinding.inflate(layoutInflater, this)
 
     val typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.FacilityPickerView)
     pickFrom = PickFrom.forAttribute(typedArray)
@@ -64,7 +91,6 @@ class FacilityPickerView(
     context.injector<Injector>().inject(this)
 
     toolbarViewWithSearch.setNavigationOnClickListener { backClicked?.invoke() }
-    toolbarViewWithoutSearch.setNavigationOnClickListener { backClicked?.invoke() }
 
     facilityRecyclerView.layoutManager = LinearLayoutManager(context)
     facilityRecyclerView.adapter = recyclerViewAdapter
@@ -108,6 +134,7 @@ class FacilityPickerView(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
@@ -120,19 +147,11 @@ class FacilityPickerView(
   }
 
   override fun showProgressIndicator() {
-    progressView.visibility = RelativeLayout.VISIBLE
+    progressIndicator.visibility = RelativeLayout.VISIBLE
   }
 
   override fun hideProgressIndicator() {
-    progressView.visibility = RelativeLayout.GONE
-  }
-
-  override fun showToolbarWithSearchField() {
-    toolbarViewFlipper.displayedChildResId = R.id.toolbarViewWithSearch
-  }
-
-  override fun showToolbarWithoutSearchField() {
-    toolbarViewFlipper.displayedChildResId = R.id.toolbarViewWithoutSearch
+    progressIndicator.visibility = RelativeLayout.GONE
   }
 
   override fun updateFacilities(facilityItems: List<FacilityListItem>) {

@@ -8,22 +8,24 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
+import com.f2prateek.rx.preferences2.Preference
+import com.google.android.material.card.MaterialCardView
 import com.jakewharton.rxbinding3.view.clicks
 import com.jakewharton.rxbinding3.view.detaches
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.synthetic.main.patientsummary_bloodsugarsummary_content.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.bloodsugar.BloodSugarMeasurement
 import org.simple.clinic.bloodsugar.BloodSugarMeasurementType
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
 import org.simple.clinic.bloodsugar.Unknown
 import org.simple.clinic.bloodsugar.entry.BloodSugarEntrySheet
 import org.simple.clinic.bloodsugar.history.BloodSugarHistoryScreenKey
 import org.simple.clinic.bloodsugar.selection.type.BloodSugarTypePickerSheet
+import org.simple.clinic.databinding.PatientsummaryBloodsugarsummaryContentBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.facility.alertchange.AlertFacilityChangeSheet
@@ -31,10 +33,11 @@ import org.simple.clinic.facility.alertchange.Continuation.ContinueToActivity
 import org.simple.clinic.feature.Feature.EditBloodSugar
 import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.platform.crash.CrashReporter
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.router.screen.ActivityResult
-import org.simple.clinic.router.screen.ScreenRouter
-import org.simple.clinic.summary.BLOOD_SUGAR_REQCODE_ALERT_FACILITY_CHANGE
 import org.simple.clinic.summary.PatientSummaryChildView
 import org.simple.clinic.summary.PatientSummaryModelUpdateCallback
 import org.simple.clinic.summary.PatientSummaryScreenKey
@@ -55,7 +58,6 @@ import org.simple.clinic.summary.bloodsugar.UiActions
 import org.simple.clinic.util.RelativeTimestampGenerator
 import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.UtcClock
-import org.simple.clinic.util.extractSuccessful
 import org.simple.clinic.util.toLocalDateAtZone
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.ScreenDestroyed
@@ -71,7 +73,21 @@ import javax.inject.Named
 class BloodSugarSummaryView(
     context: Context,
     attributes: AttributeSet
-) : CardView(context, attributes), BloodSugarSummaryViewUi, UiActions, PatientSummaryChildView {
+) : MaterialCardView(context, attributes), BloodSugarSummaryViewUi, UiActions, PatientSummaryChildView {
+
+  private var binding: PatientsummaryBloodsugarsummaryContentBinding? = null
+
+  private val addNewBloodSugar
+    get() = binding!!.addNewBloodSugar
+
+  private val bloodSugarSeeAll
+    get() = binding!!.bloodSugarSeeAll
+
+  private val bloodSugarItemContainer
+    get() = binding!!.bloodSugarItemContainer
+
+  private val noBloodSugarTextView
+    get() = binding!!.noBloodSugarTextView
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -95,10 +111,10 @@ class BloodSugarSummaryView(
   lateinit var effectHandlerFactory: BloodSugarSummaryViewEffectHandler.Factory
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
 
   @Inject
-  lateinit var crashReporter: CrashReporter
+  lateinit var screenResults: ScreenResultBus
 
   @Inject
   @Named("full_date")
@@ -111,8 +127,18 @@ class BloodSugarSummaryView(
   @Inject
   lateinit var features: Features
 
+  @Inject
+  lateinit var bloodSugarUnitPreference: Preference<BloodSugarUnitPreference>
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
+
   private val uiRenderer: BloodSugarSummaryViewUiRenderer by unsafeLazy {
     BloodSugarSummaryViewUiRenderer(this, bloodSugarSummaryConfig)
+  }
+
+  private val screenKey by unsafeLazy {
+    screenKeyProvider.keyFor<PatientSummaryScreenKey>(this)
   }
 
   private val viewEvents = PublishSubject.create<BloodSugarSummaryViewEvent>()
@@ -131,8 +157,7 @@ class BloodSugarSummaryView(
   }
 
   private val delegate: MobiusDelegate<BloodSugarSummaryViewModel, BloodSugarSummaryViewEvent, BloodSugarSummaryViewEffect> by unsafeLazy {
-    val screenKey = screenRouter.key<PatientSummaryScreenKey>(this)
-    MobiusDelegate(
+    MobiusDelegate.forView(
         events = events,
         defaultModel = BloodSugarSummaryViewModel.create(screenKey.patientUuid),
         init = BloodSugarSummaryViewInit(),
@@ -141,13 +166,13 @@ class BloodSugarSummaryView(
         modelUpdateListener = { model ->
           modelUpdateCallback?.invoke(model)
           uiRenderer.render(model)
-        },
-        crashReporter = crashReporter
+        }
     )
   }
 
   init {
-    LayoutInflater.from(context).inflate(R.layout.patientsummary_bloodsugarsummary_content, this, true)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = PatientsummaryBloodsugarsummaryContentBinding.inflate(layoutInflater, this, true)
   }
 
   override fun onFinishInflate() {
@@ -157,11 +182,8 @@ class BloodSugarSummaryView(
     }
     context.injector<BloodSugarSummaryViewInjector>().inject(this)
 
-    delegate.prepare()
-
     val screenDestroys: Observable<ScreenDestroyed> = detaches().map { ScreenDestroyed() }
     openEntrySheetAfterTypeIsSelected(screenDestroys)
-    alertFacilityChangeSheetClosed(screenDestroys)
   }
 
   override fun onAttachedToWindow() {
@@ -171,10 +193,11 @@ class BloodSugarSummaryView(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -201,12 +224,10 @@ class BloodSugarSummaryView(
 
   override fun showBloodSugarTypeSelector(currentFacility: Facility) {
     val intent = BloodSugarTypePickerSheet.intent(context)
-    val alertFacilityChangeIntent = AlertFacilityChangeSheet.intent(
-        context,
-        currentFacility.name,
-        ContinueToActivity(intent, TYPE_PICKER_SHEET)
-    )
-    activity.startActivityForResult(alertFacilityChangeIntent, BLOOD_SUGAR_REQCODE_ALERT_FACILITY_CHANGE)
+    router.push(AlertFacilityChangeSheet.Key(
+        currentFacilityName = currentFacility.name,
+        continuation = ContinueToActivity(intent, TYPE_PICKER_SHEET)
+    ))
   }
 
   override fun showSeeAllButton() {
@@ -218,7 +239,7 @@ class BloodSugarSummaryView(
   }
 
   override fun showBloodSugarHistoryScreen(patientUuid: UUID) {
-    screenRouter.push(BloodSugarHistoryScreenKey(patientUuid))
+    router.push(BloodSugarHistoryScreenKey(patientUuid).wrap())
   }
 
   override fun openBloodSugarUpdateSheet(bloodSugarMeasurementUuid: UUID, measurementType: BloodSugarMeasurementType) {
@@ -232,7 +253,8 @@ class BloodSugarSummaryView(
 
   @SuppressLint("CheckResult")
   private fun openEntrySheetAfterTypeIsSelected(onDestroys: Observable<ScreenDestroyed>) {
-    screenRouter.streamScreenResults()
+    screenResults
+        .streamResults()
         .ofType<ActivityResult>()
         .filter { it.requestCode == TYPE_PICKER_SHEET && it.succeeded() && it.data != null }
         .takeUntil(onDestroys)
@@ -240,20 +262,7 @@ class BloodSugarSummaryView(
         .subscribe(::showBloodSugarEntrySheet)
   }
 
-  @SuppressLint("CheckResult")
-  private fun alertFacilityChangeSheetClosed(onDestroys: Observable<ScreenDestroyed>) {
-    screenRouter.streamScreenResults()
-        .ofType<ActivityResult>()
-        .extractSuccessful(BLOOD_SUGAR_REQCODE_ALERT_FACILITY_CHANGE) { intent ->
-          AlertFacilityChangeSheet.readContinuationExtra<ContinueToActivity>(intent)
-        }
-        .takeUntil(onDestroys)
-        .subscribe { activity.startActivityForResult(it.intent, it.requestCode) }
-  }
-
-
   private fun showBloodSugarEntrySheet(intent: Intent) {
-    val screenKey = screenRouter.key<PatientSummaryScreenKey>(this)
     val patientUuid = screenKey.patientUuid
 
     val intentForNewBloodSugar = BloodSugarEntrySheet.intentForNewBloodSugar(
@@ -301,8 +310,8 @@ class BloodSugarSummaryView(
             bloodSugarDate = dateFormatter.format(recordedAt),
             bloodSugarTime = bloodSugarTime,
             isBloodSugarEditable = isBloodSugarEditable,
-            editMeasurementClicked = { clickedMeasurement -> viewEvents.onNext(BloodSugarClicked(clickedMeasurement)) }
-        )
+            bloodSugarUnitPreference = bloodSugarUnitPreference.get(),
+        ) { clickedMeasurement -> viewEvents.onNext(BloodSugarClicked(clickedMeasurement)) }
 
         bloodSugarItemView
       }

@@ -4,23 +4,22 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.view.View
+import android.view.LayoutInflater
 import android.widget.FrameLayout
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.link_id_with_patient_view.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.LinkIdWithPatientViewBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.main.TheActivity
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.patient.businessid.Identifier
-import org.simple.clinic.text.style.TextAppearanceWithLetterSpacingSpan
-import org.simple.clinic.util.Truss
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState.Enabled
+import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState.InProgress
 import org.simple.clinic.widgets.UiEvent
 import org.simple.clinic.widgets.animateBottomSheetIn
 import org.simple.clinic.widgets.animateBottomSheetOut
@@ -67,6 +66,26 @@ class LinkIdWithPatientView(
     attributeSet: AttributeSet
 ) : FrameLayout(context, attributeSet), LinkIdWithPatientViewUi, LinkIdWithPatientUiActions {
 
+  private var binding: LinkIdWithPatientViewBinding? = null
+
+  private val backgroundView
+    get() = binding!!.backgroundView
+
+  private val addButton
+    get() = binding!!.addButton
+
+  private val cancelButton
+    get() = binding!!.cancelButton
+
+  private val idTextView
+    get() = binding!!.idTextView
+
+  private val idPatientNameTextView
+    get() = binding!!.idPatientNameTextView
+
+  private val contentContainer
+    get() = binding!!.contentContainer
+
   @Inject
   lateinit var effectHandlerFactory: LinkIdWithPatientEffectHandler.Factory
 
@@ -103,10 +122,11 @@ class LinkIdWithPatientView(
 
   override fun onDetachedFromWindow() {
     delegate.stop()
+    binding = null
     super.onDetachedFromWindow()
   }
 
-  override fun onSaveInstanceState(): Parcelable? {
+  override fun onSaveInstanceState(): Parcelable {
     return delegate.onSaveInstanceState(super.onSaveInstanceState())
   }
 
@@ -117,7 +137,9 @@ class LinkIdWithPatientView(
   @SuppressLint("CheckResult")
   override fun onFinishInflate() {
     super.onFinishInflate()
-    View.inflate(context, R.layout.link_id_with_patient_view, this)
+    val layoutInflater = LayoutInflater.from(context)
+    binding = LinkIdWithPatientViewBinding.inflate(layoutInflater, this)
+
     if (isInEditMode) {
       return
     }
@@ -145,19 +167,8 @@ class LinkIdWithPatientView(
 
   fun uiEvents(): Observable<UiEvent> = upstreamUiEvents.hide()
 
-  override fun renderIdentifierText(identifier: Identifier) {
-    val identifierType = identifier.displayType(resources)
-    val identifierValue = identifier.displayValue()
-
-    val identifierTextAppearanceSpan = TextAppearanceWithLetterSpacingSpan(context, R.style.Clinic_V2_TextAppearance_Body0Left_NumericBold_Grey0)
-
-    idTextView.text = Truss()
-        .append(resources.getString(R.string.linkidwithpatient_add_id_text, identifierType))
-        .pushSpan(identifierTextAppearanceSpan)
-        .append(identifierValue)
-        .popSpan()
-        .append(resources.getString(R.string.linkidwithpatient_to_patient_text))
-        .build()
+  override fun renderPatientName(patientName: String) {
+    idPatientNameTextView.text = resources.getString(R.string.linkidwithpatient_patient_text, patientName)
   }
 
   override fun closeSheetWithIdLinked() {
@@ -166,6 +177,14 @@ class LinkIdWithPatientView(
 
   override fun closeSheetWithoutIdLinked() {
     upstreamUiEvents.onNext(LinkIdWithPatientCancelled)
+  }
+
+  override fun showAddButtonProgress() {
+    addButton.setButtonState(InProgress)
+  }
+
+  override fun hideAddButtonProgress() {
+    addButton.setButtonState(Enabled)
   }
 
   fun show(runBefore: () -> Unit) {

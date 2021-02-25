@@ -3,38 +3,54 @@ package org.simple.clinic.teleconsultlog.medicinefrequency
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import com.jakewharton.rxbinding3.view.clicks
 import com.jakewharton.rxbinding3.widget.checkedChanges
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.sheet_medicine_frequency.*
 import org.simple.clinic.ClinicApp
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.SheetMedicineFrequencyBinding
 import org.simple.clinic.di.InjectorProviderContextWrapper
+import org.simple.clinic.feature.Features
 import org.simple.clinic.mobius.MobiusDelegate
-import org.simple.clinic.teleconsultlog.drugduration.DrugDuration
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency.BD
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency.OD
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency.QDS
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency.TDS
 import org.simple.clinic.teleconsultlog.medicinefrequency.di.MedicineFrequencyComponent
-import org.simple.clinic.util.LocaleOverrideContextWrapper
 import org.simple.clinic.util.unsafeLazy
+import org.simple.clinic.util.withLocale
 import org.simple.clinic.util.wrap
 import org.simple.clinic.widgets.BottomSheetActivity
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiActions {
+
+  private lateinit var binding: SheetMedicineFrequencyBinding
+
+  private val medicineFrequencyRadioGroup
+    get() = binding.medicineFrequencyRadioGroup
+
+  private val medicineFrequencyTitleTextView
+    get() = binding.medicineFrequencyTitleTextView
+
+  private val saveMedicineFrequencyButton
+    get() = binding.saveMedicineFrequencyButton
 
   @Inject
   lateinit var locale: Locale
 
   @Inject
   lateinit var effectHandlerFactory: MedicineFrequencyEffectHandler.Factory
+
+  @Inject
+  lateinit var features: Features
 
   private lateinit var component: MedicineFrequencyComponent
 
@@ -46,28 +62,32 @@ class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiAc
   )
 
   companion object {
-    private const val DRUG_DURATION = "drugDuration"
     private const val MEDICINE_FREQUENCY = "medicineFrequency"
-    private const val SAVED_MEDICINE_FREQUENCY = "savedmedicineFrequency"
+    private const val EXTRA_SAVED_MEDICINE_UUID = "savedMedicineUuid"
+    private const val EXTRA_SAVED_MEDICINE_FREQUENCY = "savedMedicineFrequency"
 
     fun intent(
         context: Context,
-        drugDuration: DrugDuration,
-        medicineFrequency: MedicineFrequency
+        medicineFrequencySheetExtra: MedicineFrequencySheetExtra
     ): Intent {
       return Intent(context, MedicineFrequencySheet::class.java).apply {
-        putExtra(DRUG_DURATION, drugDuration)
-        putExtra(MEDICINE_FREQUENCY, medicineFrequency)
+        putExtra(MEDICINE_FREQUENCY, medicineFrequencySheetExtra)
       }
+    }
+
+    fun readSavedDrugFrequency(intent: Intent): SavedDrugFrequency {
+      val uuid = intent.getSerializableExtra(EXTRA_SAVED_MEDICINE_UUID) as UUID
+      val medicineFrequency = intent.getParcelableExtra<MedicineFrequency>(EXTRA_SAVED_MEDICINE_FREQUENCY)!!
+
+      return SavedDrugFrequency(
+          drugUuid = uuid,
+          frequency = medicineFrequency
+      )
     }
   }
 
-  private val drugDuration by unsafeLazy {
-    intent.getParcelableExtra<DrugDuration>(DRUG_DURATION)!!
-  }
-
-  private val medicineFrequency by unsafeLazy {
-    intent.getSerializableExtra(MEDICINE_FREQUENCY)
+  private val medicineFrequencyExtra by unsafeLazy {
+    intent.getParcelableExtra<MedicineFrequencySheetExtra>(MEDICINE_FREQUENCY)!!
   }
 
   private val events by unsafeLazy {
@@ -82,7 +102,7 @@ class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiAc
   private val delegate by unsafeLazy {
     MobiusDelegate.forActivity(
         events = events.ofType(),
-        defaultModel = MedicineFrequencyModel.create(medicineFrequency = medicineFrequency as MedicineFrequency),
+        defaultModel = MedicineFrequencyModel.create(medicineFrequency = medicineFrequencyExtra.medicineFrequency),
         init = MedicineFrequencyInit(),
         update = MedicineFrequencyUpdate(),
         effectHandler = effectHandlerFactory.create(this).build()
@@ -91,8 +111,9 @@ class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiAc
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.sheet_medicine_frequency)
-    medicineFrequencyTitleTextView.text = getString(R.string.drug_duration_title, drugDuration.name, drugDuration.dosage)
+    binding = SheetMedicineFrequencyBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    medicineFrequencyTitleTextView.text = getString(R.string.drug_duration_title, medicineFrequencyExtra.name, medicineFrequencyExtra.dosage)
   }
 
   private fun medicineFrequencyChanges(): Observable<MedicineFrequencyChanged> {
@@ -124,7 +145,8 @@ class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiAc
 
   override fun saveMedicineFrequency(medicineFrequency: MedicineFrequency) {
     val intent = Intent().apply {
-      putExtra(SAVED_MEDICINE_FREQUENCY, medicineFrequency)
+      putExtra(EXTRA_SAVED_MEDICINE_UUID, medicineFrequencyExtra.uuid)
+      putExtra(EXTRA_SAVED_MEDICINE_FREQUENCY, medicineFrequency)
     }
     setResult(Activity.RESULT_OK, intent)
     finish()
@@ -154,18 +176,20 @@ class MedicineFrequencySheet : BottomSheetActivity(), MedicineFrequencySheetUiAc
     setUpDependencyInjection()
 
     val context = newBaseContext
-        .wrap { LocaleOverrideContextWrapper.wrap(it, locale) }
         .wrap { InjectorProviderContextWrapper.wrap(it, component) }
         .wrap { ViewPumpContextWrapper.wrap(it) }
     super.attachBaseContext(context)
+    applyOverrideConfiguration(Configuration())
+  }
 
+  override fun applyOverrideConfiguration(overrideConfiguration: Configuration) {
+    super.applyOverrideConfiguration(overrideConfiguration.withLocale(locale, features))
   }
 
   private fun setUpDependencyInjection() {
     component = ClinicApp.appComponent
         .medicineFrequencyComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }

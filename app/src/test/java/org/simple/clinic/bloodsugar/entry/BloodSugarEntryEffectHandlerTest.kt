@@ -1,19 +1,21 @@
 package org.simple.clinic.bloodsugar.entry
 
+import com.f2prateek.rx.preferences2.Preference
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import dagger.Lazy
-import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.simple.clinic.TestData
 import org.simple.clinic.bloodsugar.BloodSugarReading
 import org.simple.clinic.bloodsugar.BloodSugarRepository
+import org.simple.clinic.bloodsugar.BloodSugarUnitPreference
 import org.simple.clinic.bloodsugar.HbA1c
 import org.simple.clinic.bloodsugar.PostPrandial
 import org.simple.clinic.bloodsugar.Random
@@ -26,7 +28,7 @@ import org.simple.clinic.patient.PatientRepository
 import org.simple.clinic.patient.SyncStatus.DONE
 import org.simple.clinic.storage.Timestamps
 import org.simple.clinic.util.TestUserClock
-import org.simple.clinic.util.scheduler.TrampolineSchedulersProvider
+import org.simple.clinic.util.scheduler.TestSchedulersProvider
 import org.simple.clinic.util.toUtcInstant
 import org.simple.clinic.uuid.FakeUuidGenerator
 import org.simple.clinic.widgets.ageanddateofbirth.UserInputDateValidator.Result.Invalid.DateIsInFuture
@@ -47,6 +49,8 @@ class BloodSugarEntryEffectHandlerTest {
   private val user = TestData.loggedInUser(uuid = UUID.fromString("4844b826-a162-49fe-b92c-962da172e86c"))
   private val facility = TestData.facility(uuid = UUID.fromString("7fabe36b-8fc3-457d-b9a8-68df71def7bd"))
   private val measurementUuid = UUID.fromString("175fb078-87b1-4c01-b5f0-91c3d2cefdfd")
+  private val bloodSugarUnitPreference = mock<Preference<BloodSugarUnitPreference>>()
+  private val bloodSugarUnitPreferenceSelection = BloodSugarUnitPreference.Mg
 
   private val effectHandler = BloodSugarEntryEffectHandler(
       ui = ui,
@@ -54,13 +58,18 @@ class BloodSugarEntryEffectHandlerTest {
       patientRepository = patientRepository,
       appointmentsRepository = appointmentRepository,
       userClock = userClock,
-      schedulersProvider = TrampolineSchedulersProvider(),
-      currentUser = Lazy { user },
-      currentFacility = Lazy { facility },
-      uuidGenerator = FakeUuidGenerator.fixed(measurementUuid)
-
+      schedulersProvider = TestSchedulersProvider.trampoline(),
+      currentUser = { user },
+      currentFacility = { facility },
+      uuidGenerator = FakeUuidGenerator.fixed(measurementUuid),
+      bloodSugarUnitPreference = bloodSugarUnitPreference
   ).build()
   private val testCase = EffectHandlerTestCase(effectHandler)
+
+  @Before
+  fun setup() {
+    whenever(bloodSugarUnitPreference.get()) doReturn BloodSugarUnitPreference.Mg
+  }
 
   @After
   fun tearDown() {
@@ -110,7 +119,7 @@ class BloodSugarEntryEffectHandlerTest {
   @Test
   fun `show blood sugar empty error when show blood sugar validation error effect is received with validation result empty`() {
     // when
-    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarEmpty))
+    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarEmpty, BloodSugarUnitPreference.Mg))
 
     // then
     verify(ui).showBloodSugarEmptyError()
@@ -123,10 +132,10 @@ class BloodSugarEntryEffectHandlerTest {
     val measurementType = Random
 
     // when
-    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType)))
+    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarTooHigh(measurementType), BloodSugarUnitPreference.Mg))
 
     // then
-    verify(ui).showBloodSugarHighError(measurementType)
+    verify(ui).showBloodSugarHighError(measurementType, BloodSugarUnitPreference.Mg)
     verifyNoMoreInteractions(ui)
   }
 
@@ -136,10 +145,10 @@ class BloodSugarEntryEffectHandlerTest {
     val measurementType = PostPrandial
 
     // when
-    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarTooLow(measurementType)))
+    testCase.dispatch(ShowBloodSugarValidationError(ErrorBloodSugarTooLow(measurementType), BloodSugarUnitPreference.Mg))
 
     // then
-    verify(ui).showBloodSugarLowError(measurementType)
+    verify(ui).showBloodSugarLowError(measurementType, BloodSugarUnitPreference.Mg)
     verifyNoMoreInteractions(ui)
   }
 
@@ -255,13 +264,13 @@ class BloodSugarEntryEffectHandlerTest {
         recordedAt = date.toUtcInstant(userClock),
         uuid = measurementUuid
     )).doReturn(Single.just(bloodSugar))
-    whenever(patientRepository.compareAndUpdateRecordedAt(bloodSugar.patientUuid, date.toUtcInstant(userClock))).doReturn(Completable.complete())
-    whenever(appointmentRepository.markAppointmentsCreatedBeforeTodayAsVisited(bloodSugar.patientUuid)).doReturn(Completable.complete())
 
     // when
     testCase.dispatch(createNewBloodSugarEntry)
 
     // then
+    verify(appointmentRepository).markAppointmentsCreatedBeforeTodayAsVisited(bloodSugar.patientUuid)
+    verify(patientRepository).compareAndUpdateRecordedAt(bloodSugar.patientUuid, date.toUtcInstant(userClock))
     testCase.assertOutgoingEvents(BloodSugarSaved(createNewBloodSugarEntry.wasDateChanged))
     verifyZeroInteractions(ui)
   }
@@ -287,13 +296,13 @@ class BloodSugarEntryEffectHandlerTest {
         recordedAt = date.toUtcInstant(userClock),
         uuid = measurementUuid
     )).doReturn(Single.just(bloodSugar))
-    whenever(patientRepository.compareAndUpdateRecordedAt(bloodSugar.patientUuid, date.toUtcInstant(userClock))).doReturn(Completable.complete())
-    whenever(appointmentRepository.markAppointmentsCreatedBeforeTodayAsVisited(bloodSugar.patientUuid)).doReturn(Completable.complete())
 
     // when
     testCase.dispatch(createNewBloodSugarEntry)
 
     // then
+    verify(appointmentRepository).markAppointmentsCreatedBeforeTodayAsVisited(bloodSugar.patientUuid)
+    verify(patientRepository).compareAndUpdateRecordedAt(bloodSugar.patientUuid, date.toUtcInstant(userClock))
     testCase.assertOutgoingEvents(BloodSugarSaved(createNewBloodSugarEntry.wasDateChanged))
     verifyZeroInteractions(ui)
   }
@@ -412,4 +421,27 @@ class BloodSugarEntryEffectHandlerTest {
     verifyNoMoreInteractions(ui)
   }
 
+  @Test
+  fun `when load blood sugar unit preference effect is received, then load unit preference`() {
+    // given
+    whenever(bloodSugarUnitPreference.asObservable()) doReturn Observable.just(bloodSugarUnitPreferenceSelection)
+
+    // when
+    testCase.dispatch(LoadBloodSugarUnitPreference)
+
+    // then
+    testCase.assertOutgoingEvents(BloodSugarUnitPreferenceLoaded(bloodSugarUnitPreferenceSelection))
+    verifyZeroInteractions(ui)
+  }
+
+  @Test
+  fun `when show blood sugar unit selection dialog effect is received, then open the dialog`() {
+    // when
+    testCase.dispatch(ShowBloodSugarUnitSelectionDialog(bloodSugarUnitPreferenceSelection))
+
+    // then
+    testCase.assertNoOutgoingEvents()
+    verify(ui).showBloodSugarUnitSelectionDialog(bloodSugarUnitPreferenceSelection)
+    verifyNoMoreInteractions(ui)
+  }
 }

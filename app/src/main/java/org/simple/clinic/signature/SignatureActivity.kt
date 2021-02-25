@@ -1,48 +1,74 @@
 package org.simple.clinic.signature
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.jakewharton.rxbinding3.view.clicks
 import io.reactivex.Observable
-import io.reactivex.rxkotlin.cast
-import kotlinx.android.synthetic.main.activity_signature.*
+import io.reactivex.rxkotlin.ofType
 import org.simple.clinic.ClinicApp
-import org.simple.clinic.R
+import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ActivitySignatureBinding
 import org.simple.clinic.mobius.MobiusDelegate
 import org.simple.clinic.util.unsafeLazy
 import javax.inject.Inject
 
 class SignatureActivity : AppCompatActivity(), SignatureUiActions {
 
+  companion object {
+
+    fun intent(context: Context): Intent {
+      return Intent(context, SignatureActivity::class.java)
+    }
+  }
+
   private lateinit var component: SignatureComponent
 
   @Inject
   lateinit var effectHandlerFactory: SignatureEffectHandler.Factory
 
-  private val events: Observable<SignatureEvent> by unsafeLazy {
+  private val events by unsafeLazy {
     Observable
         .merge(
             acceptSignatureClicks(),
             undoClicks()
         )
-        .cast<SignatureEvent>()
+        .compose(ReportAnalyticsEvents())
   }
 
   private val mobiusDelegate by unsafeLazy {
-
     MobiusDelegate.forActivity(
-        events = events,
-        defaultModel = SignatureModel.create(filesDir),
+        events = events.ofType(),
+        defaultModel = SignatureModel.create(),
+        init = SignatureInit(),
         update = SignatureUpdate(),
         effectHandler = effectHandlerFactory.create(this).build()
     )
   }
 
+  private lateinit var binding: ActivitySignatureBinding
+
+  private val signatureRoot
+    get() = binding.signatureRoot
+
+  private val acceptSignature
+    get() = binding.acceptSignature
+
+  private val drawSignatureFrame
+    get() = binding.drawSignatureFrame
+
+  private val clearSignature
+    get() = binding.clearSignature
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_signature)
+
+    binding = ActivitySignatureBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
+    signatureRoot.setOnClickListener { finish() }
   }
 
   private fun acceptSignatureClicks() = acceptSignature
@@ -60,6 +86,9 @@ class SignatureActivity : AppCompatActivity(), SignatureUiActions {
     drawSignatureFrame.clear()
   }
 
+  override fun setSignatureBitmap(signatureBitmap: Bitmap) {
+    drawSignatureFrame.signatureBitmap = signatureBitmap
+  }
 
   override fun closeScreen() {
     finish()
@@ -78,8 +107,7 @@ class SignatureActivity : AppCompatActivity(), SignatureUiActions {
   private fun setupDI() {
     component = ClinicApp.appComponent
         .signatureComponent()
-        .activity(this)
-        .build()
+        .create(activity = this)
 
     component.inject(this)
   }
@@ -88,6 +116,5 @@ class SignatureActivity : AppCompatActivity(), SignatureUiActions {
     setupDI()
     super.attachBaseContext(newBase)
   }
-
 }
 

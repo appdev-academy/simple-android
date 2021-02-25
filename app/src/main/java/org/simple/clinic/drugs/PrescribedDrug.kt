@@ -2,6 +2,7 @@ package org.simple.clinic.drugs
 
 import android.os.Parcelable
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -12,7 +13,9 @@ import io.reactivex.Flowable
 import kotlinx.android.parcel.Parcelize
 import org.simple.clinic.drugs.sync.PrescribedDrugPayload
 import org.simple.clinic.patient.SyncStatus
+import org.simple.clinic.storage.Timestamps
 import org.simple.clinic.teleconsultlog.medicinefrequency.MedicineFrequency
+import org.simple.clinic.util.UtcClock
 import java.time.Instant
 import java.util.UUID
 
@@ -42,16 +45,24 @@ data class PrescribedDrug(
 
     val syncStatus: SyncStatus,
 
-    val createdAt: Instant,
-
-    val updatedAt: Instant,
-
-    val deletedAt: Instant?,
+    @Embedded
+    val timestamps: Timestamps,
 
     val frequency: MedicineFrequency?,
 
-    val durationInDays: Int?
+    val durationInDays: Int?,
+
+    val teleconsultationId: UUID?
 ) : Parcelable {
+
+  val createdAt: Instant
+    get() = timestamps.createdAt
+
+  val updatedAt: Instant
+    get() = timestamps.updatedAt
+
+  val deletedAt: Instant?
+    get() = timestamps.deletedAt
 
   fun toPayload(): PrescribedDrugPayload {
     return PrescribedDrugPayload(
@@ -67,7 +78,41 @@ data class PrescribedDrug(
         updatedAt = updatedAt,
         deletedAt = deletedAt,
         frequency = frequency,
-        durationInDays = durationInDays
+        durationInDays = durationInDays,
+        teleconsultationId = teleconsultationId
+    )
+  }
+
+  fun refill(
+      uuid: UUID,
+      facilityUuid: UUID,
+      utcClock: UtcClock
+  ): PrescribedDrug {
+    return copy(
+        uuid = uuid,
+        facilityUuid = facilityUuid,
+        syncStatus = SyncStatus.PENDING,
+        timestamps = Timestamps.create(utcClock),
+        frequency = null,
+        durationInDays = null,
+        teleconsultationId = null
+    )
+  }
+
+  fun refillForTeleconsultation(
+      uuid: UUID,
+      facilityUuid: UUID,
+      teleconsultationId: UUID,
+      utcClock: UtcClock
+  ): PrescribedDrug {
+    return copy(
+        uuid = uuid,
+        facilityUuid = facilityUuid,
+        syncStatus = SyncStatus.PENDING,
+        timestamps = Timestamps.create(utcClock),
+        frequency = null,
+        durationInDays = null,
+        teleconsultationId = teleconsultationId
     )
   }
 
@@ -134,5 +179,40 @@ data class PrescribedDrug(
         instantToCompare: Instant,
         pendingStatus: SyncStatus
     ): Boolean
+
+    @Query("""
+      DELETE FROM PrescribedDrug
+      WHERE isDeleted = 1 AND syncStatus == 'DONE'
+    """)
+    fun purgeDeleted()
+
+    @Query("UPDATE PrescribedDrug SET durationInDays = :durationInDays, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE uuid = :id")
+    fun updateDrugDuration(id: UUID, durationInDays: Int, updatedAt: Instant, syncStatus: SyncStatus)
+
+    @Query("UPDATE PrescribedDrug SET frequency = :drugFrequency, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE uuid = :id")
+    fun updateDrugFrequenecy(id: UUID, drugFrequency: MedicineFrequency, updatedAt: Instant, syncStatus: SyncStatus)
+
+    @Query("UPDATE PrescribedDrug SET teleconsultationId = :teleconsultationId, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE uuid IN (:drugUuids)")
+    fun addTeleconsultationIdToDrugs(drugUuids: List<UUID>, teleconsultationId: UUID, updatedAt: Instant, syncStatus: SyncStatus)
+
+    /**
+     * [deleted] exists only to trigger Room's Boolean type converter.
+     * */
+    @Query("UPDATE PrescribedDrug SET isDeleted = :deleted, updatedAt = :updatedAt, syncStatus = :syncStatus WHERE uuid IN (:prescriptionIds)")
+    fun softDelete(prescriptionIds: List<UUID>, deleted: Boolean, updatedAt: Instant, syncStatus: SyncStatus)
+
+    @Query(""" SELECT * FROM PrescribedDrug """)
+    fun getAllPrescribedDrugs(): List<PrescribedDrug>
+
+    @Query("""
+        DELETE FROM PrescribedDrug
+        WHERE 
+            uuid NOT IN (
+                SELECT PD.uuid FROM PrescribedDrug PD
+                INNER JOIN Patient P ON P.uuid == PD.patientUuid
+            ) AND
+            syncStatus == 'DONE'
+    """)
+    fun deleteWithoutLinkedPatient()
   }
 }

@@ -8,14 +8,19 @@ import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_registration_facility_selection.view.*
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenRegistrationFacilitySelectionBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.introvideoscreen.IntroVideoScreenKey
 import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.compat.wrap
+import org.simple.clinic.navigation.v2.keyprovider.ScreenKeyProvider
 import org.simple.clinic.registration.confirmfacility.ConfirmFacilitySheet
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.router.screen.ActivityResult
 import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.user.OngoingRegistrationEntry
 import org.simple.clinic.util.extractSuccessful
 import org.simple.clinic.util.unsafeLazy
 import org.simple.clinic.widgets.UiEvent
@@ -27,14 +32,25 @@ class RegistrationFacilitySelectionScreen(
     attrs: AttributeSet
 ) : RelativeLayout(context, attrs), RegistrationFacilitySelectionUiActions {
 
+  var binding: ScreenRegistrationFacilitySelectionBinding? = null
+
+  private val facilityPickerView
+    get() = binding!!.facilityPickerView
+
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenKeyProvider: ScreenKeyProvider
 
   @Inject
   lateinit var activity: AppCompatActivity
 
   @Inject
   lateinit var effectHandlerFactory: RegistrationFacilitySelectionEffectHandler.Factory
+
+  @Inject
+  lateinit var screenResultBus: ScreenResultBus
 
   private val events by unsafeLazy {
     Observable
@@ -47,7 +63,7 @@ class RegistrationFacilitySelectionScreen(
   }
 
   private val delegate by unsafeLazy {
-    val screenKey = screenRouter.key<RegistrationFacilitySelectionScreenKey>(this)
+    val screenKey = screenKeyProvider.keyFor<RegistrationFacilitySelectionScreenKey>(this)
 
     MobiusDelegate.forView(
         events = events.ofType(),
@@ -61,13 +77,14 @@ class RegistrationFacilitySelectionScreen(
   @SuppressLint("CheckResult")
   override fun onFinishInflate() {
     super.onFinishInflate()
+    binding = ScreenRegistrationFacilitySelectionBinding.bind(this)
     if (isInEditMode) {
       return
     }
 
     context.injector<Injector>().inject(this)
 
-    facilityPickerView.backClicked = { screenRouter.pop() }
+    facilityPickerView.backClicked = { router.pop() }
   }
 
   override fun onAttachedToWindow() {
@@ -78,6 +95,7 @@ class RegistrationFacilitySelectionScreen(
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     delegate.stop()
+    binding = null
   }
 
   override fun onSaveInstanceState(): Parcelable? {
@@ -95,8 +113,8 @@ class RegistrationFacilitySelectionScreen(
   }
 
   private fun registrationFacilityConfirmations(): Observable<UiEvent> {
-    return screenRouter
-        .streamScreenResults()
+    return screenResultBus
+        .streamResults()
         .ofType<ActivityResult>()
         .extractSuccessful(CONFIRM_FACILITY_SHEET) { intent ->
           val confirmedFacilityUuid = ConfirmFacilitySheet.confirmedFacilityUuid(intent)
@@ -104,8 +122,8 @@ class RegistrationFacilitySelectionScreen(
         }
   }
 
-  override fun openIntroVideoScreen() {
-    screenRouter.push(IntroVideoScreenKey())
+  override fun openIntroVideoScreen(registrationEntry: OngoingRegistrationEntry) {
+    router.push(IntroVideoScreenKey(registrationEntry).wrap())
   }
 
   override fun showConfirmFacilitySheet(facilityUuid: UUID, facilityName: String) {

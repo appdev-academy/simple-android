@@ -2,34 +2,45 @@ package org.simple.clinic.summary
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Bundle
 import android.os.Parcelable
+import android.text.SpannedString
+import android.text.style.BulletSpan
 import android.text.style.TextAppearanceSpan
-import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.RelativeLayout
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.google.android.material.snackbar.Snackbar
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import com.jakewharton.rxbinding3.view.clicks
-import com.jakewharton.rxbinding3.view.detaches
+import com.spotify.mobius.Init
+import com.spotify.mobius.Update
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.cast
 import io.reactivex.rxkotlin.ofType
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.parcel.Parcelize
-import kotlinx.android.synthetic.main.screen_patient_summary.view.*
 import org.simple.clinic.R
 import org.simple.clinic.ReportAnalyticsEvents
 import org.simple.clinic.contactpatient.ContactPatientBottomSheet
+import org.simple.clinic.databinding.ScreenPatientSummaryBinding
+import org.simple.clinic.di.injector
 import org.simple.clinic.editpatient.EditPatientScreenKey
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.facility.alertchange.AlertFacilityChangeSheet
-import org.simple.clinic.facility.alertchange.Continuation
 import org.simple.clinic.facility.alertchange.Continuation.ContinueToActivity
 import org.simple.clinic.facility.alertchange.Continuation.ContinueToScreen
 import org.simple.clinic.home.HomeScreenKey
-import org.simple.clinic.main.TheActivity
-import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.mobius.ViewRenderer
+import org.simple.clinic.navigation.v2.HandlesBack
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.fragments.BaseScreen
 import org.simple.clinic.patient.DateOfBirth
 import org.simple.clinic.patient.Gender
 import org.simple.clinic.patient.PatientAddress
@@ -37,30 +48,21 @@ import org.simple.clinic.patient.PatientPhoneNumber
 import org.simple.clinic.patient.businessid.BusinessId
 import org.simple.clinic.patient.businessid.Identifier
 import org.simple.clinic.patient.displayLetterRes
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.router.screen.ActivityResult
-import org.simple.clinic.router.screen.BackPressInterceptCallback
-import org.simple.clinic.router.screen.BackPressInterceptor
-import org.simple.clinic.router.screen.RouterDirection.BACKWARD
-import org.simple.clinic.router.screen.ScreenRouter
 import org.simple.clinic.scheduleappointment.ScheduleAppointmentSheet
 import org.simple.clinic.summary.addphone.AddPhoneNumberDialog
 import org.simple.clinic.summary.linkId.LinkIdWithPatientCancelled
 import org.simple.clinic.summary.linkId.LinkIdWithPatientLinked
 import org.simple.clinic.summary.linkId.LinkIdWithPatientViewShown
-import org.simple.clinic.summary.teleconsultation.api.TeleconsultPhoneNumber
-import org.simple.clinic.summary.teleconsultation.contactdoctor.ContactDoctorSheet_Old
-import org.simple.clinic.summary.teleconsultation.messagebuilder.LongTeleconsultMessageBuilder
+import org.simple.clinic.summary.teleconsultation.contactdoctor.ContactDoctorSheet
+import org.simple.clinic.summary.teleconsultation.messagebuilder.LongTeleconsultMessageBuilder_Old
 import org.simple.clinic.summary.updatephone.UpdatePhoneNumberDialog
-import org.simple.clinic.util.Truss
-import org.simple.clinic.util.Unicode
+import org.simple.clinic.teleconsultlog.teleconsultrecord.screen.TeleconsultRecordScreenKey
 import org.simple.clinic.util.UserClock
 import org.simple.clinic.util.extractSuccessful
 import org.simple.clinic.util.messagesender.WhatsAppMessageSender
 import org.simple.clinic.util.toLocalDateAtZone
-import org.simple.clinic.util.unsafeLazy
-import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState
-import org.simple.clinic.widgets.ProgressMaterialButton.ButtonState.Enabled
-import org.simple.clinic.widgets.ScreenDestroyed
 import org.simple.clinic.widgets.UiEvent
 import org.simple.clinic.widgets.hideKeyboard
 import org.simple.clinic.widgets.isVisible
@@ -71,13 +73,92 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Named
 
-class PatientSummaryScreen(
-    context: Context,
-    attrs: AttributeSet
-) : RelativeLayout(context, attrs), PatientSummaryScreenUi, PatientSummaryUiActions, PatientSummaryChildView {
+class PatientSummaryScreen :
+    BaseScreen<
+        PatientSummaryScreenKey,
+        ScreenPatientSummaryBinding,
+        PatientSummaryModel,
+        PatientSummaryEvent,
+        PatientSummaryEffect>(),
+    PatientSummaryScreenUi,
+    PatientSummaryUiActions,
+    PatientSummaryChildView,
+    HandlesBack {
+
+  private val rootLayout
+    get() = binding.rootLayout
+
+  private val drugSummaryView
+    get() = binding.drugSummaryView
+
+  private val bloodPressureSummaryView
+    get() = binding.bloodPressureSummaryView
+
+  private val bloodSugarSummaryView
+    get() = binding.bloodSugarSummaryView
+
+  private val assignedFacilityView
+    get() = binding.assignedFacilityView
+
+  private val medicalHistorySummaryView
+    get() = binding.medicalHistorySummaryView
+
+  private val summaryLoadingProgressBar
+    get() = binding.summaryLoadingProgressBar
+
+  private val summaryViewsContainer
+    get() = binding.summaryViewsContainer
+
+  private val editPatientButton
+    get() = binding.editPatientButton
+
+  private val doneButton
+    get() = binding.doneButton
+
+  private val teleconsultButton
+    get() = binding.teleconsultButton
+
+  private val logTeleconsultButton
+    get() = binding.logTeleconsultButton
+
+  private val logTeleconsultButtonFrame
+    get() = binding.logTeleconsultButtonFrame
+
+  private val backButton
+    get() = binding.backButton
+
+  private val linkIdWithPatientView
+    get() = binding.linkIdWithPatientView
+
+  private val contactTextView
+    get() = binding.contactTextView
+
+  private val facilityNameAndDateTextView
+    get() = binding.facilityNameAndDateTextView
+
+  private val labelRegistered
+    get() = binding.labelRegistered
+
+  private val addressTextView
+    get() = binding.addressTextView
+
+  private val fullNameTextView
+    get() = binding.fullNameTextView
+
+  private val bpPassportTextView
+    get() = binding.bpPassportTextView
+
+  private val bangladeshNationalIdTextView
+    get() = binding.bangladeshNationalIdTextView
+
+  private val doneButtonFrame
+    get() = binding.doneButtonFrame
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenResults: ScreenResultBus
 
   @Inject
   lateinit var activity: AppCompatActivity
@@ -93,7 +174,7 @@ class PatientSummaryScreen(
   lateinit var effectHandlerFactory: PatientSummaryEffectHandler.Factory
 
   @Inject
-  lateinit var longTeleconsultMessageBuilder: LongTeleconsultMessageBuilder
+  lateinit var longTeleconsultMessageBuilder: LongTeleconsultMessageBuilder_Old
 
   @Inject
   lateinit var whatsAppMessageSender: WhatsAppMessageSender
@@ -101,8 +182,25 @@ class PatientSummaryScreen(
   private var modelUpdateCallback: PatientSummaryModelUpdateCallback? = null
 
   private val snackbarActionClicks = PublishSubject.create<PatientSummaryEvent>()
-  private val events: Observable<PatientSummaryEvent> by unsafeLazy {
-    Observable
+  private val hardwareBackClicks = PublishSubject.create<Unit>()
+  private val subscriptions = CompositeDisposable()
+
+  override fun defaultModel(): PatientSummaryModel {
+    return PatientSummaryModel.from(screenKey.intention, screenKey.patientUuid)
+  }
+
+  override fun bindView(layoutInflater: LayoutInflater, container: ViewGroup?): ScreenPatientSummaryBinding {
+    return ScreenPatientSummaryBinding.inflate(layoutInflater, container, false)
+  }
+
+  override fun uiRenderer(): ViewRenderer<PatientSummaryModel> {
+    return PatientSummaryViewRenderer(ui = this) { model ->
+      modelUpdateCallback?.invoke(model)
+    }
+  }
+
+  override fun events(): Observable<PatientSummaryEvent> {
+    return Observable
         .mergeArray(
             backClicks(),
             doneClicks(),
@@ -114,70 +212,45 @@ class PatientSummaryScreen(
             phoneNumberClicks(),
             contactDoctorClicks(),
             snackbarActionClicks,
-            teleconsultPhoneNumberSelected()
+            logTeleconsultClicks()
         )
         .compose(ReportAnalyticsEvents())
-        .cast<PatientSummaryEvent>()
+        .cast()
   }
 
-  private val viewRenderer = PatientSummaryViewRenderer(this)
-
-  private val screenKey: PatientSummaryScreenKey by unsafeLazy {
-    screenRouter.key<PatientSummaryScreenKey>(this)
+  override fun createUpdate(): Update<PatientSummaryModel, PatientSummaryEvent, PatientSummaryEffect> {
+    return PatientSummaryUpdate()
   }
 
-  private val mobiusDelegate: MobiusDelegate<PatientSummaryModel, PatientSummaryEvent, PatientSummaryEffect> by unsafeLazy {
-    MobiusDelegate.forView(
-        events = events,
-        defaultModel = PatientSummaryModel.from(screenKey.intention, screenKey.patientUuid),
-        init = PatientSummaryInit(),
-        update = PatientSummaryUpdate(),
-        effectHandler = effectHandlerFactory.create(this).build(),
-        modelUpdateListener = { model ->
-          modelUpdateCallback?.invoke(model)
-          viewRenderer.render(model)
-        }
-    )
-  }
-  private val teleconsultationErrorSnackbar by unsafeLazy {
-    Snackbar.make(rootLayout, R.string.patientsummary_teleconsult_network_error, Snackbar.LENGTH_INDEFINITE)
-        .setAction(R.string.patientsummary_teleconsult_network_error_retry) {
-          postDelayed({
-            snackbarActionClicks.onNext(RetryFetchTeleconsultInfo)
-          }, 100)
-        }
-        .setActionTextColor(ContextCompat.getColor(context, R.color.green2))
-        .setAnchorView(R.id.buttonFrame)
+  override fun createInit(): Init<PatientSummaryModel, PatientSummaryEffect> {
+    return PatientSummaryInit()
   }
 
-  override fun onSaveInstanceState(): Parcelable {
-    return mobiusDelegate.onSaveInstanceState(super.onSaveInstanceState())
+  override fun createEffectHandler(): ObservableTransformer<PatientSummaryEffect, PatientSummaryEvent> {
+    return effectHandlerFactory.create(this).build()
   }
 
-  override fun onRestoreInstanceState(state: Parcelable) {
-    super.onRestoreInstanceState(mobiusDelegate.onRestoreInstanceState(state))
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    requireContext().injector<Injector>().inject(this)
   }
 
-  @SuppressLint("CheckResult")
-  override fun onFinishInflate() {
-    super.onFinishInflate()
-    if (isInEditMode) {
-      return
-    }
-    TheActivity.component.inject(this)
+  override fun onDestroyView() {
+    super.onDestroyView()
+    subscriptions.clear()
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
 
     // Not sure why but the keyboard stays visible when coming from search.
     rootLayout.hideKeyboard()
 
-    val screenDestroys: Observable<ScreenDestroyed> = detaches().map { ScreenDestroyed() }
-    alertFacilityChangeSheetClosed(screenDestroys)
-    setupChildViewVisibility(screenDestroys)
+    subscriptions.add(setupChildViewVisibility())
   }
 
   @SuppressLint("CheckResult")
-  private fun setupChildViewVisibility(
-      screenDestroys: Observable<ScreenDestroyed>
-  ) {
+  private fun setupChildViewVisibility(): Disposable {
     val modelUpdates: List<Observable<PatientSummaryChildModel>> =
         listOf(
             this,
@@ -188,11 +261,10 @@ class PatientSummaryScreen(
             medicalHistorySummaryView
         ).map(::createSummaryChildModelStream)
 
-    Observable
+    return Observable
         .combineLatest(modelUpdates) { models -> models.map { it as PatientSummaryChildModel } }
         .filter { models -> models.all(PatientSummaryChildModel::readyToRender) }
         .take(1)
-        .takeUntil(screenDestroys)
         .subscribe {
           summaryLoadingProgressBar.visibility = GONE
           summaryViewsContainer.visibility = VISIBLE
@@ -207,31 +279,6 @@ class PatientSummaryScreen(
 
       emitter.setCancellable { summaryChildView.registerSummaryModelUpdateCallback(null) }
     }
-  }
-
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    mobiusDelegate.start()
-  }
-
-  override fun onDetachedFromWindow() {
-    if (teleconsultationErrorSnackbar.isShownOrQueued) {
-      teleconsultationErrorSnackbar.dismiss()
-    }
-    mobiusDelegate.stop()
-    super.onDetachedFromWindow()
-  }
-
-  private fun teleconsultPhoneNumberSelected(): Observable<PatientSummaryEvent> {
-    return screenRouter
-        .streamScreenResults()
-        .ofType<ActivityResult>()
-        .extractSuccessful(CONTACT_DOCTOR_SHEET) { intent ->
-          val teleconsultPhoneNumberString = ContactDoctorSheet_Old.readPhoneNumberExtra(intent)
-          val teleconsultPhoneNumber = TeleconsultPhoneNumber(teleconsultPhoneNumberString)
-
-          ContactDoctorPhoneNumberSelected(teleconsultPhoneNumber)
-        }
   }
 
   private fun editButtonClicks(): Observable<UiEvent> = editPatientButton.clicks().map { PatientSummaryEditClicked }
@@ -249,22 +296,13 @@ class PatientSummaryScreen(
 
   private fun doneClicks() = doneButton.clicks().map { PatientSummaryDoneClicked(screenKey.patientUuid) }
 
-  private fun contactDoctorClicks() = doctorButton.clicks().map { ContactDoctorClicked }
+  private fun contactDoctorClicks() = teleconsultButton.clicks().map { ContactDoctorClicked }
+
+  private fun logTeleconsultClicks() = logTeleconsultButton.clicks().map { LogTeleconsultClicked }
 
   private fun backClicks(): Observable<UiEvent> {
-    val hardwareBackKeyClicks = Observable.create<Unit> { emitter ->
-      val interceptor = object : BackPressInterceptor {
-        override fun onInterceptBackPress(callback: BackPressInterceptCallback) {
-          emitter.onNext(Unit)
-          callback.markBackPressIntercepted()
-        }
-      }
-      emitter.setCancellable { screenRouter.unregisterBackPressInterceptor(interceptor) }
-      screenRouter.registerBackPressInterceptor(interceptor)
-    }
-
     return backButton.clicks()
-        .mergeWith(hardwareBackKeyClicks)
+        .mergeWith(hardwareBackClicks)
         .map {
           if (linkIdWithPatientView.isVisible) {
             PatientSummaryLinkIdCancelled
@@ -272,6 +310,11 @@ class PatientSummaryScreen(
             PatientSummaryBackClicked(screenKey.patientUuid, screenKey.screenCreatedTimestamp)
           }
         }
+  }
+
+  override fun onBackPressed(): Boolean {
+    hardwareBackClicks.onNext(Unit)
+    return true
   }
 
   private fun bloodPressureSaves(): Observable<PatientSummaryBloodPressureSaved> {
@@ -282,30 +325,13 @@ class PatientSummaryScreen(
     }
   }
 
-  private fun appointmentScheduleSheetClosed() = screenRouter.streamScreenResults()
+  private fun appointmentScheduleSheetClosed() = screenResults
+      .streamResults()
       .ofType<ActivityResult>()
       .extractSuccessful(SUMMARY_REQCODE_SCHEDULE_APPOINTMENT) { intent ->
         ScheduleAppointmentSheet.readExtra<ScheduleAppointmentSheetExtra>(intent)
       }
       .map { ScheduledAppointment(it.sheetOpenedFrom) }
-
-  @SuppressLint("CheckResult")
-  private fun alertFacilityChangeSheetClosed(onDestroys: Observable<ScreenDestroyed>) {
-    screenRouter.streamScreenResults()
-        .ofType<ActivityResult>()
-        .extractSuccessful(SUMMARY_REQCODE_ALERT_FACILITY_CHANGE) { intent ->
-          AlertFacilityChangeSheet.readContinuationExtra<Continuation>(intent)
-        }
-        .takeUntil(onDestroys)
-        .subscribe(::openContinuation)
-  }
-
-  private fun openContinuation(continuation: Continuation) {
-    when (continuation) {
-      is ContinueToScreen -> screenRouter.push(continuation.screenKey)
-      is ContinueToActivity -> activity.startActivityForResult(continuation.intent, continuation.requestCode)
-    }
-  }
 
   private fun identifierLinkedEvents(): Observable<UiEvent> {
     return linkIdWithPatientView
@@ -344,7 +370,7 @@ class PatientSummaryScreen(
     if (registeredFacilityName != null) {
       val recordedAt = patientSummaryProfile.patient.recordedAt
       val recordedDate = dateFormatter.format(recordedAt.toLocalDateAtZone(userClock.zone))
-      val facilityNameAndDate = context.getString(R.string.patientsummary_registered_facility, recordedDate, registeredFacilityName)
+      val facilityNameAndDate = requireContext().getString(R.string.patientsummary_registered_facility, recordedDate, registeredFacilityName)
 
       facilityNameAndDateTextView.visibility = View.VISIBLE
       labelRegistered.visibility = View.VISIBLE
@@ -356,15 +382,7 @@ class PatientSummaryScreen(
   }
 
   private fun displayPatientAddress(address: PatientAddress) {
-    val addressFields = listOf(
-        address.streetAddress,
-        address.colonyOrVillage,
-        address.district,
-        address.state,
-        address.zone
-    ).filterNot { it.isNullOrBlank() }
-
-    addressTextView.text = addressFields.joinToString()
+    addressTextView.text = address.completeAddress
   }
 
   private fun displayPhoneNumber(phoneNumber: PatientPhoneNumber?) {
@@ -388,15 +406,17 @@ class PatientSummaryScreen(
     bpPassportTextView.text = when (bpPassport) {
       null -> ""
       else -> {
+        val identifierNumericSpan = TextAppearanceSpan(requireContext(), R.style.TextAppearance_Simple_Body2_Numeric)
         val identifier = bpPassport.identifier
-        val numericSpan = TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Body2Left_Numeric_White72)
-        Truss()
-            .append(identifier.displayType(resources))
-            .append(": ")
-            .pushSpan(numericSpan)
-            .append(identifier.displayValue())
-            .popSpan()
-            .build()
+        val bpPassportLabel = identifier.displayType(resources)
+
+        buildSpannedString {
+          append("$bpPassportLabel: ")
+
+          inSpans(identifierNumericSpan) {
+            append(identifier.displayValue())
+          }
+        }
       }
     }
   }
@@ -406,19 +426,26 @@ class PatientSummaryScreen(
 
     bangladeshNationalIdTextView.text = when (bangladeshNationalId) {
       null -> ""
-      else -> {
-        val identifier = bangladeshNationalId.identifier
-        val numericSpan = TextAppearanceSpan(context, R.style.Clinic_V2_TextAppearance_Body2Left_Numeric_White72)
+      else -> generateAlternativeId(bangladeshNationalId, isBpPassportVisible)
+    }
+  }
 
-        val formattedIdentifier = Truss()
-            .append(context.getString(R.string.patientsummary_bangladesh_national_id))
-            .append(": ")
-            .pushSpan(numericSpan)
-            .append(identifier.displayValue())
-            .popSpan()
-            .build()
+  private fun generateAlternativeId(bangladeshNationalId: BusinessId, isBpPassportVisible: Boolean): SpannedString {
+    val bangladeshNationalIdLabel = requireContext().getString(R.string.patientsummary_bangladesh_national_id)
+    val identifierNumericSpan = TextAppearanceSpan(requireContext(), R.style.TextAppearance_Simple_Body2_Numeric)
+    val identifier = bangladeshNationalId.identifier
 
-        if (isBpPassportVisible) "${Unicode.bullet} $formattedIdentifier" else formattedIdentifier
+    return buildSpannedString {
+      if (isBpPassportVisible) {
+        inSpans(BulletSpan(16)) {
+          append("$bangladeshNationalIdLabel: ")
+        }
+      } else {
+        append("$bangladeshNationalIdLabel: ")
+      }
+
+      inSpans(identifierNumericSpan) {
+        append(identifier.displayValue())
       }
     }
   }
@@ -428,22 +455,20 @@ class PatientSummaryScreen(
       sheetOpenedFrom: AppointmentSheetOpenedFrom,
       currentFacility: Facility
   ) {
-    val scheduleAppointmentIntent = ScheduleAppointmentSheet.intent(context, patientUuid, ScheduleAppointmentSheetExtra(sheetOpenedFrom))
-    val alertFacilityChangeIntent = AlertFacilityChangeSheet.intent(
-        context,
-        currentFacility.name,
-        ContinueToActivity(scheduleAppointmentIntent, SUMMARY_REQCODE_SCHEDULE_APPOINTMENT)
-    )
+    val scheduleAppointmentIntent = ScheduleAppointmentSheet.intent(requireContext(), patientUuid, ScheduleAppointmentSheetExtra(sheetOpenedFrom))
 
-    activity.startActivityForResult(alertFacilityChangeIntent, SUMMARY_REQCODE_ALERT_FACILITY_CHANGE)
+    router.push(AlertFacilityChangeSheet.Key(
+        currentFacilityName = currentFacility.name,
+        continuation = ContinueToActivity(scheduleAppointmentIntent, SUMMARY_REQCODE_SCHEDULE_APPOINTMENT)
+    ))
   }
 
   override fun goToPreviousScreen() {
-    screenRouter.pop()
+    router.pop()
   }
 
   override fun goToHomeScreen() {
-    screenRouter.clearHistoryAndPush(HomeScreenKey, direction = BACKWARD)
+    router.clearHistoryAndPush(HomeScreenKey)
   }
 
   override fun showUpdatePhoneDialog(patientUuid: UUID) {
@@ -479,12 +504,11 @@ class PatientSummaryScreen(
       patientSummaryProfile: PatientSummaryProfile,
       currentFacility: Facility
   ) {
-    val intentForAlertSheet = AlertFacilityChangeSheet.intent(
-        context,
-        currentFacility.name,
-        ContinueToScreen(createEditPatientScreenKey(patientSummaryProfile))
-    )
-    activity.startActivityForResult(intentForAlertSheet, SUMMARY_REQCODE_ALERT_FACILITY_CHANGE)
+
+    router.push(AlertFacilityChangeSheet.Key(
+        currentFacilityName = currentFacility.name,
+        continuation = ContinueToScreen(createEditPatientScreenKey(patientSummaryProfile))
+    ))
   }
 
   override fun showDiagnosisError() {
@@ -498,43 +522,17 @@ class PatientSummaryScreen(
     activity.startActivity(ContactPatientBottomSheet.intent(activity, patientUuid))
   }
 
-  override fun contactDoctor(patientTeleconsultationInfo: PatientTeleconsultationInfo, teleconsultationPhoneNumber: String) {
-    val message = longTeleconsultMessageBuilder.message(patientTeleconsultationInfo)
-    whatsAppMessageSender.send(teleconsultationPhoneNumber, message)
+  override fun openContactDoctorSheet(patientUuid: UUID) {
+    val intent = ContactDoctorSheet.intent(requireContext(), patientUuid)
+    requireContext().startActivity(intent)
   }
 
-  override fun openContactDoctorSheet(
-      facility: Facility,
-      phoneNumbers: List<TeleconsultPhoneNumber>
-  ) {
-    val intent = ContactDoctorSheet_Old.intent(context, facility, phoneNumbers)
-    activity.startActivityForResult(intent, CONTACT_DOCTOR_SHEET)
+  override fun showTeleconsultButton() {
+    teleconsultButton.visibility = View.VISIBLE
   }
 
-  override fun enableContactDoctorButton() {
-    doctorButton.setButtonState(Enabled)
-  }
-
-  override fun disableContactDoctorButton() {
-    doctorButton.setButtonState(ButtonState.Disabled)
-  }
-
-  override fun fetchingTeleconsultInfo() {
-    doctorButton.setButtonState(ButtonState.InProgress)
-  }
-
-  override fun showTeleconsultInfoError() {
-    if (teleconsultationErrorSnackbar.isShown.not()) {
-      teleconsultationErrorSnackbar.show()
-    }
-  }
-
-  override fun showContactDoctorButton() {
-    doctorButton.visibility = View.VISIBLE
-  }
-
-  override fun hideContactDoctorButton() {
-    doctorButton.visibility = View.GONE
+  override fun hideTeleconsultButton() {
+    teleconsultButton.visibility = View.GONE
   }
 
   override fun showAssignedFacilityView() {
@@ -550,12 +548,19 @@ class PatientSummaryScreen(
   }
 
   override fun hideDoneButton() {
-    doneButton.visibility = View.GONE
+    doneButtonFrame.visibility = View.GONE
   }
 
   override fun showTeleconsultLogButton() {
-    logTeleconsultButton.visibility = View.VISIBLE
-    buttonFrame.setBackgroundColor(ContextCompat.getColor(context, R.color.green3))
+    logTeleconsultButtonFrame.visibility = View.VISIBLE
+  }
+
+  override fun navigateToTeleconsultRecordScreen(patientUuid: UUID, teleconsultRecordId: UUID) {
+    router.push(TeleconsultRecordScreenKey(patientUuid, teleconsultRecordId))
+  }
+
+  interface Injector {
+    fun inject(target: PatientSummaryScreen)
   }
 }
 

@@ -1,47 +1,51 @@
 package org.simple.clinic.search.results
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Parcelable
-import android.util.AttributeSet
-import android.widget.RelativeLayout
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import com.jakewharton.rxbinding3.view.detaches
 import io.reactivex.Observable
-import io.reactivex.rxkotlin.ofType
-import kotlinx.android.synthetic.main.screen_patient_search_results.view.*
+import io.reactivex.rxkotlin.cast
 import org.simple.clinic.ReportAnalyticsEvents
+import org.simple.clinic.databinding.ScreenPatientSearchResultsBinding
 import org.simple.clinic.di.injector
 import org.simple.clinic.facility.Facility
 import org.simple.clinic.facility.alertchange.AlertFacilityChangeSheet
 import org.simple.clinic.facility.alertchange.Continuation.ContinueToScreen
-import org.simple.clinic.mobius.MobiusDelegate
+import org.simple.clinic.navigation.v2.Router
+import org.simple.clinic.navigation.v2.fragments.BaseScreen
 import org.simple.clinic.newentry.PatientEntryScreenKey
 import org.simple.clinic.patient.PatientSearchCriteria
 import org.simple.clinic.patient.PatientSearchCriteria.Name
 import org.simple.clinic.patient.PatientSearchCriteria.PhoneNumber
 import org.simple.clinic.patient.businessid.Identifier
-import org.simple.clinic.router.screen.ActivityResult
-import org.simple.clinic.router.screen.ScreenRouter
+import org.simple.clinic.router.ScreenResultBus
 import org.simple.clinic.summary.OpenIntention
 import org.simple.clinic.summary.PatientSummaryScreenKey
 import org.simple.clinic.util.UtcClock
-import org.simple.clinic.util.extractSuccessful
-import org.simple.clinic.util.unsafeLazy
-import org.simple.clinic.widgets.ScreenDestroyed
 import org.simple.clinic.widgets.UiEvent
 import org.simple.clinic.widgets.hideKeyboard
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 
-class PatientSearchResultsScreen(
-    context: Context,
-    attrs: AttributeSet
-) : RelativeLayout(context, attrs), PatientSearchResultsUi, PatientSearchResultsUiActions {
+class PatientSearchResultsScreen :
+    BaseScreen<
+        PatientSearchResultsScreenKey,
+        ScreenPatientSearchResultsBinding,
+        PatientSearchResultsModel,
+        PatientSearchResultsEvent,
+        PatientSearchResultsEffect>(),
+    PatientSearchResultsUi,
+    PatientSearchResultsUiActions {
 
   @Inject
-  lateinit var screenRouter: ScreenRouter
+  lateinit var router: Router
+
+  @Inject
+  lateinit var screenResults: ScreenResultBus
 
   @Inject
   lateinit var utcClock: UtcClock
@@ -52,73 +56,42 @@ class PatientSearchResultsScreen(
   @Inject
   lateinit var effectHandlerInjectionFactory: PatientSearchResultsEffectHandler.InjectionFactory
 
-  private val screenKey by unsafeLazy { screenRouter.key<PatientSearchResultsScreenKey>(this) }
+  private val searchResultsView
+    get() = binding.searchResultsView
 
-  private val events by unsafeLazy {
-    Observable
-        .merge(
-            searchResultClicks(),
-            registerNewPatientClicks()
-        )
-        .compose(ReportAnalyticsEvents())
-        .share()
-  }
+  private val toolbar
+    get() = binding.toolbar
 
-  private val delegate by unsafeLazy {
-    val uiRenderer = PatientSearchResultsUiRenderer(this)
+  override fun bindView(layoutInflater: LayoutInflater, container: ViewGroup?) =
+      ScreenPatientSearchResultsBinding.inflate(layoutInflater, container, false)
 
-    MobiusDelegate.forView(
-        events = events.ofType(),
-        defaultModel = PatientSearchResultsModel.create(screenKey.criteria),
-        update = PatientSearchResultsUpdate(),
-        effectHandler = effectHandlerInjectionFactory.create(this).build(),
-        init = PatientSearchResultsInit(),
-        modelUpdateListener = uiRenderer::render
-    )
-  }
+  override fun defaultModel() = PatientSearchResultsModel.create(screenKey.criteria)
 
-  @SuppressLint("CheckResult")
-  override fun onFinishInflate() {
-    super.onFinishInflate()
-    if (isInEditMode) {
-      return
-    }
+  override fun uiRenderer() = PatientSearchResultsUiRenderer(this)
 
+  override fun events() = Observable
+      .merge(
+          searchResultClicks(),
+          registerNewPatientClicks()
+      )
+      .compose(ReportAnalyticsEvents())
+      .cast<PatientSearchResultsEvent>()
+
+  override fun createUpdate() = PatientSearchResultsUpdate()
+
+  override fun createInit() = PatientSearchResultsInit()
+
+  override fun createEffectHandler() = effectHandlerInjectionFactory.create(this).build()
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
     context.injector<Injector>().inject(this)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     setupScreen()
-
-    val screenDestroys = detaches().map { ScreenDestroyed() }
-    setupAlertResults(screenDestroys)
-  }
-
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    delegate.start()
     searchResultsView.searchWithCriteria(screenKey.criteria)
-  }
-
-  override fun onDetachedFromWindow() {
-    delegate.stop()
-    super.onDetachedFromWindow()
-  }
-
-  override fun onSaveInstanceState(): Parcelable? {
-    return delegate.onSaveInstanceState(super.onSaveInstanceState())
-  }
-
-  override fun onRestoreInstanceState(state: Parcelable?) {
-    super.onRestoreInstanceState(delegate.onRestoreInstanceState(state))
-  }
-
-  @SuppressLint("CheckResult")
-  private fun setupAlertResults(screenDestroys: Observable<ScreenDestroyed>) {
-    screenRouter.streamScreenResults()
-        .ofType<ActivityResult>()
-        .extractSuccessful(ALERT_FACILITY_CHANGE) { intent ->
-          AlertFacilityChangeSheet.readContinuationExtra<ContinueToScreen>(intent).screenKey
-        }
-        .takeUntil(screenDestroys)
-        .subscribe(screenRouter::push)
   }
 
   private fun searchResultClicks(): Observable<UiEvent> {
@@ -138,12 +111,12 @@ class PatientSearchResultsScreen(
   }
 
   private fun setupScreen() {
-    hideKeyboard()
+    binding.root.hideKeyboard()
     toolbar.setNavigationOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
     toolbar.setOnClickListener {
-      screenRouter.pop()
+      router.pop()
     }
 
     toolbar.title = generateToolbarTitleForCriteria(screenKey.criteria)
@@ -157,25 +130,21 @@ class PatientSearchResultsScreen(
   }
 
   override fun openPatientSummaryScreen(patientUuid: UUID) {
-    screenRouter.push(PatientSummaryScreenKey(patientUuid, OpenIntention.ViewExistingPatient, Instant.now(utcClock)))
+    router.push(PatientSummaryScreenKey(patientUuid, OpenIntention.ViewExistingPatient, Instant.now(utcClock)))
   }
 
   override fun openLinkIdWithPatientScreen(patientUuid: UUID, identifier: Identifier) {
-    screenRouter.push(PatientSummaryScreenKey(patientUuid, OpenIntention.LinkIdWithPatient(identifier), Instant.now(utcClock)))
+    router.push(PatientSummaryScreenKey(patientUuid, OpenIntention.LinkIdWithPatient(identifier), Instant.now(utcClock)))
   }
 
   override fun openPatientEntryScreen(facility: Facility) {
-    activity.startActivityForResult(
-        AlertFacilityChangeSheet.intent(context, facility.name, ContinueToScreen(PatientEntryScreenKey())),
-        ALERT_FACILITY_CHANGE
-    )
+    router.push(AlertFacilityChangeSheet.Key(
+        currentFacilityName = facility.name,
+        continuation = ContinueToScreen(PatientEntryScreenKey())
+    ))
   }
 
   interface Injector {
     fun inject(target: PatientSearchResultsScreen)
-  }
-
-  companion object {
-    private const val ALERT_FACILITY_CHANGE = 1122
   }
 }
