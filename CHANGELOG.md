@@ -2,6 +2,11 @@
 
 ## Next Release
 ### Internal
+- [In Progress: 20 Jan 2021] Material Theme-ing Migration
+- [In Progress: 08 Feb 2021] Migrate app to use ViewBinding
+
+## On Demo
+### Internal
 - Load the current facility as a direct call instead of a reactive one in `OverdueEffectHandler`
 - Migrate `PatientSummaryScreen` to a fragment
 - Bump Dagger to v2.32
@@ -9,19 +14,25 @@
 - Bump WorkManager to v2.5.0
 - Fix the Room query thread pool executor to run all available threads
 - Load list of `colonyOrVillage` from the `PatientAddress` table
-- Stop loading all patients after current facility is loaded in `InstantSearchScreen`
 - Change `TeleconsultRecordScreen` to a fragment
-- Change `AppLockScreen` to a fragment
-- [In Progress: 20 Jan 2021] Material Theme-ing Migration
-- [In Progress: 08 Feb 2021] Migrate app to use ViewBinding
+- Only load the alphabetical patient log once when the screen is opened
+- Improve performance of the instant search queries by ~50%
 
 ### Changes
 - Updated translations: `bn-IN`, `ti-ET`, `om-ET`, `bn-BD`, `te-IN`, `kn-IN`, `mr-IN`, `hi-IN`, `pa-IN`, `am-ET`
 - Show progress when linking bp passport to patient
 - Show progress when saving medical history for new patient
 - Change prescriptions end icon to a chevron icon instead of dropdown
+- Stop loading patients from other facilities in the alphabetical patient log
 
-## On Demo
+### Fixes
+- Fix cannot exit patient summary screen after scheduling an appointment
+
+## 2021-02-26-7647
+### Internal
+- Change `AppLockScreen` to a fragment
+
+## 2021-02-22-7641
 ### Internal
 - Bump Material Design Components to v1.3.0
 - Bump ConstraintLayout to v2.0.4
