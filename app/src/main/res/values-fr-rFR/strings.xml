@@ -161,12 +161,12 @@
   <string name="patients_recentpatients_nameage">%1$s, %2$s</string>
 
   <!-- Blood pressure entry -->
-  <string name="bloodpressureentry_sheet_title_enter_blood_pressure">Charge Virale</string>
-  <string name="bloodpressureentry_sheet_title_edit_blood_pressure">Modifier la charge virale</string>
+  <string name="bloodpressureentry_sheet_title_enter_blood_pressure">Charge CV</string>
+  <string name="bloodpressureentry_sheet_title_edit_blood_pressure">Modifier la charge CV</string>
   <string name="bloodpressureentry_sheet_title_enter_date">Date de la visite</string>
   <string name="bloodpressureentry_remove">Supprimer</string>
-  <string name="bloodpressureentry_systolic">Charge virale élevée</string>
-  <string name="bloodpressureentry_diastolic">Charge virale faible</string>
+  <string name="bloodpressureentry_systolic">Charge CV élevée</string>
+  <string name="bloodpressureentry_diastolic">Charge CV faible</string>
   <string name="bloodpressureentry_day">Jour</string>
   <string name="bloodpressureentry_month">Mois</string>
   <string name="bloodpressureentry_year">Année</string>
@@ -179,8 +179,8 @@
   <string name="bloodpressureentry_error_diastolic_empty">Enter systolic and diastolic pressures</string>
   <string name="bloodpressureentry_error_date_invalid_pattern">Entrez une date valide en JJ/MM/AAAA</string>
   <string name="bloodpressureentry_error_date_is_in_future">La date ne peut être dans le futur</string>
-  <string name="bloodpressureentry_remove_bp_title">Supprimer la charge virale</string>
-  <string name="bloodpressureentry_remove_bp_message">Êtes-vous sûr de vouloir supprimer cet enregistrement de la charge virale?</string>
+  <string name="bloodpressureentry_remove_bp_title">Supprimer la charge CV</string>
+  <string name="bloodpressureentry_remove_bp_message">Êtes-vous sûr de vouloir supprimer cet enregistrement de la charge CV?</string>
   <string name="bloodpressureentry_remove_bp_confirm">Supprimer</string>
   <string name="bloodpressureentry_remove_bp_cancel">Annuler</string>
 
@@ -188,9 +188,9 @@
   <string name="patientsummary_contentdescription_up_button">Retour en arrière</string>
   <string name="patientsummary_prescriptions_add">Médicaments</string>
   <string name="patientsummary_prescriptions_update">Modifier les médicaments</string>
-  <string name="patientsummary_bp_add_new">Charge virale</string>
+  <string name="patientsummary_bp_add_new">Charge CV</string>
   <string name="patientsummary_finish_saving_patient">Sauvegarder</string>
-  <string name="patientsummary_bp_none_added">Pas de charge virale ajoutée</string>
+  <string name="patientsummary_bp_none_added">Pas de charge CV ajoutée</string>
   <string name="patientsummary_edit">Edit</string>
 
   <string name="patientsummary_updatephone_dialog_title">Mise à jour du numéro de téléphone</string>
@@ -221,7 +221,7 @@
   <string name="patientsummary_contact_doctor_diagnosis_answer_yes" translatable="false">Oui</string>
   <string name="patientsummary_contact_doctor_diagnosis_answer_no" translatable="false">Non</string>
   <plurals name="patientsummary_contact_doctor_patient_info_bps" translatable="false">
-    <item quantity="one">*Dernier % de lecture de la charge virale*:</item>
+    <item quantity="one">*Dernier % de lecture de la charge CV*:</item>
     <item quantity="other">*% de jours de retard*:</item>
   </plurals>
   <plurals name="patientsummary_contact_doctor_patient_info_blood_sugars" translatable="false">
@@ -239,12 +239,12 @@
 
   <!-- Lint fails to find usages for these strings. -->
   <!--suppress UnusedResources -->
-  <string name="bloodpressure_level_low">Charge virale élevée</string>
+  <string name="bloodpressure_level_low">Charge CV élevée</string>
   <!--suppress UnusedResources -->
   <string name="bloodpressure_level_high">TB</string>
 
   <string name="bloodsugar_level_low">Enceinte (de préférence uniquement pour les femmes)</string>
-  <string name="bloodsugar_level_high">Charge virale faible</string>
+  <string name="bloodsugar_level_high">Charge CV faible</string>
 
   <string name="timestamp_today">Aujourd`hui</string>
   <string name="timestamp_yesterday">Hier</string>
@@ -319,7 +319,7 @@
   <string name="screenonboarding_intro_1">Rechercher \&amp; trouver \ ndes milliers de patients</string>
   <string name="screenonboarding_intro_1_hypertension">\la tuberculose</string>
   <string name="screenonboarding_intro_2">Tenir à jour les dossiers de \n</string>
-  <string name="screenonboarding_intro_2_bp">charge virale \n</string>
+  <string name="screenonboarding_intro_2_bp">charge CV \n</string>
   <string name="screenonboarding_intro_2_and">\&amp;</string>
   <string name="screenonboarding_intro_2_medicines">\les médicaments</string>
   <string name="screenonboarding_intro_3">Les patients reçoivent</string>
@@ -328,7 +328,7 @@
 
   <!-- Overdue List -->
   <string name="overdue_no_patients">Aucun patient en retard</string>
-  <string name="overdue_empty_desc">Vous pourrez appeler les patients qui manquent leur visite prévue pour un contrôle de la charge virale</string>
+  <string name="overdue_empty_desc">Vous pourrez appeler les patients qui manquent leur visite prévue pour un contrôle de la charge CV</string>
   <string name="overdue_list_item_name_age">%s, %s</string>
   <string name="overdue_list_item_diagnosis_diabetes">TB</string>
   <string name="overdue_list_item_diagnosis_hypertension">Grossesse (si femme)</string>
@@ -378,13 +378,13 @@
 
   <!-- Reports -->
   <string name="reports_come_back_later">Revenez plus tard</string>
-  <string name="reports_you_will_be_able_to_see">Vous pourrez consulter ici les rapports de charge virale de votre clinique.</string>
+  <string name="reports_you_will_be_able_to_see">Vous pourrez consulter ici les rapports de charge CV de votre clinique.</string>
 
   <!-- Medical History -->
   <!--suppress UnusedResources used in enum -->
   <string name="medicalhistory_question_heartattack">Test de la LV au cours des 3 derniers mois</string>
   <!--suppress UnusedResources -->
-  <string name="medicalhistory_question_stroke">Charge virale élevée</string>
+  <string name="medicalhistory_question_stroke">Charge CV élevée</string>
   <!--suppress UnusedResources -->
   <string name="medicalhistory_question_kidney">Autre</string>
   <!--suppress UnusedResources -->
@@ -505,7 +505,7 @@
   <!-- BloodSugar type picker -->
   <string name="bloodsugartype_picker_title">Sélectionnez une mesure</string>
   <string name="bloodsugartype_picker_desc">Choisissez "Je ne sait pas" si vous n`êtes pas sûr.</string>
-  <string name="bloodsugartype_rbs">Charge virale</string>
+  <string name="bloodsugartype_rbs">Charge CV</string>
   <string name="bloodsugartype_fbs">Fasting blood sugar (FBS)</string>
   <string name="bloodsugartype_ppbs">Post prandial blood sugar (PPBS)</string>
   <string name="bloodsugartype_hba1c" translatable="false">HbA1c</string>
@@ -529,19 +529,19 @@
   <string name="bloodsugarentry_fasting_title">Fasting blood sugar</string>
   <string name="bloodsugarentry_hba1c_title" translatable="false">HbA1c</string>
   <string name="bloodsugarentry_remove">Supprimer</string>
-  <string name="bloodsugarentry_edit_random_title">Modifier une charge virale élevée</string>
-  <string name="bloodsugarentry_edit_post_prandial_title">Modifier une faible charge virale</string>
+  <string name="bloodsugarentry_edit_random_title">Modifier une charge CV élevée</string>
+  <string name="bloodsugarentry_edit_post_prandial_title">Modifier une faible charge CV</string>
   <string name="bloodsugarentry_edit_fasting_title">Modifier TB</string>
   <string name="bloodsugarentry_edit_hba1c_title">Modifier la grossesse</string>
 
   <!-- Confirm remove blood sugar dialog -->
-  <string name="bloodsugarentry_remove_blood_sugar_title">Supprimer la charge virale</string>
-  <string name="bloodsugarentry_remove_blood_sugar_message">Êtes-vous sûr de vouloir supprimer cet enregistrement de la charge virale?</string>
+  <string name="bloodsugarentry_remove_blood_sugar_title">Supprimer la charge CV</string>
+  <string name="bloodsugarentry_remove_blood_sugar_message">Êtes-vous sûr de vouloir supprimer cet enregistrement de la charge CV?</string>
   <string name="bloodsugarentry_remove_blood_sugar_confirm">Supprimer</string>
   <string name="bloodsugarentry_remove_blood_sugar_cancel">Annuler</string>
 
   <!-- Blood Sugar Summary view -->
-  <string name="bloodsugarsummaryview_no_blood_sugars">Pas de charge virale ajoutée</string>
+  <string name="bloodsugarsummaryview_no_blood_sugars">Pas de charge CV ajoutée</string>
   <string name="bloodsugarsummaryview_add_blood_sugar_button">TB</string>
   <string name="bloodpressurehistory_blood_sugar_date_time" translatable="false">%1$s\n%2$s</string>
 
@@ -554,12 +554,12 @@
   <string name="bloodsugar_reading_unit_type_percentage" translatable="false">%</string>
 
   <!-- Blood Pressure History screen -->
-  <string name="bloodpressurehistory_add_bp_button">Charge virale</string>
+  <string name="bloodpressurehistory_add_bp_button">Charge CV</string>
   <string name="bloodpressurehistory_bp_time_date" translatable="false">%1$s\n%2$s</string>
   <string name="bloodpressurehistory_toolbar_title">%1$s, %2$s, %3$s</string>
 
   <!-- Blood Sugar History screen -->
-  <string name="bloodsugarhistory_add_blood_sugar_button">Charge virale</string>
+  <string name="bloodsugarhistory_add_blood_sugar_button">Charge CV</string>
   <string name="bloodsugarhistory_blood_sugar_date_time" translatable="false">%1$s\n%2$s</string>
   <string name="bloodsugarhistory_toolbar_title">%1$s, %2$s, %3$s</string>
 
